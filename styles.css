@@ -20,13 +20,27 @@ body {
     margin: 20px 0;
     padding: 20px;
     border: 2px dashed #ddd;
+    min-height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-placeholder {
     font-size: 1.5rem;
     color: #555;
-    min-height: 50px;
+}
+
+.card {
+    width: 100px;
+    height: 100px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 button {
     padding: 10px 20px;
+    margin: 5px;
     font-size: 1rem;
     color: #fff;
     background-color: #007BFF;
