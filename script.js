@@ -11,7 +11,7 @@ const addCards = (color, count) => {
 // Function to initialize the deck
 const initializeDeck = () => {
     cardStack = [];
-    addCards("Guest", 100);
+    addCards("Red", 100);
     addCards("Blue", 10);
     addCards("Yellow", 10);
     addCards("Green", 10);
