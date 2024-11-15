@@ -68,3 +68,28 @@ resetButton.addEventListener("click", () => {
 // Initialize the deck and update the UI
 initializeDeck();
 updateRemainingCards();
+
+
+// Select DOM elements
+const diceFace = document.getElementById("dice-face");
+const rollButton = document.getElementById("roll-button");
+const resultDisplay = document.getElementById("result-display");
+
+// Function to roll the dice
+const rollDice = () => {
+    // Generate a random number between 1 and 6
+    const diceValue = Math.floor(Math.random() * 6) + 1;
+
+    // Update the dice display
+    diceFace.textContent = diceValue;
+
+    // Update the result text
+    resultDisplay.textContent = `You rolled a ${diceValue}!`;
+};
+
+// Add event listener to the roll button
+rollButton.addEventListener("click", rollDice);
+
+// Initialize with a default dice face
+diceFace.textContent = "🎲";
+
