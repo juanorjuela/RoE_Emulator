@@ -1,95 +1,94 @@
-// Initialize the card stack
-let cardStack = [];
+// Card Decks
+const playerDeck = [
+    ...Array(15).fill("Pizza Station"),
+    ...Array(15).fill("Drink Stations"),
+    ...Array(15).fill("WC Station"),
+    ...Array(15).fill("DJ Station"),
+    ...Array(25).fill("Order More Pizza"),
+    ...Array(25).fill("Order More Drinks"),
+    ...Array(50).fill("Clean WC"),
+    ...Array(30).fill("Adjust Volume"),
+    ...Array(10).fill("Extra Queue"),
+    ...Array(10).fill("Helping Hand"),
+    ...Array(10).fill("Police Enchanter"),
+    ...Array(5).fill("The DROP"),
+];
 
-// Function to add cards by color
-const addCards = (color, count) => {
-    for (let i = 0; i < count; i++) {
-        cardStack.push(color);
-    }
-};
+const roundDeck = [
+    ...Array(100).fill("Add Guest"),
+    ...Array(20).fill("Need Drink"),
+    ...Array(15).fill("Need Food"),
+    ...Array(10).fill("Need WC"),
+    ...Array(5).fill("Neighbour Visit"),
+    ...Array(5).fill("Something Broke"),
+    ...Array(5).fill("WC Maintenance"),
+];
 
-// Function to initialize the deck
-const initializeDeck = () => {
-    cardStack = [];
-    addCards("Red", 100);
-    addCards("Blue", 10);
-    addCards("Yellow", 10);
-    addCards("Green", 10);
-    addCards("Black", 10);
-    addCards("Purple", 6);
-    addCards("Brown", 4);
-    shuffleStack(cardStack);
-};
+// DOM Elements
+const playerCardsDiv = document.getElementById("player-cards");
+const roundCardDiv = document.getElementById("round-card");
+const diceResultsDiv = document.getElementById("dice-results");
+const logList = document.getElementById("log-list");
 
-// Shuffle function
-const shuffleStack = (stack) => {
-    for (let i = stack.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [stack[i], stack[j]] = [stack[j], stack[i]];
-    }
-};
+// Shuffle Function
+const shuffle = (deck) => deck.sort(() => Math.random() - 0.5);
 
-// Select DOM elements
-const cardDisplay = document.getElementById("card-display");
-const shuffleButton = document.getElementById("shuffle-button");
-const resetButton = document.getElementById("reset-button");
-const remainingCards = document.getElementById("remaining-cards");
-
-// Update remaining card count
-const updateRemainingCards = () => {
-    remainingCards.textContent = `Remaining cards: ${cardStack.length}`;
-};
-
-// Display card as a colored square
-const displayCard = (color) => {
-    cardDisplay.innerHTML = `<div class="card" style="background-color: ${color};"></div>`;
-};
-
-// Shuffle button functionality
-shuffleButton.addEventListener("click", () => {
-    if (cardStack.length > 0) {
-        const card = cardStack.pop(); // Draw the top card
-        displayCard(card);
-        updateRemainingCards();
-    } else {
-        cardDisplay.innerHTML = `<p class="card-placeholder">No more cards to draw!</p>`;
-        shuffleButton.disabled = true;
-    }
+// Prep Game Start
+document.getElementById("prep-game-btn").addEventListener("click", () => {
+    const shuffledDeck = shuffle([...playerDeck]);
+    const selectedCards = shuffledDeck.slice(0, 10);
+    playerCardsDiv.innerHTML = "";
+    selectedCards.forEach((card) => {
+        const cardElement = document.createElement("div");
+        cardElement.className = "card";
+        cardElement.textContent = card;
+        cardElement.addEventListener("click", () => {
+            cardElement.classList.toggle("black");
+        });
+        playerCardsDiv.appendChild(cardElement);
+    });
+    logList.innerHTML += `<li>Game prepped with cards: ${selectedCards.join(", ")}</li>`;
 });
 
-// Reset button functionality
-resetButton.addEventListener("click", () => {
-    initializeDeck();
-    cardDisplay.innerHTML = `<p class="card-placeholder">Press "Shuffle" to draw a card!</p>`;
-    shuffleButton.disabled = false;
-    updateRemainingCards();
+// New Round
+document.getElementById("new-round-btn").addEventListener("click", () => {
+    document.getElementById("prep-game-btn").click();
+    logList.innerHTML += `<li>New round started!</li>`;
 });
 
-// Initialize the deck and update the UI
-initializeDeck();
-updateRemainingCards();
+// Grab Round Card
+document.getElementById("round-card-btn").addEventListener("click", () => {
+    const shuffledDeck = shuffle([...roundDeck]);
+    const card = shuffledDeck[0];
+    roundCardDiv.textContent = `Round Card: ${card}`;
+    logList.innerHTML += `<li>Round card drawn: ${card}</li>`;
+});
 
-
-// Select DOM elements
-const diceFace = document.getElementById("dice-face");
-const rollButton = document.getElementById("roll-button");
-const resultDisplay = document.getElementById("result-display");
-
-// Function to roll the dice
-const rollDice = () => {
-    // Generate a random number between 1 and 6
-    const diceValue = Math.floor(Math.random() * 6) + 1;
-
-    // Update the dice display
-    diceFace.textContent = diceValue;
-
-    // Update the result text
-    resultDisplay.textContent = `You rolled a ${diceValue}!`;
+// Roll Dice
+const rollDice = (diceId) => {
+    const roll = Math.floor(Math.random() * 3) + 1;
+    document.getElementById(diceId).textContent = roll;
 };
 
-// Add event listener to the roll button
-rollButton.addEventListener("click", rollDice);
+["roll-dice-1-btn", "roll-dice-2-btn", "roll-dice-3-btn"].forEach((btnId, idx) => {
+    document.getElementById(btnId).addEventListener("click", () => {
+        rollDice(`dice-${idx + 1}`);
+    });
+});
 
-// Initialize with a default dice face
-diceFace.textContent = "🎲";
+// Reset Game
+document.getElementById("reset-btn").addEventListener("click", () => {
+    playerCardsDiv.innerHTML = "";
+    roundCardDiv.textContent = "";
+    diceResultsDiv.innerHTML = "";
+    logList.innerHTML = "";
+    logList.innerHTML += `<li>Game reset!</li>`;
+});
 
+// Add Dice Elements
+[1, 2, 3].forEach((num) => {
+    const diceDiv = document.createElement("div");
+    diceDiv.className = "dice";
+    diceDiv.id = `dice-${num}`;
+    diceResultsDiv.appendChild(diceDiv);
+});

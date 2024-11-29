@@ -1,7 +1,8 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
     margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -10,101 +11,103 @@ body {
 }
 
 .container {
+    width: 90%;
+    max-width: 800px;
     background: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 5%;
 }
 
-.card-display {
-    margin: 20px 0;
-    padding: 20px;
-    border: 2px dashed #ddd;
-    min-height: 100px;
+.controls button {
+    margin: 5px;
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.controls button:hover {
+    background-color: #0056b3;
+}
+
+.game-area {
+    margin-top: 20px;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.card-placeholder {
-    font-size: 1.5rem;
-    color: #555;
+.player-cards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
 }
 
 .card {
     width: 100px;
-    height: 100px;
+    height: 150px;
+    background-color: #ddd;
+    border: 2px solid #aaa;
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-button {
-    padding: 10px 20px;
-    margin: 5px;
-    font-size: 1rem;
-    color: #fff;
-    background-color: #007BFF;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-#remaining-cards {
-    margin-top: 10px;
-    color: #333;
-    font-size: 1rem;
-}
-
-}
-
-.dice-display {
-    margin: 20px auto;
-    width: 100px;
-    height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    background-color: #fff;
+    font-size: 14px;
+    cursor: pointer;
 }
 
-.dice-face {
-    width: 80px;
-    height: 80px;
-    background-color: #007BFF;
-    color: #fff;
-    font-size: 3rem;
+.card img {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.card.black {
+    background-color: black;
+}
+
+.round-card {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.dice-results {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.dice {
+    width: 50px;
+    height: 50px;
+    background: #ddd;
+    border: 2px solid #aaa;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-button {
-    padding: 10px 20px;
-    font-size: 1rem;
-    color: #fff;
-    background-color: #007BFF;
-    border: none;
+    font-size: 18px;
     border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-button:hover {
-    background-color: #0056b3;
+.log-section {
+    margin-top: 30px;
+    text-align: left;
 }
 
-#result-display {
-    margin-top: 10px;
-    color: #333;
-    font-size: 1rem;
+#log-list {
+    list-style: none;
+    padding: 0;
+}
+
+#log-list li {
+    margin: 5px 0;
+    padding: 5px;
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }

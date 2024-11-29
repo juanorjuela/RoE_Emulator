@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Party Turn Simulator</title>
+    <title>Board Game Assistant</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Party Action Shuffle Simulator</h1>
-        <div id="card-display" class="card-display">
-            <div class="card-placeholder">Press "Shuffle" to draw a card!</div>
+        <h1>Board Game Assistant</h1>
+        <div class="controls">
+            <button id="prep-game-btn">Prep Game Start</button>
+            <button id="new-round-btn">New Round</button>
+            <button id="round-card-btn">Grab a Round Card</button>
+            <button id="roll-dice-1-btn">Roll Dice 1</button>
+            <button id="roll-dice-2-btn">Roll Dice 2</button>
+            <button id="roll-dice-3-btn">Roll Dice 3</button>
+            <button id="reset-btn">Reset Game</button>
         </div>
-        <button id="shuffle-button">Shuffle</button>
-        <button id="reset-button">Start Fresh</button>
-        <p id="remaining-cards"></p>
-    </div>
-
-    <div class="container">
-        <h1>Dice Simulator</h1>
-        <div id="dice-display" class="dice-display">
-            <div class="dice-face" id="dice-face"></div>
+        
+        <div class="game-area">
+            <div class="player-cards" id="player-cards"></div>
+            <div class="round-card" id="round-card"></div>
+            <div class="dice-results" id="dice-results"></div>
         </div>
-        <button id="roll-button">Roll Dice</button>
-        <p id="result-display">Roll a dice to start!</p>
+        
+        <div class="log-section">
+            <h2>Round Log</h2>
+            <ul id="log-list"></ul>
+        </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
