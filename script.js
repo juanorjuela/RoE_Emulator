@@ -1,3 +1,6 @@
+let remainingRoundDeck = [...roundDeck]; // Clone the roundDeck array for tracking
+
+
 // Card Decks
 const playerDeck = [
     ...Array(15).fill("Pizza Station"),
@@ -57,12 +60,38 @@ document.getElementById("new-round-btn").addEventListener("click", () => {
 });
 
 // Grab Round Card
-document.getElementById("round-card-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle([...roundDeck]);
-    const card = shuffledDeck[0];
-    roundCardDiv.textContent = `Round Card: ${card}`;
-    logList.innerHTML += `<li>Round card drawn: ${card}</li>`;
-});
+function grabRoundCard() {
+    // Shuffle the deck
+    remainingRoundDeck.sort(() => Math.random() - 0.5);
+
+    if (remainingRoundDeck.length > 0) {
+        // Draw a card
+        const roundCard = remainingRoundDeck.shift(); // Remove the top card from the deck
+        const roundCardContainer = document.getElementById("roundCard");
+        roundCardContainer.innerHTML = ""; // Clear previous card
+
+        // Create image element for the round card
+        const cardImage = document.createElement("img");
+        cardImage.src = `images/${roundCard.toLowerCase().replace(/ /g, "_")}.png`;
+        cardImage.alt = roundCard;
+        cardImage.classList.add("card-image");
+
+        // Append the image to the container
+        roundCardContainer.appendChild(cardImage);
+
+        // Log the card in the visual log
+        addToLog(`Round Card Drawn: ${roundCard}`);
+    } else {
+        alert("No more cards in the deck! Start a new round to reset the deck.");
+    }
+
+    // Update the deck count display
+function updateDeckCount() {
+    const deckCountElement = document.getElementById("roundDeckCount");
+    deckCountElement.textContent = `Remaining Cards: ${remainingRoundDeck.length}`;
+}
+
+
 
 // Roll Dice
 const rollDice = (diceId) => {

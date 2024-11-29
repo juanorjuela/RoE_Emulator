@@ -111,3 +111,22 @@ body {
     border: 1px solid #ddd;
     border-radius: 5px;
 }
+
+.card-image {
+    width: 100px; /* Adjust the size to fit your design */
+    height: auto; /* Maintain the image's aspect ratio */
+    display: block;
+    margin: 0 auto;
+}
+.card-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.deck-info {
+    text-align: center;
+    margin: 10px 0;
+    font-size: 18px;
+    color: #333;
+    font-weight: bold;
+}
