@@ -36,7 +36,7 @@ const shuffle = (deck) => deck.sort(() => Math.random() - 0.5);
 // Prep Game Start
 document.getElementById("prep-game-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...playerDeck]);
-    const selectedCards = shuffledDeck.slice(0, 5);
+    const selectedCards = shuffledDeck.slice(0, 12);
     playerCardsDiv.innerHTML = "";
     selectedCards.forEach((card) => {
         const cardElement = document.createElement("div");
