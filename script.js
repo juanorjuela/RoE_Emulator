@@ -82,7 +82,7 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 document.getElementById("round-card-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...fuckupsDeck]);
     const card = shuffledDeck[0];
-    roundCardDiv.textContent = `Round Card: ${card}`;
+    roundCardDiv.textContent = `Fuckup: ${card}`;
     logList.innerHTML += `<li>Round card drawn: ${card}</li>`;
 });
 
