@@ -2,9 +2,9 @@
 let playerDeck = [
     ...Array(5).fill("Order Pizza"),
     ...Array(5).fill("Order Drinks"),
-    ...Array(3).fill("Clean WC"),
+    ...Array(4).fill("Clean WC"),
     ...Array(1).fill("The DROP"),
-    ...Array(6).fill("Invite Random"),
+    ...Array(8).fill("Invite Random"),
     ...Array(4).fill("Music/Rock"),
     ...Array(4).fill("Music/Pop"),
     ...Array(4).fill("Music/Latin"),
