@@ -1,23 +1,22 @@
 // Card Decks
 let playerDeck = [
-    ...Array(15).fill("Order Pizza"),
-    ...Array(15).fill("Order Drinks"),
-    ...Array(15).fill("Clean WC"),
-    ...Array(2).fill("The DROP"),
-    ...Array(15).fill("Invite Random"),
-    ...Array(3).fill("Music/Rock"),
-    ...Array(3).fill("Music/Pop"),
-    ...Array(3).fill("Music/Latin"),
-    ...Array(3).fill("Music/HipHop"),
-    ...Array(3).fill("Music/EDM"),
-    ...Array(3).fill("Music/Classical"),
+    ...Array(5).fill("Order Pizza"),
+    ...Array(5).fill("Order Drinks"),
+    ...Array(5).fill("Clean WC"),
+    ...Array(1).fill("The DROP"),
+    ...Array(10).fill("Invite Random"),
+    ...Array(5).fill("Music/Rock"),
+    ...Array(5).fill("Music/Pop"),
+    ...Array(5).fill("Music/Latin"),
+    ...Array(5).fill("Music/HipHop"),
+    ...Array(1).fill("Music/Classical"),
 ];
 
 // Needs of the round. a.k.a Fuckups
 const fuckupsDeck = [
     ...Array(25).fill("Need Drink"),
     ...Array(25).fill("Need Food"),
-    ...Array(25).fill("Need WC"),
+    ...Array(20).fill("Need WC"),
     ...Array(25).fill("Need Dance"),
 ];
 
