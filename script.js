@@ -72,7 +72,7 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 
     paintPlayerHand();
 
-    logList.innerHTML += `<li>Player selected: ${selectedCards.join(", ")}. Main deck has now ${playerDeck.length} cards</li>`;
+    logList.innerHTML += `<li>Player selected: ${selectedCards.join(", ")}. Actions deck has now ${playerDeck.length} cards</li>`;
 
     console.log(playerHand);
 });
@@ -82,7 +82,7 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...fuckupsDeck]);
     const card = shuffledDeck[0];
     roundCardDiv.textContent = `Fuckup: ${card}`;
-    logList.innerHTML += `<li>Round card drawn: ${card}</li>`;
+    logList.innerHTML += `<li>Round FCKUP: ${card}</li>`;
 });
 
 // Roll Dice
@@ -116,7 +116,7 @@ function main() {
     });
 
     playerDeck = shuffle([...playerDeck]);
-    logList.innerHTML += `<li>Main deck initialized with ${playerDeck.length} cards</li>`;
+    logList.innerHTML += `<li>Actions deck starts with ${playerDeck.length} cards</li>`;
 }
 
 main();
