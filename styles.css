@@ -43,8 +43,8 @@ body {
 }
 
 .player-cards {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    display: flex;
+    justify-content: center;
     gap: 10px;
 }
 
