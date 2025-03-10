@@ -1,10 +1,10 @@
 // Card Decks
 let playerDeck = [
     ...Array(4).fill("Order Pizza"),
-    ...Array(5).fill("Order Drinks"),
+    ...Array(4).fill("Order Drinks"),
     ...Array(3).fill("Clean WC"),
     ...Array(1).fill("The DROP"),
-    ...Array(6).fill("Invite Random"),
+    ...Array(5).fill("Invite Random"),
     ...Array(3).fill("Music/Rock"),
     ...Array(3).fill("Music/Pop"),
     ...Array(3).fill("Music/Latin"),
@@ -14,11 +14,11 @@ let playerDeck = [
 
 // Needs of the round. a.k.a Fuckups
 const fuckupsDeck = [
-    ...Array(20).fill("Need Drink"),
-    ...Array(20).fill("Need Food"),
-    ...Array(20).fill("Need WC"),
+    ...Array(15).fill("Need Drink"),
+    ...Array(15).fill("Need Food"),
+    ...Array(15).fill("Need WC"),
     ...Array(20).fill("Need Dance"),
-    ...Array(20).fill("Change Music"),
+    ...Array(15).fill("Change Music"),
 ];
 
 const playerHand = [];
