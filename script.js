@@ -2,23 +2,23 @@
 let playerDeck = [
     ...Array(4).fill("Order Pizza"),
     ...Array(4).fill("Order Drinks"),
-    ...Array(3).fill("Clean WC"),
+    ...Array(4).fill("Clean WC"),
     ...Array(1).fill("The DROP"),
     ...Array(5).fill("Invite Random"),
-    ...Array(3).fill("Music/Rock"),
-    ...Array(3).fill("Music/Pop"),
-    ...Array(3).fill("Music/Latin"),
-    ...Array(3).fill("Music/HipHop"),
+    ...Array(2).fill("Music/Rock"),
+    ...Array(2).fill("Music/Pop"),
+    ...Array(2).fill("Music/Latin"),
+    ...Array(2).fill("Music/HipHop"),
     ...Array(1).fill("Music/Classical"),
 ];
 
 // Needs of the round. a.k.a Fuckups
 const fuckupsDeck = [
-    ...Array(15).fill("Need Drink"),
-    ...Array(15).fill("Need Food"),
-    ...Array(15).fill("Need WC"),
-    ...Array(20).fill("Need Dance"),
-    ...Array(15).fill("Change Music"),
+    ...Array(12).fill("Need Drink"),
+    ...Array(12).fill("Need Food"),
+    ...Array(12).fill("Need WC"),
+    ...Array(25).fill("Need Dance"),
+    ...Array(25).fill("Change Music"),
 ];
 
 const playerHand = [];
@@ -56,7 +56,7 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
     }
 
     const handLength = playerHand.length;
-    const missing = 3 - handLength;
+    const missing = 7 - handLength;
 
     if (missing === 0) {
         return;
