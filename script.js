@@ -4,10 +4,10 @@ let playerDeck = [
     ...Array(2).fill("Order Drinks"),
     ...Array(2).fill("Clean WC"),
     ...Array(5).fill("Invite Random"),
-    ...Array(2).fill("Music/Rock"),
-    ...Array(2).fill("Music/Pop"),
-    ...Array(2).fill("Music/Latin"),
-    ...Array(2).fill("Music/HipHop"),
+    ...Array(3).fill("Music/Rock"),
+    ...Array(3).fill("Music/Pop"),
+    ...Array(3).fill("Music/Latin"),
+    ...Array(3).fill("Music/HipHop"),
 ];
 
 // Needs of the round. a.k.a Fuckups
