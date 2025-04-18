@@ -46,6 +46,8 @@ body {
     display: flex;
     justify-content: center;
     gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .card {
