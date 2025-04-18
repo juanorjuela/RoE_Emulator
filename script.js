@@ -1,13 +1,13 @@
 // Card Decks
 let playerDeck = [
-    ...Array(2).fill("Order Pizza"),
-    ...Array(2).fill("Order Drinks"),
-    ...Array(2).fill("Clean WC"),
-    ...Array(5).fill("Invite Random"),
-    ...Array(3).fill("Music/Rock"),
-    ...Array(3).fill("Music/Pop"),
-    ...Array(3).fill("Music/Latin"),
-    ...Array(3).fill("Music/HipHop"),
+    ...Array(3).fill("Order Pizza"),
+    ...Array(3).fill("Order Drinks"),
+    ...Array(3).fill("Clean WC"),
+    ...Array(6).fill("Invite Random"),
+    ...Array(4).fill("Music/Rock"),
+    ...Array(4).fill("Music/Pop"),
+    ...Array(4).fill("Music/Latin"),
+    ...Array(4).fill("Music/HipHop"),
 ];
 
 // Needs of the round. a.k.a Fuckups
@@ -54,7 +54,7 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
     }
 
     const handLength = playerHand.length;
-    const missing = 7 - handLength;
+    const missing = 6 - handLength;
 
     if (missing === 0) {
         return;
