@@ -1,9 +1,9 @@
 // Card Decks
 let playerDeck = [
-    ...Array(3).fill("Order Pizza"),
-    ...Array(3).fill("Order Drinks"),
-    ...Array(3).fill("Clean WC"),
-    ...Array(6).fill("Invite Random"),
+    ...Array(5).fill("Order Pizza"),
+    ...Array(5).fill("Order Drinks"),
+    ...Array(4).fill("Clean WC"),
+    ...Array(10).fill("Invite Random"),
     ...Array(4).fill("Music/Rock"),
     ...Array(4).fill("Music/Pop"),
     ...Array(4).fill("Music/Latin"),
