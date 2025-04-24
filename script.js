@@ -2,6 +2,7 @@
 let playerDeck = [
     ...Array(5).fill("Order Pizza"),
     ...Array(5).fill("Order Drinks"),
+    ...Array(5).fill("Upgrade DJ station"),
     ...Array(4).fill("Clean WC"),
     ...Array(9).fill("Invite Random"),
     ...Array(3).fill("Music/Rock"),
