@@ -11,23 +11,37 @@ let playerDeck = [
     ...Array(3).fill("Music/HipHop"),
     ...Array(3).fill("Music/Techno"),
     ...Array(3).fill("Music/Disco"),
+    ...Array(4).fill("The DROP: Cancels the effect of a FCKUP"),
 ];
 
 // Needs of the round. a.k.a Fuckups
 const fuckupsDeck = [
-    ...Array(7).fill("Need Drink"),
-    ...Array(7).fill("Need Food"),
-    ...Array(4).fill("Need WC"),
-    ...Array(15).fill("Need Dance"),
-    ...Array(15).fill("Change Music"),
-    ...Array(1).fill("Multi / Drink and eat or leave"),
-    ...Array(1).fill("Multi / Eat and dance or leave"),
-    ...Array(1).fill("Multi / Drink and pee or leave"),
-    ...Array(1).fill("Multi / Dance and eat or leave"),
-    ...Array(1).fill("Take and deal with 2 more fuckups"),
-    ...Array(3).fill("Neighbour Call - If there is 3 or more guests in the entrance, they must leave. When your party collect 3 neighbour cards, the police will arrive and 10 guests must leave the party."),
+
+    ...Array(6).fill("Change Music"), 
+    ...Array(1).fill("Unlucky: Take and deal with 2 more fuckups"),
+    ...Array(1).fill("Lazy Bastrad: Take out 3 action cards from your hand, you can only play with 3 cards for 2 rounds"),
+    ...Array(1).fill("Too much to drink: You can now only play one action for the next 2 rounds"),
+    ...Array(1).fill("Diarrhea: Go immediately to the WC, everyone currently in the WC leaves the party"),
+    ...Array(1).fill("Electricity is out: (DICE) Guests leave the party"),
+    ...Array(1).fill("Overdose: (DICE) people leave in the ambulance"),
+    ...Array(1).fill("Bar fight: triggers a neighbour call"),
+    ...Array(1).fill("Unpluged system: Everyone leaves the dancefloor"),
+    ...Array(2).fill("The munchies: (DICE) people go to eat."),
+    ...Array(5).fill("Night Fever: (DICE) people go to dance."),
+    ...Array(2).fill("Shots!: (DICE) people go to drink."),
+    ...Array(2).fill("Quick pee: (DICE) people go to the WC."),
+    ...Array(1).fill("Broken WC: unless you clean this mess, all the guests that need the WC will leave."),
+    ...Array(3).fill("Neighbour Call - All guests in the entrance must leave. When your party collect 3 neighbour cards, the police will arrive and 10 guests must leave the party."),
 
 ];
+
+// Needs of the round. a.k.a Fuckups
+const minimisions = [
+
+    ...Array(1).fill("Fairy Dusk: get 3 people into the WC"), 
+];
+
+
 
 const playerHand = [];
 
