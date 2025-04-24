@@ -3,13 +3,13 @@ let playerDeck = [
     ...Array(5).fill("Order Pizza"),
     ...Array(5).fill("Order Drinks"),
     ...Array(4).fill("Clean WC"),
-    ...Array(10).fill("Invite Random"),
-    ...Array(4).fill("Music/Rock"),
-    ...Array(4).fill("Music/Pop"),
-    ...Array(4).fill("Music/Latin"),
-    ...Array(4).fill("Music/HipHop"),
-    ...Array(4).fill("Music/Techno"),
-    ...Array(4).fill("Music/Disco"),
+    ...Array(9).fill("Invite Random"),
+    ...Array(3).fill("Music/Rock"),
+    ...Array(3).fill("Music/Pop"),
+    ...Array(3).fill("Music/Latin"),
+    ...Array(3).fill("Music/HipHop"),
+    ...Array(3).fill("Music/Techno"),
+    ...Array(3).fill("Music/Disco"),
 ];
 
 // Needs of the round. a.k.a Fuckups
