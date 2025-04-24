@@ -8,15 +8,24 @@ let playerDeck = [
     ...Array(4).fill("Music/Pop"),
     ...Array(4).fill("Music/Latin"),
     ...Array(4).fill("Music/HipHop"),
+    ...Array(4).fill("Music/Techno"),
+    ...Array(4).fill("Music/Disco"),
 ];
 
 // Needs of the round. a.k.a Fuckups
 const fuckupsDeck = [
-    ...Array(10).fill("Need Drink"),
-    ...Array(10).fill("Need Food"),
-    ...Array(10).fill("Need WC"),
-    ...Array(25).fill("Need Dance"),
-    ...Array(25).fill("Change Music"),
+    ...Array(7).fill("Need Drink"),
+    ...Array(7).fill("Need Food"),
+    ...Array(4).fill("Need WC"),
+    ...Array(15).fill("Need Dance"),
+    ...Array(15).fill("Change Music"),
+    ...Array(1).fill("Multi / Drink and eat or leave"),
+    ...Array(1).fill("Multi / Eat and dance or leave"),
+    ...Array(1).fill("Multi / Drink and pee or leave"),
+    ...Array(1).fill("Multi / Dance and eat or leave"),
+    ...Array(1).fill("Take and deal with 2 more fuckups"),
+    ...Array(3).fill("Neighbour Call - If there is 3 or more guests in the entrance, they must leave. When your party collect 3 neighbour cards, the police will arrive and 10 guests must leave the party."),
+
 ];
 
 const playerHand = [];
