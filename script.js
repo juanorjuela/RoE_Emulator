@@ -17,8 +17,8 @@ let playerDeck = [
 // Needs of the round. a.k.a Fuckups
 const fuckupsDeck = [
 
-    ...Array(6).fill("Change Music"), 
-    ...Array(1).fill("Unlucky: Take and deal with 2 more fuckups"),
+    ...Array(6).fill("Change Music: Use a music card from your deck, no need to be in a dance room. If the music does no change now, 3 people will leave the party."), 
+    ...Array(1).fill("Unlucky: Take 2 more fuckups"),
     ...Array(1).fill("Lazy Bastrad: Take out 3 action cards from your hand, you can only play with 3 cards for 2 rounds"),
     ...Array(1).fill("Too much to drink: You can now only play one action for the next 2 rounds"),
     ...Array(1).fill("Diarrhea: Go immediately to the WC, everyone currently in the WC leaves the party"),
@@ -26,19 +26,43 @@ const fuckupsDeck = [
     ...Array(1).fill("Overdose: (DICE) people leave in the ambulance"),
     ...Array(1).fill("Bar fight: triggers a neighbour call"),
     ...Array(1).fill("Unpluged system: Everyone leaves the dancefloor"),
-    ...Array(2).fill("The munchies: (DICE) people go to eat."),
+    ...Array(1).fill("The munchies: (DICE) people go to eat."),
     ...Array(5).fill("Night Fever: (DICE) people go to dance."),
-    ...Array(2).fill("Shots!: (DICE) people go to drink."),
-    ...Array(2).fill("Quick pee: (DICE) people go to the WC."),
+    ...Array(1).fill("Shots!: (DICE) people go to drink."),
+    ...Array(1).fill("Quick pee: (DICE) people go to the WC."),
+    ...Array(1).fill("Hold my hair: (DICE) people go to the WC."),
     ...Array(1).fill("Broken WC: unless you clean this mess, all the guests that need the WC will leave."),
     ...Array(3).fill("Neighbour Call - All guests in the entrance must leave. When your party collect 3 neighbour cards, the police will arrive and 10 guests must leave the party."),
 
 ];
 
-// Needs of the round. a.k.a Fuckups
-const minimisions = [
+// Mini Mission to be done in-game
+const minimissionsDeck = [
 
-    ...Array(1).fill("Fairy Dusk: get 3 people into the WC"), 
+    ...Array(1).fill("Fairy Dusk: go to a WC and bring 2 guests with you (3 coins)"), 
+    ...Array(1).fill("Hooked: In bedroom with someone else, only the 2 of you (3 coins)"), 
+    ...Array(1).fill("House Chef: Chill in a full kitchen (3 coins)"), 
+    ...Array(1).fill("Nomad: move to 3 rooms in one turn (2 coins)"), 
+    ...Array(1).fill("Nothing like a sweaty dancefloor: Dance with other 7 fellow dancers, in a dancefloor (2 coins)"), 
+    ...Array(1).fill("Hook-Up: Be with someone alone in the corridor (3 coins)"), 
+    ...Array(1).fill("Germofobe: Wash your hands, leave the WC, go back and wash them again. (2 coins)"), 
+    ...Array(1).fill("Get some: That disco queen in the corner has something for you (2 coins)"), 
+    ...Array(1).fill("Sophisto Prick: suddenly you got an urge to read a book from the library (1 coin)"), 
+    ...Array(1).fill("Powernap: Quick bedroom break, need to rest a sec (1 coin)"), 
+    ...Array(1).fill("Creeper: Watching people dance from a non-danceble corner (1 coin)"), 
+    ...Array(1).fill("Barman:"),
+];
+
+// Goals for when the pary is over
+const PartyGoalsDeck = [
+
+    ...Array(1).fill("5 de Mayo: Most people should be Latin Fans and most music palyed should be Latin Music (30 coins)"), 
+    ...Array(1).fill("Underground Rave: Most people should be Trance Fans and most music palyed should be Trance Music (30 coins)"), 
+    ...Array(1).fill("Disco Fever: Most people should be Disco Fans and most music palyed should be Disco Music (30 coins)"), 
+    ...Array(1).fill("Karaoke Vibes: Most people should be Pop Fans and most music palyed should be Pop Music (30 coins)"), 
+    ...Array(1).fill("Mosh Pitt: Most people should be Rock Fans and most music palyed should be Rock Music (30 coins)"),
+    ...Array(1).fill("Rap Battle: Most people should be Hip-Hop Fans and most music palyed should be Hip-Hop Music (30 coins)"),  
+    Hip-Hop
 ];
 
 
@@ -107,6 +131,15 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
     roundCardDiv.textContent = `Fuckup: ${card}`;
     logList.innerHTML += `<li>Round FCKUP: ${card}</li>`;
 });
+
+// Grab Mini Mission
+document.getElementById("mini-mission-btn").addEventListener("click", () => {
+    const shuffledDeck = shuffle([...minimissionsDeck]);
+    const card = shuffledDeck[0];
+    roundCardDiv.textContent = `Mini Mission: ${card}`;
+    logList.innerHTML += `<li>Mini Mission: ${card}</li>`;
+});
+
 
 // Roll Dice
 const rollDice = (diceId) => {
