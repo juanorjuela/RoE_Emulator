@@ -150,7 +150,7 @@ window.addEventListener("DOMContentLoaded", () => {
         document.getElementById(diceId).textContent = roll;
     };
 
-    ["roll-dice-1-btn", "roll-dice-2-btn"].forEach((btnId, idx) => {
+    ["roll-one-dice-btn", "roll-two-dice-btn"].forEach((btnId, idx) => {
         document.getElementById(btnId).addEventListener("click", () => {
             rollDice(`dice-${idx + 1}`);
         });
