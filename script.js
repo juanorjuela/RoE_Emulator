@@ -1,5 +1,5 @@
 // Card Decks
-const playerDeck = [
+let playerDeck = [
     ...Array(5).fill("Order Pizza"),
     ...Array(5).fill("Order Drinks"),
     ...Array(5).fill("Upgrade DJ Station"),
@@ -63,6 +63,8 @@ const PartyGoalsDeck = [
     ...Array(1).fill("Rap Battle: Most guests should be Hip-Hop fans and most songs played should be Hip-Hop (30 coins)"),  
 ];
 
+
+const playerHand = [];
 
 
 // DOM Elements
