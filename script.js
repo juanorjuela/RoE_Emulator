@@ -11,13 +11,13 @@ let playerDeck = [
     ...Array(3).fill("Play Music: Hip-Hop"),
     ...Array(3).fill("Play Music: Techno"),
     ...Array(3).fill("Play Music: Disco"),
-    ...Array(4).fill("The DROP: Cancel the effect of one FCKUP"),
+    ...Array(2).fill("The DROP: Cancel the effect of one FCKUP"),
 ];
 
 // Needs of the round a.k.a FCKUPs
 const fuckupsDeck = [
 
-    ...Array(6).fill("Change Music: Play any music card from your hand — you don't need to be at a dance room. If the music doesn't change now, 3 guests will leave the party."),
+    ...Array(5).fill("Change Music: Play any music card from your hand — you don't need to be at a dance room. If the music doesn't change now, 3 guests will leave the party."),
     ...Array(1).fill("Unlucky: Draw 2 more FCKUP cards."),
     ...Array(1).fill("Lazy Bastard: Discard 3 action cards from your hand. You can only play with 3 cards for the next 2 rounds."),
     ...Array(1).fill("Too Much to Drink: You can only play 1 action per round for the next 2 rounds."),
@@ -98,7 +98,7 @@ const paintPlayerHand = () => {
 
 document.getElementById("grab-action-cards-btn").addEventListener("click", () => {
     if (!playerDeck.length) {
-        logList.innerHTML += <li>No more cards to select</li>;
+        logList.innerHTML += `<li>No more cards to select</li>`;
         return
     }
 
@@ -120,7 +120,7 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 
     paintPlayerHand();
 
-    logList.innerHTML += <li>Player selected: ${selectedCards.join(", ")}. Actions deck has now ${playerDeck.length} cards</li>;
+    logList.innerHTML += `<li>Player selected: ${selectedCards.join(", ")}. Actions deck has now ${playerDeck.length} cards</li>`;
 
     console.log(playerHand);
 });
@@ -129,24 +129,24 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 document.getElementById("round-card-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...fuckupsDeck]);
     const card = shuffledDeck[0];
-    roundCardDiv.textContent = Fuckup: ${card};
-    logList.innerHTML += <li>Round FCKUP: ${card}</li>;
+    roundCardDiv.textContent = `Fuckup: ${card}`;
+    logList.innerHTML += `<li>Round FCKUP: ${card}</li>`;
 });
 
 // Grab Mini Mission
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...minimissionsDeck]);
     const card = shuffledDeck[0];
-    miniMissionDiv.textContent = Mini Mission: ${card};
-    logList.innerHTML += <li>Mini Mission: ${card}</li>;
+    miniMissionDiv.textContent = `Mini Mission: ${card}`;
+    logList.innerHTML += `<li>Mini Mission: ${card}</li>`;
 });
 
 // Grab Party Goal
 document.getElementById("party-goals-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...PartyGoalsDeck]);
     const card = shuffledDeck[0];
-    partyGoalDiv.textContent = Party Goal: ${card};
-    logList.innerHTML += <li>Party Goal: ${card}</li>;
+    partyGoalDiv.textContent = `Party Goal: ${card}`;
+    logList.innerHTML += `<li>Party Goal: ${card}</li>`;
 });
 
 
@@ -158,7 +158,7 @@ const rollDice = (diceId) => {
 
 ["roll-dice-1-btn", "roll-dice-2-btn"].forEach((btnId, idx) => {
     document.getElementById(btnId).addEventListener("click", () => {
-        rollDice(dice-${idx + 1});
+        rollDice(`dice-${idx + 1}`);
     });
 });
 
@@ -168,7 +168,7 @@ document.getElementById("reset-btn").addEventListener("click", () => {
     roundCardDiv.textContent = "";
     diceResultsDiv.innerHTML = "";
     logList.innerHTML = "";
-    logList.innerHTML += <li>Game reset!</li>;
+    logList.innerHTML += `<li>Game reset!</li>`;
 });
 
 function main() {
@@ -176,12 +176,12 @@ function main() {
     [1, 2].forEach((num) => {
         const diceDiv = document.createElement("div");
         diceDiv.className = "dice";
-        diceDiv.id = dice-${num};
+        diceDiv.id = `dice-${num}`;
         diceResultsDiv.appendChild(diceDiv);
     });
 
     playerDeck = shuffle([...playerDeck]);
-    logList.innerHTML += <li>Actions deck starts with ${playerDeck.length} cards</li>;
+    logList.innerHTML += `<li>Actions deck starts with ${playerDeck.length} cards</li>`;
 }
 
 main();
