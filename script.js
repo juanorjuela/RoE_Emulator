@@ -17,7 +17,7 @@ let playerDeck = [
 // Needs of the round. a.k.a Fuckups
 const fuckupsDeck = [
 
-    ...Array(6).fill("Change Music: Use a music card from your deck, no need to be in a dance room. If the music does no change now, 3 people will leave the party."), 
+    ...Array(6).fill("Change Music: Use a music card from your deck, no need to be in a dance room. If the music does not change now, 3 people will leave the party."), 
     ...Array(1).fill("Unlucky: Take 2 more fuckups"),
     ...Array(1).fill("Lazy Bastrad: Take out 3 action cards from your hand, you can only play with 3 cards for 2 rounds"),
     ...Array(1).fill("Too much to drink: You can now only play one action for the next 2 rounds"),
@@ -72,6 +72,8 @@ const playerHand = [];
 // DOM Elements
 const playerCardsDiv = document.getElementById("player-cards");
 const roundCardDiv = document.getElementById("round-card");
+const miniMissionDiv = document.getElementById("mini-mission");
+const partyGoalDiv = document.getElementById("party-goal");
 const diceResultsDiv = document.getElementById("dice-results");
 const logList = document.getElementById("log-list");
 
@@ -136,8 +138,16 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...minimissionsDeck]);
     const card = shuffledDeck[0];
-    roundCardDiv.textContent = `Mini Mission: ${card}`;
+    miniMissionDiv.textContent = `Mini Mission: ${card}`;
     logList.innerHTML += `<li>Mini Mission: ${card}</li>`;
+});
+
+// Grab Party Goal
+document.getElementById("party-goals-btn").addEventListener("click", () => {
+    const shuffledDeck = shuffle([...PartyGoalsDeck]);
+    const card = shuffledDeck[0];
+    partyGoalDiv.textContent = `Party Goal: ${card}`;
+    logList.innerHTML += `<li>Party Goal: ${card}</li>`;
 });
 
 
