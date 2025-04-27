@@ -14,9 +14,7 @@ let playerDeck = [
     ...Array(2).fill("The DROP: Cancel the effect of one FCKUP"),
 ];
 
-// Needs of the round a.k.a FCKUPs
 const fuckupsDeck = [
-
     ...Array(5).fill("Change Music: Play any music card from your hand — you don't need to be at a dance room. If the music doesn't change now, 3 guests will leave the party."),
     ...Array(1).fill("Unlucky: Draw 2 more FCKUP cards."),
     ...Array(1).fill("Lazy Bastard: Discard 3 action cards from your hand. You can only play with 3 cards for the next 2 rounds."),
@@ -35,9 +33,7 @@ const fuckupsDeck = [
     ...Array(3).fill("Neighbor Complaint - All guests at the entrance must leave. If you collect 3 neighbor complaints, the police show up and 10 guests must leave."),
 ];
 
-// Mini Missions during the game
 const minimissionsDeck = [
-
     ...Array(1).fill("Fairy Dusk: Visit the WC and bring 2 guests with you (3 coins)"), 
     ...Array(1).fill("Hooked: Be alone in a bedroom with another guest (3 coins)"), 
     ...Array(1).fill("House Chef: Chill out in a full kitchen (3 coins)"), 
@@ -52,9 +48,7 @@ const minimissionsDeck = [
     ...Array(1).fill("Barman: Serve drinks at a full drinking station (2 coins)"),
 ];
 
-// Goals for when the party is over
 const PartyGoalsDeck = [
-
     ...Array(1).fill("5 de Mayo: Most guests should be Latin music fans and most songs played should be Latin (30 coins)"), 
     ...Array(1).fill("Underground Rave: Most guests should be Trance fans and most songs played should be Techno/Trance (30 coins)"), 
     ...Array(1).fill("Disco Fever: Most guests should be Disco fans and most songs played should be Disco (30 coins)"), 
@@ -63,9 +57,7 @@ const PartyGoalsDeck = [
     ...Array(1).fill("Rap Battle: Most guests should be Hip-Hop fans and most songs played should be Hip-Hop (30 coins)"),  
 ];
 
-
 const playerHand = [];
-
 
 // DOM Elements
 const playerCardsDiv = document.getElementById("player-cards");
@@ -75,35 +67,34 @@ const partyGoalDiv = document.getElementById("party-goal");
 const diceResultsDiv = document.getElementById("dice-results");
 const logList = document.getElementById("log-list");
 
-// Shuffle Function (with better shuffling algorithm)
+// Shuffle Function
 const shuffle = (deck) => {
-    let shuffledDeck = [...deck]; // Make a copy of the deck to avoid modifying the original
+    let shuffledDeck = [...deck];
     for (let i = shuffledDeck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [shuffledDeck[i], shuffledDeck[j]] = [shuffledDeck[j], shuffledDeck[i]]; // Swap elements
+        [shuffledDeck[i], shuffledDeck[j]] = [shuffledDeck[j], shuffledDeck[i]];
     }
     return shuffledDeck;
 };
 
-// Paint Player Hand (renders the player's hand of cards to the UI)
+// Paint Player Hand
 const paintPlayerHand = () => {
-    playerCardsDiv.innerHTML = ""; // Clear existing hand display
+    playerCardsDiv.innerHTML = "";
     playerHand.forEach((card, i) => {
         const cardElement = document.createElement("div");
         cardElement.className = "card";
-        cardElement.textContent = card; // Display card's name or content
+        cardElement.textContent = card;
         cardElement.addEventListener("click", () => {
-            // Send to cemetery (remove card)
             playerCardsDiv.removeChild(cardElement);
-            playerHand.splice(i, 1); // Remove card from the hand
-            paintPlayerHand(); // Re-render the hand
-            console.log(playerHand); // Log the updated hand
+            playerHand.splice(i, 1);
+            paintPlayerHand();
+            console.log(playerHand);
         });
         playerCardsDiv.appendChild(cardElement);
     });
 };
 
-// Grag/Refill Action Cards
+// Grab/Refill Action Cards
 document.getElementById("grab-action-cards-btn").addEventListener("click", () => {
     if (!playerDeck.length) {
         logList.innerHTML += `<li>No more cards to select</li>`;
@@ -117,6 +108,9 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
         return;
     }
 
+    // Shuffle the player deck before drawing new cards
+    playerDeck = shuffle(playerDeck);
+
     const selectedCards = [];
     for (let i = 0; i < missing; i++) {
         const poppedCard = playerDeck.pop();
@@ -126,7 +120,7 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
     }
     playerHand.push(...selectedCards);
 
-    paintPlayerHand(); // Re-render the hand
+    paintPlayerHand();
 
     logList.innerHTML += `<li>Player selected: ${selectedCards.join(", ")}. Actions deck has now ${playerDeck.length} cards</li>`;
 
@@ -135,97 +129,24 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 
 // Grab Round Card
 document.getElementById("round-card-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(fuckupsDeck);  // Shuffle the fuckupsDeck
-    const card = shuffledDeck[0];  // Get the first card
+    const shuffledDeck = shuffle(fuckupsDeck);
+    const card = shuffledDeck[0];
     roundCardDiv.textContent = `FCKUP/ ${card}`;
     logList.innerHTML += `<li>FCKUP/ ${card}</li>`;
 });
 
 // Grab Mini Mission
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(minimissionsDeck);  // Shuffle the minimissionsDeck
-    const card = shuffledDeck[0];  // Get the first card
+    const shuffledDeck = shuffle(minimissionsDeck);
+    const card = shuffledDeck[0];
     miniMissionDiv.textContent = `MINI MISSION/ ${card}`;
     logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
 });
 
 // Grab Party Goal
 document.getElementById("party-goals-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(PartyGoalsDeck);  // Shuffle the PartyGoalsDeck
-    const card = shuffledDeck[0];  // Get the first card
+    const shuffledDeck = shuffle(PartyGoalsDeck);
+    const card = shuffledDeck[0];
     partyGoalDiv.textContent = `PARTY GOAL/ ${card}`;
     logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
-
-
-
-/*
-// Roll Dice
-const rollDice = (diceId) => {
-    const roll = Math.floor(Math.random() * 6) + 1;
-    document.getElementById(diceId).textContent = roll;
-};
-
-["roll-dice-1-btn", "roll-dice-2-btn"].forEach((btnId, idx) => {
-    document.getElementById(btnId).addEventListener("click", () => {
-        rollDice(`dice-${idx + 1}`);
-    });
-});
-
-*/
-const dice = document.getElementById("dice");
-
-dice.addEventListener("click", () => {
-  // Trigger the dice roll animation
-  dice.classList.add("roll");
-
-  // Simulate a dice number after the roll (random from 1 to 6)
-  setTimeout(() => {
-    const randomNumber = Math.floor(Math.random() * 6) + 1;
-    dice.querySelector(".number").textContent = randomNumber;
-
-    // Remove the 'roll' class to reset the animation
-    dice.classList.remove("roll");
-  }, 250); // Set the timeout duration to match the animation duration
-});
-
-const dice2 = document.getElementById("dice2");
-
-dice2.addEventListener("click", () => {
-  // Trigger the dice roll animation
-  dice2.classList.add("roll");
-
-  // Simulate a dice number after the roll (random from 1 to 6)
-  setTimeout(() => {
-    const randomNumber = Math.floor(Math.random() * 6) + 1;
-    dice2.querySelector(".number2").textContent = randomNumber;
-
-    // Remove the 'roll' class to reset the animation
-    dice2.classList.remove("roll");
-  }, 250); // Set the timeout duration to match the animation duration
-});
-
-/*
-// Reset Game
-document.getElementById("reset-btn").addEventListener("click", () => {
-    playerCardsDiv.innerHTML = "";
-    roundCardDiv.textContent = "";
-    diceResultsDiv.innerHTML = "";
-    logList.innerHTML = "";
-    logList.innerHTML += `<li>Game reset!</li>`;
-});
-
-function main() {
-    // Add Dice Elements
-    [1, 2].forEach((num) => {
-        const diceDiv = document.createElement("div");
-        diceDiv.className = "dice";
-        diceDiv.id = `dice-${num}`;
-        diceResultsDiv.appendChild(diceDiv);
-    });
-
-    playerDeck = shuffle([...playerDeck]);
-    logList.innerHTML += `<li>Actions deck starts with ${playerDeck.length} cards</li>`;
-}
-
-main();*/
