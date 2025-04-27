@@ -151,7 +151,7 @@ document.getElementById("party-goals-btn").addEventListener("click", () => {
     logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
 
-
+/*
 // Roll Dice
 const rollDice = (diceId) => {
     const roll = Math.floor(Math.random() * 6) + 1;
@@ -164,6 +164,7 @@ const rollDice = (diceId) => {
     });
 });
 
+*/
 const dice = document.getElementById("dice");
 
 dice.addEventListener("click", () => {
