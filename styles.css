@@ -188,7 +188,7 @@ body {
 
 /* Add dice roll effect on click */
 .dice.roll {
-  animation: dice-roll 0.5s ease-out;
+  animation: dice-roll 0.25s ease-out;
 }
 
 

@@ -178,7 +178,7 @@ dice.addEventListener("click", () => {
 
     // Remove the 'roll' class to reset the animation
     dice.classList.remove("roll");
-  }, 500); // Set the timeout duration to match the animation duration
+  }, 250); // Set the timeout duration to match the animation duration
 });
 
 const dice2 = document.getElementById("dice2");
@@ -194,7 +194,7 @@ dice2.addEventListener("click", () => {
 
     // Remove the 'roll' class to reset the animation
     dice2.classList.remove("roll");
-  }, 500); // Set the timeout duration to match the animation duration
+  }, 250); // Set the timeout duration to match the animation duration
 });
 
 /*
