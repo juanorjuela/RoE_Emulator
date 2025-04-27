@@ -197,7 +197,7 @@ dice.addEventListener("click", () => {
   }, 500); // Set the timeout duration to match the animation duration
 });
 
-
+/*
 // Reset Game
 document.getElementById("reset-btn").addEventListener("click", () => {
     playerCardsDiv.innerHTML = "";
@@ -219,5 +219,5 @@ function main() {
     playerDeck = shuffle([...playerDeck]);
     logList.innerHTML += `<li>Actions deck starts with ${playerDeck.length} cards</li>`;
 }
-
+*/
 main();
