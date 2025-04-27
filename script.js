@@ -1,5 +1,5 @@
 // Card Decks
-let playerDeck = [
+const playerDeck = [
     ...Array(5).fill("Order Pizza"),
     ...Array(5).fill("Order Drinks"),
     ...Array(5).fill("Upgrade DJ Station"),
