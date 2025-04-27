@@ -96,6 +96,8 @@ const paintPlayerHand = () => {
     });
 };
 
+// Grag/Refill Action Cards
+
 document.getElementById("grab-action-cards-btn").addEventListener("click", () => {
     if (!playerDeck.length) {
         logList.innerHTML += `<li>No more cards to select</li>`;
@@ -129,24 +131,24 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 document.getElementById("round-card-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...fuckupsDeck]);
     const card = shuffledDeck[0];
-    roundCardDiv.textContent = `FCKUP// ${card}`;
-    logList.innerHTML += `<li>FCKUP// ${card}</li>`;
+    roundCardDiv.textContent = `FCKUP/ ${card}`;
+    logList.innerHTML += `<li>FCKUP/ ${card}</li>`;
 });
 
 // Grab Mini Mission
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...minimissionsDeck]);
     const card = shuffledDeck[0];
-    miniMissionDiv.textContent = `MINI MISSION// ${card}`;
-    logList.innerHTML += `<li>MINI MISSION// ${card}</li>`;
+    miniMissionDiv.textContent = `MINI MISSION/ ${card}`;
+    logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
 });
 
 // Grab Party Goal
 document.getElementById("party-goals-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...PartyGoalsDeck]);
     const card = shuffledDeck[0];
-    partyGoalDiv.textContent = `PARTY GOAL// ${card}`;
-    logList.innerHTML += `<li>PARTY GOAL// ${card}</li>`;
+    partyGoalDiv.textContent = `PARTY GOAL/ ${card}`;
+    logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
 
 
@@ -161,6 +163,23 @@ const rollDice = (diceId) => {
         rollDice(`dice-${idx + 1}`);
     });
 });
+
+const dice = document.getElementById("dice");
+
+dice.addEventListener("click", () => {
+  // Trigger the dice roll animation
+  dice.classList.add("roll");
+
+  // Simulate a dice number after the roll (random from 1 to 6)
+  setTimeout(() => {
+    const randomNumber = Math.floor(Math.random() * 6) + 1;
+    dice.querySelector(".number").textContent = randomNumber;
+
+    // Remove the 'roll' class to reset the animation
+    dice.classList.remove("roll");
+  }, 1000); // Set the timeout duration to match the animation duration
+});
+
 
 // Reset Game
 document.getElementById("reset-btn").addEventListener("click", () => {
