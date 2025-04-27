@@ -183,9 +183,9 @@ dice.addEventListener("click", () => {
 
 const dice2 = document.getElementById("dice2");
 
-dice.addEventListener("click", () => {
+dice2.addEventListener("click", () => {
   // Trigger the dice roll animation
-  dice.classList.add("roll");
+  dice2.classList.add("roll");
 
   // Simulate a dice number after the roll (random from 1 to 6)
   setTimeout(() => {
