@@ -177,7 +177,23 @@ dice.addEventListener("click", () => {
 
     // Remove the 'roll' class to reset the animation
     dice.classList.remove("roll");
-  }, 1000); // Set the timeout duration to match the animation duration
+  }, 500); // Set the timeout duration to match the animation duration
+});
+
+const dice = document.getElementById("dice2");
+
+dice.addEventListener("click", () => {
+  // Trigger the dice roll animation
+  dice.classList.add("roll");
+
+  // Simulate a dice number after the roll (random from 1 to 6)
+  setTimeout(() => {
+    const randomNumber = Math.floor(Math.random() * 6) + 1;
+    dice.querySelector(".number").textContent = randomNumber;
+
+    // Remove the 'roll' class to reset the animation
+    dice.classList.remove("roll");
+  }, 500); // Set the timeout duration to match the animation duration
 });
 
 
