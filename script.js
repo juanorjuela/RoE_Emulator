@@ -180,7 +180,7 @@ dice.addEventListener("click", () => {
   }, 500); // Set the timeout duration to match the animation duration
 });
 
-const dice = document.getElementById("dice2");
+const dice2 = document.getElementById("dice2");
 
 dice.addEventListener("click", () => {
   // Trigger the dice roll animation
