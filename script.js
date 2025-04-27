@@ -2,68 +2,67 @@
 let playerDeck = [
     ...Array(5).fill("Order Pizza"),
     ...Array(5).fill("Order Drinks"),
-    ...Array(5).fill("Upgrade DJ station"),
+    ...Array(5).fill("Upgrade DJ Station"),
     ...Array(4).fill("Clean WC"),
-    ...Array(9).fill("Invite Random"),
-    ...Array(3).fill("Music/Rock"),
-    ...Array(3).fill("Music/Pop"),
-    ...Array(3).fill("Music/Latin"),
-    ...Array(3).fill("Music/HipHop"),
-    ...Array(3).fill("Music/Techno"),
-    ...Array(3).fill("Music/Disco"),
-    ...Array(4).fill("The DROP: Cancels the effect of a FCKUP"),
+    ...Array(9).fill("Invite Random Guest"),
+    ...Array(3).fill("Play Music: Rock"),
+    ...Array(3).fill("Play Music: Pop"),
+    ...Array(3).fill("Play Music: Latin"),
+    ...Array(3).fill("Play Music: Hip-Hop"),
+    ...Array(3).fill("Play Music: Techno"),
+    ...Array(3).fill("Play Music: Disco"),
+    ...Array(4).fill("The DROP: Cancel the effect of one FCKUP"),
 ];
 
-// Needs of the round. a.k.a Fuckups
+// Needs of the round a.k.a FCKUPs
 const fuckupsDeck = [
 
-    ...Array(6).fill("Change Music: Use a music card from your deck, no need to be in a dance room. If the music does not change now, 3 people will leave the party."), 
-    ...Array(1).fill("Unlucky: Take 2 more fuckups"),
-    ...Array(1).fill("Lazy Bastrad: Take out 3 action cards from your hand, you can only play with 3 cards for 2 rounds"),
-    ...Array(1).fill("Too much to drink: You can now only play one action for the next 2 rounds"),
-    ...Array(1).fill("Diarrhea: Go immediately to the WC, everyone currently in the WC leaves the party"),
-    ...Array(1).fill("Electricity is out: (DICE) Guests leave the party"),
-    ...Array(1).fill("Overdose: (DICE) people leave in the ambulance"),
-    ...Array(1).fill("Bar fight: triggers a neighbour call"),
-    ...Array(1).fill("Unpluged system: Everyone leaves the dancefloor"),
-    ...Array(1).fill("The munchies: (DICE) people go to eat."),
-    ...Array(5).fill("Night Fever: (DICE) people go to dance."),
-    ...Array(1).fill("Shots!: (DICE) people go to drink."),
-    ...Array(1).fill("Quick pee: (DICE) people go to the WC."),
-    ...Array(1).fill("Hold my hair: (DICE) people go to the WC."),
-    ...Array(1).fill("Broken WC: unless you clean this mess, all the guests that need the WC will leave."),
-    ...Array(3).fill("Neighbour Call - All guests in the entrance must leave. When your party collect 3 neighbour cards, the police will arrive and 10 guests must leave the party."),
-
+    ...Array(6).fill("Change Music: Play any music card from your hand — you don't need to be at a dance room. If the music doesn't change now, 3 guests will leave the party."),
+    ...Array(1).fill("Unlucky: Draw 2 more FCKUP cards."),
+    ...Array(1).fill("Lazy Bastard: Discard 3 action cards from your hand. You can only play with 3 cards for the next 2 rounds."),
+    ...Array(1).fill("Too Much to Drink: You can only play 1 action per round for the next 2 rounds."),
+    ...Array(1).fill("Diarrhea: Rush immediately to the WC! All guests currently in the WC leave the party."),
+    ...Array(1).fill("Power Outage: (DICE) Some guests leave the party."),
+    ...Array(1).fill("Overdose: (DICE) Some guests leave with the ambulance."),
+    ...Array(1).fill("Bar Fight: Triggers a neighbor complaint."),
+    ...Array(1).fill("Unplugged System: Everyone leaves the dancefloor."),
+    ...Array(1).fill("The Munchies: (DICE) guests head to the kitchen to eat."),
+    ...Array(5).fill("Night Fever: (DICE) guests head to the dancefloor."),
+    ...Array(1).fill("Shots!: (DICE) guests head to the bar."),
+    ...Array(1).fill("Quick Pee: (DICE) guests rush to the WC."),
+    ...Array(1).fill("Hold My Hair: (DICE) guests rush to the WC."),
+    ...Array(1).fill("Broken WC: If you don't clean it, all guests needing the WC will leave."),
+    ...Array(3).fill("Neighbor Complaint - All guests at the entrance must leave. If you collect 3 neighbor complaints, the police show up and 10 guests must leave."),
 ];
 
-// Mini Mission to be done in-game
+// Mini Missions during the game
 const minimissionsDeck = [
 
-    ...Array(1).fill("Fairy Dusk: go to a WC and bring 2 guests with you (3 coins)"), 
-    ...Array(1).fill("Hooked: In bedroom with someone else, only the 2 of you (3 coins)"), 
-    ...Array(1).fill("House Chef: Chill in a full kitchen (3 coins)"), 
-    ...Array(1).fill("Nomad: move to 3 rooms in one turn (2 coins)"), 
-    ...Array(1).fill("Nothing like a sweaty dancefloor: Dance with other 7 fellow dancers, in a dancefloor (2 coins)"), 
-    ...Array(1).fill("Hook-Up: Be with someone alone in the corridor (3 coins)"), 
-    ...Array(1).fill("Germofobe: Wash your hands, leave the WC, go back and wash them again. (2 coins)"), 
-    ...Array(1).fill("Get some: That disco queen in the corner has something for you (2 coins)"), 
-    ...Array(1).fill("Sophisto Prick: suddenly you got an urge to read a book from the library (1 coin)"), 
-    ...Array(1).fill("Powernap: Quick bedroom break, need to rest a sec (1 coin)"), 
-    ...Array(1).fill("Creeper: Watching people dance from a non-danceble corner (1 coin)"), 
-    ...Array(1).fill("Barman:"),
+    ...Array(1).fill("Fairy Dusk: Visit the WC and bring 2 guests with you (3 coins)"), 
+    ...Array(1).fill("Hooked: Be alone in a bedroom with another guest (3 coins)"), 
+    ...Array(1).fill("House Chef: Chill out in a full kitchen (3 coins)"), 
+    ...Array(1).fill("Nomad: Visit 3 different rooms in a single turn (2 coins)"), 
+    ...Array(1).fill("Sweaty Dancefloor: Dance with 7 other guests on the dancefloor (2 coins)"), 
+    ...Array(1).fill("Hook-Up: Meet someone alone in the corridor (3 coins)"), 
+    ...Array(1).fill("Germophobe: Wash your hands, leave the WC, go back and wash again (2 coins)"), 
+    ...Array(1).fill("Get Some: That disco queen in the corner is calling you (2 coins)"), 
+    ...Array(1).fill("Sophisto Prick: Suddenly feel like reading a book from the library (1 coin)"), 
+    ...Array(1).fill("Powernap: Take a quick break in the bedroom (1 coin)"), 
+    ...Array(1).fill("Creeper: Watch people dancing from a non-danceable corner (1 coin)"), 
+    ...Array(1).fill("Barman: Serve drinks at a full drinking station (2 coins)"),
 ];
 
-// Goals for when the pary is over
+// Goals for when the party is over
 const PartyGoalsDeck = [
 
-    ...Array(1).fill("5 de Mayo: Most people should be Latin Fans and most music palyed should be Latin Music (30 coins)"), 
-    ...Array(1).fill("Underground Rave: Most people should be Trance Fans and most music palyed should be Trance Music (30 coins)"), 
-    ...Array(1).fill("Disco Fever: Most people should be Disco Fans and most music palyed should be Disco Music (30 coins)"), 
-    ...Array(1).fill("Karaoke Vibes: Most people should be Pop Fans and most music palyed should be Pop Music (30 coins)"), 
-    ...Array(1).fill("Mosh Pitt: Most people should be Rock Fans and most music palyed should be Rock Music (30 coins)"),
-    ...Array(1).fill("Rap Battle: Most people should be Hip-Hop Fans and most music palyed should be Hip-Hop Music (30 coins)"),  
-   
+    ...Array(1).fill("5 de Mayo: Most guests should be Latin music fans and most songs played should be Latin (30 coins)"), 
+    ...Array(1).fill("Underground Rave: Most guests should be Trance fans and most songs played should be Techno/Trance (30 coins)"), 
+    ...Array(1).fill("Disco Fever: Most guests should be Disco fans and most songs played should be Disco (30 coins)"), 
+    ...Array(1).fill("Karaoke Vibes: Most guests should be Pop fans and most songs played should be Pop (30 coins)"), 
+    ...Array(1).fill("Mosh Pit: Most guests should be Rock fans and most songs played should be Rock (30 coins)"),
+    ...Array(1).fill("Rap Battle: Most guests should be Hip-Hop fans and most songs played should be Hip-Hop (30 coins)"),  
 ];
+
 
 
 
