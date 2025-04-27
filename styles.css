@@ -191,7 +191,7 @@ body {
   animation: dice-roll 0.25s ease-out;
 }
 
-.dice-box: {
+div.dice-box: {
     display: flex;
     align-content: center;
     justify-content: space-between;
