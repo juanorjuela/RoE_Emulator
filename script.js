@@ -64,9 +64,11 @@ const PartyGoalsDeck = [
 ];
 
 
-
-
 const playerHand = [];
+const playerDeck = [/* Add your action cards here */];
+const fuckupsDeck = [/* Your fuckup cards */];
+const minimissionsDeck = [/* Your mini mission cards */];
+const PartyGoalsDeck = [/* Your party goal cards */];
 
 // DOM Elements
 const playerCardsDiv = document.getElementById("player-cards");
@@ -76,7 +78,7 @@ const partyGoalDiv = document.getElementById("party-goal");
 const diceResultsDiv = document.getElementById("dice-results");
 const logList = document.getElementById("log-list");
 
-/// Shuffle Function (with better shuffling algorithm)
+// Shuffle Function (with better shuffling algorithm)
 const shuffle = (deck) => {
     let shuffledDeck = [...deck]; // Make a copy of the deck to avoid modifying the original
     for (let i = shuffledDeck.length - 1; i > 0; i--) {
@@ -84,6 +86,24 @@ const shuffle = (deck) => {
         [shuffledDeck[i], shuffledDeck[j]] = [shuffledDeck[j], shuffledDeck[i]]; // Swap elements
     }
     return shuffledDeck;
+};
+
+// Paint Player Hand (renders the player's hand of cards to the UI)
+const paintPlayerHand = () => {
+    playerCardsDiv.innerHTML = ""; // Clear existing hand display
+    playerHand.forEach((card, i) => {
+        const cardElement = document.createElement("div");
+        cardElement.className = "card";
+        cardElement.textContent = card; // Display card's name or content
+        cardElement.addEventListener("click", () => {
+            // Send to cemetery (remove card)
+            playerCardsDiv.removeChild(cardElement);
+            playerHand.splice(i, 1); // Remove card from the hand
+            paintPlayerHand(); // Re-render the hand
+            console.log(playerHand); // Log the updated hand
+        });
+        playerCardsDiv.appendChild(cardElement);
+    });
 };
 
 // Grag/Refill Action Cards
@@ -109,9 +129,11 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
     }
     playerHand.push(...selectedCards);
 
-    paintPlayerHand();
+    paintPlayerHand(); // Re-render the hand
 
     logList.innerHTML += `<li>Player selected: ${selectedCards.join(", ")}. Actions deck has now ${playerDeck.length} cards</li>`;
+
+    console.log(playerHand);
 });
 
 // Grab Round Card
@@ -137,6 +159,7 @@ document.getElementById("party-goals-btn").addEventListener("click", () => {
     partyGoalDiv.textContent = `PARTY GOAL/ ${card}`;
     logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
+
 
 
 /*
