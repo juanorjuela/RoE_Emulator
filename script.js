@@ -12,7 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
         ...Array(3).fill("Play Music: Hip-Hop"),
         ...Array(3).fill("Play Music: Techno"),
         ...Array(3).fill("Play Music: Disco"),
-        ...Array(4).fill("The DROP: Cancel the effect of one FCKUP"),
+        ...Array(1).fill("The DROP: Cancel the effect of one FCKUP"),
     ];
 
     // Needs of the round a.k.a FCKUPs
