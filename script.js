@@ -64,11 +64,6 @@ const PartyGoalsDeck = [
 ];
 
 
-const playerHand = [];
-const playerDeck = [/* Add your action cards here */];
-const fuckupsDeck = [/* Your fuckup cards */];
-const minimissionsDeck = [/* Your mini mission cards */];
-const PartyGoalsDeck = [/* Your party goal cards */];
 
 // DOM Elements
 const playerCardsDiv = document.getElementById("player-cards");
