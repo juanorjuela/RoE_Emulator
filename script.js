@@ -62,7 +62,7 @@ const PartyGoalsDeck = [
     ...Array(1).fill("Karaoke Vibes: Most people should be Pop Fans and most music palyed should be Pop Music (30 coins)"), 
     ...Array(1).fill("Mosh Pitt: Most people should be Rock Fans and most music palyed should be Rock Music (30 coins)"),
     ...Array(1).fill("Rap Battle: Most people should be Hip-Hop Fans and most music palyed should be Hip-Hop Music (30 coins)"),  
-    Hip-Hop
+   
 ];
 
 
