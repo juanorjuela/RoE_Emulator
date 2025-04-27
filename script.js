@@ -190,7 +190,7 @@ dice.addEventListener("click", () => {
   // Simulate a dice number after the roll (random from 1 to 6)
   setTimeout(() => {
     const randomNumber = Math.floor(Math.random() * 6) + 1;
-    dice2.querySelector(".number").textContent = randomNumber;
+    dice2.querySelector(".number2").textContent = randomNumber;
 
     // Remove the 'roll' class to reset the animation
     dice2.classList.remove("roll");
