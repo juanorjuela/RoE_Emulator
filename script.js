@@ -150,3 +150,74 @@ document.getElementById("party-goals-btn").addEventListener("click", () => {
     partyGoalDiv.textContent = `PARTY GOAL/ ${card}`;
     logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
+
+/*
+// Roll Dice
+const rollDice = (diceId) => {
+    const roll = Math.floor(Math.random() * 6) + 1;
+    document.getElementById(diceId).textContent = roll;
+};
+
+["roll-dice-1-btn", "roll-dice-2-btn"].forEach((btnId, idx) => {
+    document.getElementById(btnId).addEventListener("click", () => {
+        rollDice(dice-${idx + 1});
+    });
+});
+
+*/
+const dice = document.getElementById("dice");
+
+dice.addEventListener("click", () => {
+  // Trigger the dice roll animation
+  dice.classList.add("roll");
+
+  // Simulate a dice number after the roll (random from 1 to 6)
+  setTimeout(() => {
+    const randomNumber = Math.floor(Math.random() * 6) + 1;
+    dice.querySelector(".number").textContent = randomNumber;
+
+    // Remove the 'roll' class to reset the animation
+    dice.classList.remove("roll");
+  }, 250); // Set the timeout duration to match the animation duration
+});
+
+const dice2 = document.getElementById("dice2");
+
+dice2.addEventListener("click", () => {
+  // Trigger the dice roll animation
+  dice2.classList.add("roll");
+
+  // Simulate a dice number after the roll (random from 1 to 6)
+  setTimeout(() => {
+    const randomNumber = Math.floor(Math.random() * 6) + 1;
+    dice2.querySelector(".number2").textContent = randomNumber;
+
+    // Remove the 'roll' class to reset the animation
+    dice2.classList.remove("roll");
+  }, 250); // Set the timeout duration to match the animation duration
+});
+
+/*
+// Reset Game
+document.getElementById("reset-btn").addEventListener("click", () => {
+    playerCardsDiv.innerHTML = "";
+    roundCardDiv.textContent = "";
+    diceResultsDiv.innerHTML = "";
+    logList.innerHTML = "";
+    logList.innerHTML += <li>Game reset!</li>;
+});
+
+function main() {
+    // Add Dice Elements
+    [1, 2].forEach((num) => {
+        const diceDiv = document.createElement("div");
+        diceDiv.className = "dice";
+        diceDiv.id = dice-${num};
+        diceResultsDiv.appendChild(diceDiv);
+    });
+
+    playerDeck = shuffle([...playerDeck]);
+    logList.innerHTML += <li>Actions deck starts with ${playerDeck.length} cards</li>;
+}
+
+main();*/
