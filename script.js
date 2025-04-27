@@ -77,24 +77,24 @@ const diceResultsDiv = document.getElementById("dice-results");
 const logList = document.getElementById("log-list");
 
 // Shuffle Function
-const shuffle = (deck) => deck.sort(() => Math.random() - 0.5);
+function shuffleDeck(deck) {
+  // Fisher-Yates shuffle algorithm
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]]; // Swap elements
+  }
 
-const paintPlayerHand = () => {
-    playerCardsDiv.innerHTML = "";
-    playerHand.forEach((card, i) => {
-        const cardElement = document.createElement("div");
-        cardElement.className = "card";
-        cardElement.textContent = card;
-        cardElement.addEventListener("click", () => {
-            // Send to cementery
-            playerCardsDiv.removeChild(cardElement);
-            playerHand.splice(i, 1);
-            paintPlayerHand();
-            console.log(playerHand);
-        });
-        playerCardsDiv.appendChild(cardElement);
-    });
-};
+  // Optional: Avoid consecutive repeats (e.g., two "Loud Music" cards in a row)
+  for (let i = 1; i < deck.length; i++) {
+    if (deck[i].name === deck[i - 1].name) {
+      // Swap with a random card later in the deck
+      const j = Math.floor(Math.random() * (deck.length - i)) + i;
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  return deck;
+}
 
 // Grag/Refill Action Cards
 
