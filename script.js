@@ -76,9 +76,9 @@ const partyGoalDiv = document.getElementById("party-goal");
 const diceResultsDiv = document.getElementById("dice-results");
 const logList = document.getElementById("log-list");
 
-// Fisher-Yates Shuffle Function
+/// Shuffle Function (with better shuffling algorithm)
 const shuffle = (deck) => {
-    let shuffledDeck = [...deck];
+    let shuffledDeck = [...deck]; // Make a copy of the deck to avoid modifying the original
     for (let i = shuffledDeck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffledDeck[i], shuffledDeck[j]] = [shuffledDeck[j], shuffledDeck[i]]; // Swap elements
@@ -86,31 +86,11 @@ const shuffle = (deck) => {
     return shuffledDeck;
 };
 
-console.log("Shuffled deck:", shuffledDeck.map(c => c.name));
-
-const paintPlayerHand = () => {
-    playerCardsDiv.innerHTML = "";
-    playerHand.forEach((card, i) => {
-        const cardElement = document.createElement("div");
-        cardElement.className = "card";
-        cardElement.textContent = card;
-        cardElement.addEventListener("click", () => {
-            // Send to cementery
-            playerCardsDiv.removeChild(cardElement);
-            playerHand.splice(i, 1);
-            paintPlayerHand();
-            console.log(playerHand);
-        });
-        playerCardsDiv.appendChild(cardElement);
-    });
-};
-
 // Grag/Refill Action Cards
-
 document.getElementById("grab-action-cards-btn").addEventListener("click", () => {
     if (!playerDeck.length) {
         logList.innerHTML += `<li>No more cards to select</li>`;
-        return
+        return;
     }
 
     const handLength = playerHand.length;
@@ -122,9 +102,9 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 
     const selectedCards = [];
     for (let i = 0; i < missing; i++) {
-        const poppedCard = playerDeck.pop()
+        const poppedCard = playerDeck.pop();
         if (poppedCard) {
-            selectedCards.push(poppedCard)
+            selectedCards.push(poppedCard);
         }
     }
     playerHand.push(...selectedCards);
@@ -132,30 +112,28 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
     paintPlayerHand();
 
     logList.innerHTML += `<li>Player selected: ${selectedCards.join(", ")}. Actions deck has now ${playerDeck.length} cards</li>`;
-
-    console.log(playerHand);
 });
 
 // Grab Round Card
 document.getElementById("round-card-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle([...fuckupsDeck]);
-    const card = shuffledDeck[0];
+    const shuffledDeck = shuffle(fuckupsDeck);  // Shuffle the fuckupsDeck
+    const card = shuffledDeck[0];  // Get the first card
     roundCardDiv.textContent = `FCKUP/ ${card}`;
     logList.innerHTML += `<li>FCKUP/ ${card}</li>`;
 });
 
 // Grab Mini Mission
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle([...minimissionsDeck]);
-    const card = shuffledDeck[0];
+    const shuffledDeck = shuffle(minimissionsDeck);  // Shuffle the minimissionsDeck
+    const card = shuffledDeck[0];  // Get the first card
     miniMissionDiv.textContent = `MINI MISSION/ ${card}`;
     logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
 });
 
 // Grab Party Goal
 document.getElementById("party-goals-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle([...PartyGoalsDeck]);
-    const card = shuffledDeck[0];
+    const shuffledDeck = shuffle(PartyGoalsDeck);  // Shuffle the PartyGoalsDeck
+    const card = shuffledDeck[0];  // Get the first card
     partyGoalDiv.textContent = `PARTY GOAL/ ${card}`;
     logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
