@@ -129,7 +129,7 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
 document.getElementById("round-card-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...fuckupsDeck]);
     const card = shuffledDeck[0];
-    roundCardDiv.textContent = `Fuckup: ${card}`;
+    roundCardDiv.textContent = `FCKUP// ${card}`;
     logList.innerHTML += `<li>FCKUP// ${card}</li>`;
 });
 
@@ -137,7 +137,7 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...minimissionsDeck]);
     const card = shuffledDeck[0];
-    miniMissionDiv.textContent = `Mini Mission: ${card}`;
+    miniMissionDiv.textContent = `MINI MISSION// ${card}`;
     logList.innerHTML += `<li>MINI MISSION// ${card}</li>`;
 });
 
@@ -145,7 +145,7 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
 document.getElementById("party-goals-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle([...PartyGoalsDeck]);
     const card = shuffledDeck[0];
-    partyGoalDiv.textContent = `Party Goal: ${card}`;
+    partyGoalDiv.textContent = `PARTY GOAL// ${card}`;
     logList.innerHTML += `<li>PARTY GOAL// ${card}</li>`;
 });
 
