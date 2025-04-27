@@ -219,5 +219,5 @@ function main() {
     playerDeck = shuffle([...playerDeck]);
     logList.innerHTML += `<li>Actions deck starts with ${playerDeck.length} cards</li>`;
 }
-*/
-main();
+
+main();*/
