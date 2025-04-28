@@ -42,7 +42,7 @@ const fuckupsDeck = [
 
 const minimissionsDeck = [
     ...Array(1).fill("🧚 Fairy Dusk: Visit the 🚾 and bring 2 guests with you (3 coins)"), 
-    ...Array(1).fill("🎉 Hooked: Be alone in a bedroom with another guest (3 coins)"), 
+    ...Array(1).fill("🛏️ Hooked: Be alone in a bedroom with another guest (3 coins)"), 
     ...Array(1).fill("🧑‍🍳 House Chef: Chill out in a full kitchen (3 coins)"), 
     ...Array(1).fill("🧳 Nomad: Visit 3 different rooms in a single turn (2 coins)"), 
     ...Array(1).fill("💃 Sweaty Dancefloor: Dance with 7 other guests on the dancefloor (2 coins)"), 
