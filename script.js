@@ -36,42 +36,9 @@ const fuckupsDeck = [
     ...Array(2).fill("🏺 Something broke: Find the guest responsible and kick it out of the party."),
     ...Array(1).fill("😈 Unwanted Graffiti: Those (Roll 🎲) guests are vandalizing the walls, kick them out!."),
     ...Array(1).fill("🚩 Red Flag: There are (Roll 🎲) guests bullying people, not cool, kick them out!."),
-=======
-    ...Array(5).fill("Order Pizza"),
-    ...Array(5).fill("Order Drinks"),
-    ...Array(2).fill("New DJ Station"),
-    ...Array(4).fill("Clean WC"),
-    ...Array(8).fill("Invite Random Guest - One person from the genre of your choosing enters the party."),
-    ...Array(3).fill("Play Music: Rock - 3 Rockers enter the party"),
-    ...Array(3).fill("Play Music: Pop - 3 Poppers enter the party"),
-    ...Array(3).fill("Play Music: Latin - 3 Salseros enter the party"),
-    ...Array(3).fill("Play Music: Hip-Hop - 3 Hiphoppers enter the party"),
-    ...Array(3).fill("Play Music: Techno - 3 Ravers enter the party"),
-    ...Array(3).fill("Play Music: Disco - 3 Disco queens enter the party"),
-    ...Array(2).fill("The DROP: Cancel the effect of one FCKUP"),
+
 ];
 
-const fuckupsDeck = [
-    ...Array(5).fill("Change Music: Play any music card from your hand — you don't need to be at a dance room. If the music doesn't change now, 3 guests will leave the party."),
-    ...Array(1).fill("Unlucky: Draw 2 more FCKUP cards."),
-    ...Array(1).fill("Lazy Bastard: Discard 3 action cards from your hand. You can only play with 3 cards for the next 2 rounds."),
-    ...Array(1).fill("Too Much to Drink: You can only play 1 action per round for the next 2 rounds."),
-    ...Array(1).fill("Diarrhea: Rush immediately to the WC! All guests currently in the WC leave the party."),
-    ...Array(1).fill("Power Outage: (DICE) Some guests leave the party."),
-    ...Array(1).fill("Overdose: (DICE) Some guests leave with the ambulance."),
-    ...Array(1).fill("Bar Fight: Triggers a neighbor complaint."),
-    ...Array(1).fill("Unplugged System: Everyone leaves the dancefloor."),
-    ...Array(1).fill("The Munchies: (DICE) guests head to the kitchen to eat."),
-    ...Array(5).fill("Night Fever: (DICE) guests head to the dancefloor."),
-    ...Array(1).fill("Shots!: (DICE) guests head to the bar."),
-    ...Array(1).fill("Quick Pee: (DICE) guests rush to the WC."),
-    ...Array(1).fill("Hold My Hair: (DICE) guests rush to the WC."),
-    ...Array(1).fill("No TP??: One guest leaves the party."),
-    ...Array(1).fill("Too crowded: Some guests feel its getting really warm, (DICE) guests leave the party."),
-    ...Array(1).fill("Broken WC: If you don't clean it, all guests needing the WC will leave."),
-    ...Array(3).fill("Neighbor Complaint - All guests at the entrance must leave. If you collect 3 neighbor complaints, the police show up and 10 guests must leave."),
->>>>>>> bc1b2b68960e6d0224d042417c933d7be463f8a4
-];
 
 const minimissionsDeck = [
     ...Array(1).fill("🧚 Fairy Dusk: Visit the 🚾 and bring 2 guests with you (3 coins)"), 
