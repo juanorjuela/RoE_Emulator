@@ -2,15 +2,15 @@
 let playerDeck = [
     ...Array(5).fill("Order Pizza"),
     ...Array(5).fill("Order Drinks"),
-    ...Array(5).fill("Upgrade DJ Station"),
+    ...Array(2).fill("New DJ Station"),
     ...Array(4).fill("Clean WC"),
-    ...Array(9).fill("Invite Random Guest"),
-    ...Array(3).fill("Play Music: Rock"),
-    ...Array(3).fill("Play Music: Pop"),
-    ...Array(3).fill("Play Music: Latin"),
-    ...Array(3).fill("Play Music: Hip-Hop"),
-    ...Array(3).fill("Play Music: Techno"),
-    ...Array(3).fill("Play Music: Disco"),
+    ...Array(8).fill("Invite Random Guest - One person from the genre of your choosing enters the party."),
+    ...Array(3).fill("Play Music: Rock - 3 Rockers enter the party"),
+    ...Array(3).fill("Play Music: Pop - 3 Poppers enter the party"),
+    ...Array(3).fill("Play Music: Latin - 3 Salseros enter the party"),
+    ...Array(3).fill("Play Music: Hip-Hop - 3 Hiphoppers enter the party"),
+    ...Array(3).fill("Play Music: Techno - 3 Ravers enter the party"),
+    ...Array(3).fill("Play Music: Disco - 3 Disco queens enter the party"),
     ...Array(2).fill("The DROP: Cancel the effect of one FCKUP"),
 ];
 
@@ -29,6 +29,8 @@ const fuckupsDeck = [
     ...Array(1).fill("Shots!: (DICE) guests head to the bar."),
     ...Array(1).fill("Quick Pee: (DICE) guests rush to the WC."),
     ...Array(1).fill("Hold My Hair: (DICE) guests rush to the WC."),
+    ...Array(1).fill("No TP??: One guest leaves the party."),
+    ...Array(1).fill("Too crowded: Some guests feel its getting really warm, (DICE) guests leave the party."),
     ...Array(1).fill("Broken WC: If you don't clean it, all guests needing the WC will leave."),
     ...Array(3).fill("Neighbor Complaint - All guests at the entrance must leave. If you collect 3 neighbor complaints, the police show up and 10 guests must leave."),
 ];
