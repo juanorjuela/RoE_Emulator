@@ -1,11 +1,12 @@
 // Card Decks
 let playerDeck = [
 
-    ...Array(5).fill("🍕 Order Pizza"),
-    ...Array(5).fill("🍻 Order Drinks"),
-    ...Array(5).fill("🔊 New DJ Station"),
-    ...Array(4).fill("🧽 Clean 🚾"),
-    ...Array(9).fill("🥸 Invite Random Guest"),
+    ...Array(4).fill("🍕 Order Pizza"),
+    ...Array(4).fill("🍻 Order Drinks"),
+    ...Array(4).fill("🔊 Hire a new DJ Station"),
+    ...Array(4).fill("🛁 Add access to a new 🚾 "),
+    ...Array(3).fill("🧽 Clean 🚾"),
+    ...Array(8).fill("🥸 Invite Random Guest"),
     ...Array(3).fill("🎵 Play Music: Rock"),
     ...Array(3).fill("🎵 Play Music: Pop"),
     ...Array(3).fill("🎵 Play Music: Latin"),
@@ -68,7 +69,9 @@ const PartyGoalsDeck = [
     ...Array(1).fill("Disco Divas Night: Have a mayority Disco and Pop music fans at the end of the party (20 coins)"),
     ...Array(1).fill("Rage Against the Public Enemy: Have a mayority Rock and Hip-Hop music fans at the end of the party (20 coins)"),
     ...Array(1).fill("K-Pop night: Have a mayority Pop and Techno music fans at the end of the party (20 coins)"),
-    ...Array(1).fill("K-Pop night: Have a mayority Pop and Techno music fans at the end of the party (20 coins)"),
+    ...Array(1).fill("Beer Fest: Have 3 or more drink stations running at the end of the party (10 coins)"),
+    ...Array(1).fill("Disco Guards: Have a disco queen in every room at the end of the party (10 coins)"),   
+    ...Array(1).fill("TikTok Dance Crew: Have a group of 6 poppers dancing at the end of the party (10 coins)"),  
 ];
 
 const playerHand = [];
