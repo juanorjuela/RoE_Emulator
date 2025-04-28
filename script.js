@@ -4,6 +4,8 @@ let playerDeck = [
     ...Array(4).fill("🍕 Order Pizza"),
     ...Array(4).fill("🍻 Order Drinks"),
     ...Array(4).fill("🔊 Hire a new DJ Station"),
+    ...Array(2).fill("🏃 Rush: you got extra Dice to move"),
+    ...Array(2).fill("🏇 Freedom: you got an extra move this round"),
     ...Array(4).fill("🛁 Add access to a new 🚾 "),
     ...Array(4).fill("🚪 Come In: Everyone in the entrance moves inside"),
     ...Array(3).fill("🧽 Clean 🚾"),
@@ -18,26 +20,26 @@ let playerDeck = [
 ];
 
 const fuckupsDeck = [
-    ...Array(5).fill("🎶 Change Music: Play any music card from your hand — you don't need to be at a dance room. If the music doesn't change now, 3 guests will leave the party."),
+    ...Array(6).fill("🎶 Change Music: Go to the dancefloor room and play any music card from your hand. If the music doesn't change now, 2 guests will leave the party."),
     ...Array(1).fill("🐈‍⬛ Unlucky: Draw 2 more FCKUP cards."),
     ...Array(1).fill("💤 Lazy Bastard: Discard 3 action cards from your hand. You can only play with 3 cards for the next 2 rounds."),
-    ...Array(1).fill("🥴 Too Much to Drink: You can only play 1 action per round for the next 2 rounds."),
+    ...Array(1).fill("🥴 Too Much to Drink: You can only play 1 action per round for the next 1 round."),
     ...Array(1).fill("😵 Diarrhea: You need to rush immediately to the 🚾! All guests currently in the 🚾 leave the party."),
     ...Array(1).fill("💡 Power Outage: (Roll 🎲) guests leave the party."),
-    ...Array(1).fill("🚑 Overdose: (Roll 🎲) Some guests leave with the ambulance."),
+    ...Array(1).fill("🚑 Overdose: 2 guests leave with the ambulance."),
     ...Array(1).fill("🥊 Bar Fight: The noise triggers a neighbor complaint."),
     ...Array(1).fill("🔌 Unplugged System: Everyone leaves the dancefloor."),
     ...Array(1).fill("🌿 The Munchies: (Roll 🎲) guests head to the kitchen to eat."),
-    ...Array(5).fill("🕺🏽 Night Fever: (Roll 🎲) guests head to the dancefloor."),
+    ...Array(4).fill("🕺🏽 Night Fever: (Roll 🎲) guests head to the dancefloor."),
     ...Array(1).fill("🍹 Shots!: (Roll 🎲) guests head to the bar."),
-    ...Array(1).fill("🚽 Quick Pee: (Roll 🎲) guests rush to the 🚾."),
-    ...Array(1).fill("🤮 Hold My Hair: (Roll 🎲) guests rush to the 🚾."),
+    ...Array(1).fill("🚽 Pee Rush: (Roll 🎲) guests rush to the 🚾."),
+    ...Array(1).fill("🤮 Hold My Hair: 2 guests rush to the 🚾."),
     ...Array(1).fill("🪠 EWWW: If you don't clean the 🚾, all guests needing the 🚾 will leave."),
     ...Array(1).fill("🧻 No TP: You forgot to put a new roll, one nasty ass guests leaves the party."),
-    ...Array(3).fill("🤫 Neighbor Complaint - (Roll 🎲) guests at the entrance must leave. If you collect 3 neighbor complaints, the police shows up and 5 guests must leave the party."),
-    ...Array(2).fill("🏺 Something broke: Find the guest responsible and kick it out of the party."),
-    ...Array(1).fill("😈 Unwanted Graffiti: Those (Roll 🎲) guests are vandalizing the walls, kick them out!."),
-    ...Array(1).fill("🚩 Red Flag: There are (Roll 🎲) guests bullying people, not cool, kick them out!."),
+    ...Array(3).fill("🤫 Neighbor Complaint - If you collect 3 neighbor complaints, the police shows up and 5 guests must leave the party."),
+    ...Array(3).fill("🏺 Something broke: Find the guest responsible and kick it out of the party."),
+    ...Array(1).fill("😈 Unwanted Graffiti: 3 guests are vandalizing the walls, kick them out!."),
+    ...Array(1).fill("🚩 Red Flag: There are 2 idiots bullying random people, not cool, kick them out!."),
 
 ];
 
@@ -45,7 +47,7 @@ const fuckupsDeck = [
 const minimissionsDeck = [
     ...Array(1).fill("🧚 Fairy Dusk: Visit the 🚾 and bring 2 guests with you (3 coins)"), 
     ...Array(1).fill("🛏️ Hooked: Be alone in a bedroom with another guest (3 coins)"), 
-    ...Array(1).fill("🧑‍🍳 House Chef: Chill out in a full kitchen (3 coins)"), 
+    ...Array(1).fill("🧑‍🍳 House Chef: Chill out in a full kitchen (5 coins)"), 
     ...Array(1).fill("🧳 Nomad: Visit 3 different rooms in a single turn (2 coins)"), 
     ...Array(1).fill("💃 Sweaty Dancefloor: Dance with 7 other guests on the dancefloor (2 coins)"), 
     ...Array(1).fill("🧑‍🤝‍🧑 Hook-Up: Meet someone alone in the corridor (3 coins)"), 
@@ -54,7 +56,7 @@ const minimissionsDeck = [
     ...Array(1).fill("📚 Sophisto Prick: Suddenly feel like reading a book from the library (1 coin)"), 
     ...Array(1).fill("😴 Powernap: Take a quick break in the bedroom (1 coin)"), 
     ...Array(1).fill("🕵️ Creeper: Watch people dancing from a non-danceable corner (1 coin)"), 
-    ...Array(1).fill("🍾 Barman: Serve drinks at a full drinking station (2 coins)"),
+    ...Array(1).fill("🍾 Barman: Serve drinks at a full drinking station (5 coins)"),
 ];
 
 const PartyGoalsDeck = [
