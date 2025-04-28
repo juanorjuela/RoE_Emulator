@@ -1,6 +1,6 @@
 // Card Decks
 let playerDeck = [
-<<<<<<< HEAD
+
     ...Array(5).fill("🍕 Order Pizza"),
     ...Array(5).fill("🍻 Order Drinks"),
     ...Array(5).fill("🔊 New DJ Station"),
