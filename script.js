@@ -77,8 +77,8 @@ const PartyGoalsDeck = [
     ...Array(1).fill("TikTok Dance Crew: Have a group of 6 poppers dancing at the end of the party (10 coins)"),  
 ];
 
-const htmlOutput = playerDeck.join('<br><br>').replace(/\n/g, '<br>');
-document.getElementById("player-cards").innerHTML = htmlOutput;
+/*const htmlOutput = playerDeck.join('<br><br>').replace(/\n/g, '<br>');
+document.getElementById("player-cards").innerHTML = htmlOutput;*/
 
 const playerHand = [];
 
