@@ -1,22 +1,22 @@
 // Card Decks
 let playerDeck = [
 
-    ...Array(4).fill("🍕 Order Pizza"),
-    ...Array(4).fill("🍻 Order Drinks"),
-    ...Array(4).fill("🔊 Hire a new DJ Station"),
-    ...Array(2).fill("🏃 Rush: you got extra Dice, this turn you move with 3 dice"),
-    ...Array(2).fill("🏇 Freedom: you got an extra move this round"),
-    ...Array(4).fill("🛁 Add access to a new 🚾 "),
-    ...Array(4).fill("🚪 Come In: Everyone in the entrance moves inside"),
-    ...Array(3).fill("🧽 Clean 🚾 - Everyone in the 🚾 must go elsewhere"),
-    ...Array(8).fill("🥸 Invite Random Guest from a genre of your choosing"),
-    ...Array(3).fill("🎵 Play Music: Rock - 3 Rockers arrive to the party and someone who hates rock music leaves"),
-    ...Array(3).fill("🎵 Play Music: Pop - 3 Poppers arrive to the party and someone who hates pop music leaves"),
-    ...Array(3).fill("🎵 Play Music: Latin - 3 Rockers arrive to the party and someone who hates rock music leaves"),
-    ...Array(3).fill("🎵 Play Music: Rap - 3 Rappers arrive to the party and someone who hates rap music leaves"),
-    ...Array(3).fill("🎵 Play Music: Techno - 3 Ravers arrive to the party and someone who hates techno music leaves"),
-    ...Array(3).fill("🎵 Play Music: Disco - 3 Discoheads arrive to the party and someone who hates disco music leaves"),
-    ...Array(2).fill("🎉 The DROP: Your party is so lit that you are able to cancel the effect of one FCKUP"),
+    ...Array(4).fill("🍕\nOrder Pizza"),
+    ...Array(4).fill("🍻\nOrder Drinks"),
+    ...Array(4).fill("🔊\nHire a new DJ Station"),
+    ...Array(2).fill("🏃\nRush:\nYou got extra Dice. \nThis turn you move with 3 dice"),
+    ...Array(2).fill("🏇\nFreedom: \nYou got an extra MOVE this round"),
+    ...Array(4).fill("🛁\nAdd access to a new 🚾 "),
+    ...Array(4).fill("🚪\nCome In:\nEveryone in the entrance moves inside"),
+    ...Array(3).fill("🧽\nClean 🚾\nEveryone in the 🚾 must go elsewhere"),
+    ...Array(8).fill("🥸\nInvite Random Guest from a genre of your choosing"),
+    ...Array(3).fill("🎵\nPlay Music:\nRock\n\n3 Rockers arrive to the party and someone who hates rock music leaves"),
+    ...Array(3).fill("🎵\nPlay Music:\nPop\n\n3 Poppers arrive to the party and someone who hates pop music leaves"),
+    ...Array(3).fill("🎵\nPlay Music:\nLatin\n\n3 Rockers arrive to the party and someone who hates rock music leaves"),
+    ...Array(3).fill("🎵\nPlay Music:\nRap\n\n3 Rappers arrive to the party and someone who hates rap music leaves"),
+    ...Array(3).fill("🎵\nPlay Music:\nTechno\n\n3 Ravers arrive to the party and someone who hates techno music leaves"),
+    ...Array(3).fill("🎵\nPlay Music:\nDisco\n\n3 Discoheads arrive to the party and someone who hates disco music leaves"),
+    ...Array(2).fill("🎉\nThe DROP:\nYour party is so lit that you are able to cancel the effect of one FCKUP"),
 ];
 
 const fuckupsDeck = [
@@ -76,6 +76,9 @@ const PartyGoalsDeck = [
     ...Array(1).fill("Disco Guards: Have a disco queen in every room at the end of the party (10 coins)"),   
     ...Array(1).fill("TikTok Dance Crew: Have a group of 6 poppers dancing at the end of the party (10 coins)"),  
 ];
+
+const htmlOutput = lines.join('<br><br>').replace(/\n/g, '<br>');
+document.getElementById("output").innerHTML = htmlOutput;
 
 const playerHand = [];
 
