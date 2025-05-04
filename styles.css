@@ -91,6 +91,11 @@ button:hover {
     width: 250px;
 }
 
+.fuckup-card{
+    background-color: orange;
+    height: 200px;
+}
+
 .dice-results {
     display: flex;
     justify-content: center;
