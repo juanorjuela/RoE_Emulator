@@ -159,18 +159,40 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
 });
 
 // Grab Mini Mission
+/*
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle(minimissionsDeck);
     const card = shuffledDeck[0];
     miniMissionDiv.textContent += `MINI MISSION/ ${card}`;
     logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
 });
+*/
+
+document.getElementById("mini-mission-btn").addEventListener("click", () => {
+    const shuffledDeck = shuffle(minimissionsDeck);
+    const drawnCards = shuffledDeck.slice(0, 3); // Or however many you want
+
+    const container = document.getElementById("mini-mission-container");
+
+    drawnCards.forEach(card => {
+        // Create a new .round-card div for each mini mission
+        const newCardDiv = document.createElement("div");
+        newCardDiv.className = "round-card";
+        newCardDiv.textContent = `MINI MISSION/ ${card}`;
+
+        // Append to container
+        container.appendChild(newCardDiv);
+
+        // Also log it
+        logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
+    });
+});
 
 // Grab Party Goal
 document.getElementById("party-goals-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle(PartyGoalsDeck);
     const card = shuffledDeck[0];
-    partyGoalDiv.textContent = `PARTY GOAL/ ${card}`;
+    partyGoalDiv.textContent += `PARTY GOAL/ ${card}`;
     logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
 
