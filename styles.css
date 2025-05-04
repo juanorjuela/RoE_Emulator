@@ -75,8 +75,11 @@ button:hover {
 }
 
 .round-card {
-    font-size: 18px;
-    font-weight: bold;
+    padding: 20px;
+    border: 1px solid black;
+    border-radius: 15px;
+    margin: 5%;
+    width: 250px;
 }
 
 .dice-results {
