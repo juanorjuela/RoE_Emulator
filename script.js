@@ -36,7 +36,7 @@ const fuckupsDeck = [
     ...Array(1).fill("🤮 Hold My Hair: 2 guests rush to the 🚾."),
     ...Array(1).fill("🪠 EWWW: If you don't clean the 🚾, all guests needing the 🚾 will leave."),
     ...Array(1).fill("🧻 No TP: You forgot to put a new roll, one nasty ass guests leaves the party."),
-    ...Array(3).fill("🤫 Neighbor Complaint - If you collect 3 neighbor complaints, the police shows up and 6 guests must leave the party."),
+    ...Array(3).fill("🔇 Neighbor Complaint 🔇 - If you collect 3 neighbor complaints, the police shows up and 6 guests must leave the party."),
     ...Array(3).fill("🏺 Something broke: Find the guest responsible and kick it out of the party."),
     ...Array(1).fill("😈 Unwanted Graffiti: 3 guests are vandalizing the walls, kick them out!."),
     ...Array(1).fill("🚩 Red Flag: There are 2 idiots bullying random people, not cool, kick them out!."),
