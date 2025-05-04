@@ -169,36 +169,51 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
 */
 
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(minimissionsDeck);
-    const drawnCards = shuffledDeck.slice(0, 1); // Or however many you want
-
+    const miniMissions = drawUniqueCards(minimissionsDeck, drawnMiniMissions, 3);
     const container = document.getElementById("mini-mission-container");
 
-    drawnCards.forEach(card => {
-        const newCardDiv = document.createElement("div");
-        newCardDiv.className = "round-card";
-
-        newCardDiv.innerHTML = `
+    miniMissions.forEach(card => {
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "round-card";
+        cardDiv.innerHTML = `
             <span>MINI MISSION/ ${card}</span>
-            <button class="resolve-btn">✔ Resolved</button>
+            <div class="card-buttons">
+                <button class="resolve-btn">✔ Resolved</button>
+                <button class="discard-btn">✖ Discard</button>
+            </div>
         `;
+        container.appendChild(cardDiv);
 
-        container.appendChild(newCardDiv);
-
-        const resolveBtn = newCardDiv.querySelector(".resolve-btn");
+        const resolveBtn = cardDiv.querySelector(".resolve-btn");
         resolveBtn.addEventListener("click", () => {
-            // Extract coin number from card text (e.g. "(3 coins)")
-            const match = card.match(/\((\d+)\s*coins?\)/i);
-            const coinCount = match ? parseInt(match[1], 10) : 1;
+            const coinValue = getCoinValue(card);
+            totalCoins += coinValue;
+            updateTotalCoinsDisplay();
+            cardDiv.innerHTML = `🪙`.repeat(coinValue);
+        });
 
-            // Replace with that many emojis
-            newCardDiv.innerHTML = `⭐`.repeat(coinCount);
+        const discardBtn = cardDiv.querySelector(".discard-btn");
+        discardBtn.addEventListener("click", () => {
+            cardDiv.remove();
         });
 
         logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
     });
-
 });
+
+let totalCoins = 0;
+
+// Function to extract coin value from card text
+function getCoinValue(cardText) {
+    const match = cardText.match(/\((\d+)\s*coins?\)/i);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+// Function to update total coins display
+function updateTotalCoinsDisplay() {
+    const totalCoinsDisplay = document.getElementById('total-coins');
+    totalCoinsDisplay.textContent = `Total Coins: ${totalCoins}`;
+}
 
 // Grab Party Goal
 /*
@@ -249,7 +264,7 @@ document.getElementById("party-goals-btn").addEventListener("click", () => {
             // Add event listener for the "Resolve" button
             const resolveBtn = cardDiv.querySelector(".resolve-btn");
             resolveBtn.addEventListener("click", () => {
-                cardDiv.innerHTML = `🪙`.repeat(coinCount);
+                cardDiv.innerHTML = `⭐`.repeat(coinCount);
                 updateResolvedCount();
             });
 
