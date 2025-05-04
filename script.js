@@ -175,17 +175,24 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const container = document.getElementById("mini-mission-container");
 
     drawnCards.forEach(card => {
-        // Create a new .round-card div for each mini mission
-        const newCardDiv = document.createElement("div");
-        newCardDiv.className = "round-card";
-        newCardDiv.textContent = `MINI MISSION/ ${card}`;
+    const newCardDiv = document.createElement("div");
+    newCardDiv.className = "round-card";
 
-        // Append to container
-        container.appendChild(newCardDiv);
+    newCardDiv.innerHTML = `
+        <span>MINI MISSION/ ${card}</span>
+        <button class="resolve-btn">✔ Resolved</button>
+    `;
 
-        // Also log it
-        logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
+    container.appendChild(newCardDiv);
+
+    const resolveBtn = newCardDiv.querySelector(".resolve-btn");
+    resolveBtn.addEventListener("click", () => {
+        newCardDiv.innerHTML = `🪙`; // You can replace this with any reward emoji or style
     });
+
+    logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
+});
+
 });
 
 // Grab Party Goal
