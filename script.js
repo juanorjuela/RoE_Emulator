@@ -201,12 +201,92 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
 });
 
 // Grab Party Goal
+/*
 document.getElementById("party-goals-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle(PartyGoalsDeck);
     const card = shuffledDeck[0];
     partyGoalDiv.textContent += `PARTY GOAL/ ${card}`;
     logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
 });
+
+*/
+// Initialize a Set to keep track of drawn party goals
+const drawnPartyGoals = new Set();
+
+// Number of party goals to draw per click
+const PARTY_GOAL_COUNT = 3;
+
+document.getElementById("party-goals-btn").addEventListener("click", () => {
+    const shuffledDeck = shuffle(PartyGoalsDeck);
+    const container = document.getElementById("party-goal-container");
+    let drawn = 0;
+
+    for (let i = 0; i < shuffledDeck.length && drawn < PARTY_GOAL_COUNT; i++) {
+        const card = shuffledDeck[i];
+        if (!drawnPartyGoals.has(card)) {
+            drawnPartyGoals.add(card);
+            drawn++;
+
+            const cardDiv = document.createElement("div");
+            cardDiv.className = "round-card";
+
+            // Extract coin count from the card text
+            const match = card.match(/\((\d+)\s*coins?\)/i);
+            const coinCount = match ? parseInt(match[1], 10) : 1;
+
+            // Set the inner HTML of the card
+            cardDiv.innerHTML = `
+                <span>PARTY GOAL/ ${card}</span>
+                <div class="card-buttons">
+                    <button class="resolve-btn">✔ Resolved</button>
+                    <button class="discard-btn">✖ Discard</button>
+                </div>
+            `;
+
+            // Append the card to the container
+            container.appendChild(cardDiv);
+
+            // Add event listener for the "Resolve" button
+            const resolveBtn = cardDiv.querySelector(".resolve-btn");
+            resolveBtn.addEventListener("click", () => {
+                cardDiv.innerHTML = `🪙`.repeat(coinCount);
+                updateResolvedCount();
+            });
+
+            // Add event listener for the "Discard" button
+            const discardBtn = cardDiv.querySelector(".discard-btn");
+            discardBtn.addEventListener("click", () => {
+                cardDiv.remove();
+                drawnPartyGoals.delete(card);
+                updateResolvedCount();
+            });
+
+            // Log the drawn card
+            logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
+        }
+    }
+
+    if (drawn < PARTY_GOAL_COUNT) {
+        alert("No more unique party goals available.");
+    }
+});
+
+// Function to update the count of resolved goals
+function updateResolvedCount() {
+    const container = document.getElementById("party-goal-container");
+    const resolvedCards = container.querySelectorAll(".round-card");
+    let resolvedCount = 0;
+
+    resolvedCards.forEach(card => {
+        if (!card.querySelector(".resolve-btn")) {
+            resolvedCount++;
+        }
+    });
+
+    // Display the resolved count
+    document.getElementById("resolved-count").textContent = `Resolved Goals: ${resolvedCount}`;
+}
+
 
 /*
 // Roll Dice
