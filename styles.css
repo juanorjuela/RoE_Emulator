@@ -74,7 +74,7 @@ button:hover {
     background-color: black;
 }
 
-.mini-mission-container{
+#mini-mission-container{
     display: flex;
     flex-direction: row;
     align-content: center;
