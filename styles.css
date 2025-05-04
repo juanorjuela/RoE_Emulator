@@ -12,7 +12,7 @@ body {
 
 .container {
     width: 90%;
-    max-width: 800px;
+    max-width: 1000px;
     background: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -78,7 +78,8 @@ button:hover {
     display: flex;
     flex-direction: row;
     align-content: center;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 
@@ -86,7 +87,8 @@ button:hover {
     padding: 20px;
     border: 1px solid black;
     border-radius: 15px;
-    margin: 2%;
+    margin: 1%;
+    width: 300px;
 }
 
 .dice-results {
