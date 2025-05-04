@@ -86,8 +86,7 @@ button:hover {
     padding: 20px;
     border: 1px solid black;
     border-radius: 15px;
-    margin: 5%;
-    width: 350px;
+    margin: 2%;
 }
 
 .dice-results {
@@ -145,13 +144,6 @@ button:hover {
     font-weight: bold;
 }
 
-.round-card{
-
-    padding: 20px;
-    border: 1px solid black;
-    border-radius: 15px;
-
-}
 
 /* Dice styles */
 .dice {
