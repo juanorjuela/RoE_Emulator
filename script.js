@@ -169,39 +169,36 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
 */
 
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
-    const miniMissions = drawUniqueCards(minimissionsDeck, drawnMiniMissions, 3);
+    const shuffledDeck = shuffle(minimissionsDeck);
+    const drawnCards = shuffledDeck.slice(0, 1); // Or however many you want
+
     const container = document.getElementById("mini-mission-container");
 
-    miniMissions.forEach(card => {
-        const cardDiv = document.createElement("div");
-        cardDiv.className = "round-card";
-        cardDiv.innerHTML = `
+    drawnCards.forEach(card => {
+        const newCardDiv = document.createElement("div");
+        newCardDiv.className = "round-card";
+
+        newCardDiv.innerHTML = `
             <span>MINI MISSION/ ${card}</span>
-            <div class="card-buttons">
-                <button class="resolve-btn">✔ Resolved</button>
-                <button class="discard-btn">✖ Discard</button>
-            </div>
+            <button class="resolve-btn">✔ Resolved</button>
         `;
-        container.appendChild(cardDiv);
 
-        const resolveBtn = cardDiv.querySelector(".resolve-btn");
+        container.appendChild(newCardDiv);
+
+        const resolveBtn = newCardDiv.querySelector(".resolve-btn");
         resolveBtn.addEventListener("click", () => {
-            const coinValue = getCoinValue(card);
-            totalCoins += coinValue;
-            updateTotalCoinsDisplay();
-            cardDiv.innerHTML = `🪙`.repeat(coinValue);
-        });
+            // Extract coin number from card text (e.g. "(3 coins)")
+            const match = card.match(/\((\d+)\s*coins?\)/i);
+            const coinCount = match ? parseInt(match[1], 10) : 1;
 
-        const discardBtn = cardDiv.querySelector(".discard-btn");
-        discardBtn.addEventListener("click", () => {
-            cardDiv.remove();
+            // Replace with that many emojis
+            newCardDiv.innerHTML = `💸`.repeat(coinCount);
         });
 
         logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
     });
+
 });
-
-
 
 // Grab Party Goal
 /*
