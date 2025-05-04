@@ -214,4 +214,12 @@ div.dice-box: {
     justify-content: center;
 }
 
+#party-goal-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: space-between;
+    align-items: flex-start;
+}
 
