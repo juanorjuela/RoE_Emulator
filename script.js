@@ -170,7 +170,7 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
 
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle(minimissionsDeck);
-    const drawnCards = shuffledDeck.slice(0, 3); // Or however many you want
+    const drawnCards = shuffledDeck.slice(0, 1); // Or however many you want
 
     const container = document.getElementById("mini-mission-container");
 
