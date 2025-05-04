@@ -52,15 +52,15 @@ button:hover {
 }
 
 .card {
-    width: 100px;
-    height: 150px;
+    width: 150px;
+    height: 200px;
     background-color: #ddd;
     border: 2px solid #aaa;
     border-radius: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
 }
 
@@ -88,7 +88,7 @@ button:hover {
     border: 1px solid black;
     border-radius: 15px;
     margin: 1%;
-    width: 300px;
+    width: 250px;
 }
 
 .dice-results {
@@ -217,7 +217,7 @@ div.dice-box: {
 #party-goal-container {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-content: center;
     justify-content: space-between;
     align-items: flex-start;
