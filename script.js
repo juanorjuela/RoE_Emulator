@@ -201,19 +201,7 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
     });
 });
 
-let totalCoins = 0;
 
-// Function to extract coin value from card text
-function getCoinValue(cardText) {
-    const match = cardText.match(/\((\d+)\s*coins?\)/i);
-    return match ? parseInt(match[1], 10) : 0;
-}
-
-// Function to update total coins display
-function updateTotalCoinsDisplay() {
-    const totalCoinsDisplay = document.getElementById('total-coins');
-    totalCoinsDisplay.textContent = `Total Coins: ${totalCoins}`;
-}
 
 // Grab Party Goal
 /*
