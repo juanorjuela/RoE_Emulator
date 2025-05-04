@@ -162,7 +162,7 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const shuffledDeck = shuffle(minimissionsDeck);
     const card = shuffledDeck[0];
-    miniMissionDiv.textContent = `MINI MISSION/ ${card}`;
+    miniMissionDiv.textContent += `MINI MISSION/ ${card}`;
     logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
 });
 
