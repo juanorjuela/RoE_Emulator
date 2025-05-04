@@ -175,23 +175,28 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
     const container = document.getElementById("mini-mission-container");
 
     drawnCards.forEach(card => {
-    const newCardDiv = document.createElement("div");
-    newCardDiv.className = "round-card";
+        const newCardDiv = document.createElement("div");
+        newCardDiv.className = "round-card";
 
-    newCardDiv.innerHTML = `
-        <span>MINI MISSION/ ${card}</span>
-        <button class="resolve-btn">✔ Resolved</button>
-    `;
+        newCardDiv.innerHTML = `
+            <span>MINI MISSION/ ${card}</span>
+            <button class="resolve-btn">✔ Resolved</button>
+        `;
 
-    container.appendChild(newCardDiv);
+        container.appendChild(newCardDiv);
 
-    const resolveBtn = newCardDiv.querySelector(".resolve-btn");
-    resolveBtn.addEventListener("click", () => {
-        newCardDiv.innerHTML = `🪙`; // You can replace this with any reward emoji or style
+        const resolveBtn = newCardDiv.querySelector(".resolve-btn");
+        resolveBtn.addEventListener("click", () => {
+            // Extract coin number from card text (e.g. "(3 coins)")
+            const match = card.match(/\((\d+)\s*coins?\)/i);
+            const coinCount = match ? parseInt(match[1], 10) : 1;
+
+            // Replace with that many emojis
+            newCardDiv.innerHTML = `⭐`.repeat(coinCount);
+        });
+
+        logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
     });
-
-    logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
-});
 
 });
 
