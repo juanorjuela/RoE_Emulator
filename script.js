@@ -1,22 +1,22 @@
 // Card Decks
 let playerDeck = [
 
-    ...Array(4).fill("🍕\n\nOrder Pizza"),
-    ...Array(4).fill("🍻\n\nOrder Drinks"),
-    ...Array(4).fill("🔊\n\nHire a new DJ Station"),
-    ...Array(2).fill("🏃\n\nRush:\nYou got extra Dice. \nThis turn you move with 3 dice"),
-    ...Array(2).fill("🏇\n\nFreedom: \nYou got an extra MOVE this round"),
-    ...Array(4).fill("🛁\n\nAdd access to a new 🚾 "),
-    ...Array(4).fill("🚪\n\nCome In:\nEveryone in the entrance moves inside"),
-    ...Array(3).fill("🧽\n\nClean 🚾\nEveryone in the 🚾 must go elsewhere"),
-    ...Array(8).fill("🥸\n\nInvite Random Guest from a genre of your choosing"),
-    ...Array(3).fill("🎵\n\nPlay Music:\nRock\n\n3 Rockers arrive to the party and someone who hates rock music leaves"),
-    ...Array(3).fill("🎵\n\nPlay Music:\nPop\n\n3 Poppers arrive to the party and someone who hates pop music leaves"),
-    ...Array(3).fill("🎵\n\nPlay Music:\nLatin\n\n3 Rockers arrive to the party and someone who hates rock music leaves"),
-    ...Array(3).fill("🎵\n\nPlay Music:\nRap\n\n3 Rappers arrive to the party and someone who hates rap music leaves"),
-    ...Array(3).fill("🎵\n\nPlay Music:\nTechno\n\n3 Ravers arrive to the party and someone who hates techno music leaves"),
-    ...Array(3).fill("🎵\n\nPlay Music:\nDisco\n\n3 Discoheads arrive to the party and someone who hates disco music leaves"),
-    ...Array(2).fill("🎉\n\nThe DROP:\nYour party is so lit that you are able to cancel the effect of one FCKUP"),
+    ...Array(4).fill("🍕<br> <br>Order Pizza"),
+    ...Array(4).fill("🍻<br> <br>Order Drinks"),
+    ...Array(4).fill("🔊<br> <br>Hire a new DJ Station"),
+    ...Array(2).fill("🏃<br> <br>Rush:<br> <br>You got extra Dice. <br> <br>This turn you move with 3 dice"),
+    ...Array(2).fill("🏇<br> <br>Freedom: <br> <br>You got an extra MOVE this round"),
+    ...Array(4).fill("🛁<br> <br>Add access to a new 🚾 "),
+    ...Array(4).fill("🚪<br> <br>Come In:<br> <br>Everyone in the entrance moves inside"),
+    ...Array(3).fill("🧽<br> <br>Clean 🚾<br> <br>Everyone in the 🚾 must go elsewhere"),
+    ...Array(8).fill("🥸<br> <br>Invite Random Guest from a genre of your choosing"),
+    ...Array(3).fill("🎵<br> <br>Play Music:<br> <br>Rock<br> <br>3 Rockers arrive to the party and someone who hates rock music leaves"),
+    ...Array(3).fill("🎵<br> <br>Play Music:<br> <br>Pop<br> <br>3 Poppers arrive to the party and someone who hates pop music leaves"),
+    ...Array(3).fill("🎵<br> <br>Play Music:<br> <br>Latin<br> <br>3 Latins arrive to the party and someone who hates rock music leaves"),
+    ...Array(3).fill("🎵<br> <br>Play Music:<br> <br>Rap<br> <br>3 Rappers arrive to the party and someone who hates rap music leaves"),
+    ...Array(3).fill("🎵<br> <br>Play Music:<br> <br>Techno<br> <br>3 Ravers arrive to the party and someone who hates techno music leaves"),
+    ...Array(3).fill("🎵<br> <br>Play Music:<br> <br>Disco<br> <br>3 Discoheads arrive to the party and someone who hates disco music leaves"),
+    ...Array(2).fill("🎉<br> <br>The DROP:<br> <br>Your party is so lit that you are able to cancel the effect of one FCKUP"),
 ];
 
 const fuckupsDeck = [
@@ -106,7 +106,7 @@ const paintPlayerHand = () => {
     playerHand.forEach((card, i) => {
         const cardElement = document.createElement("div");
         cardElement.className = "card";
-        cardElement.textContent = card;
+        cardElement.innerHTML = card;
         cardElement.addEventListener("click", () => {
             playerCardsDiv.removeChild(cardElement);
             playerHand.splice(i, 1);
