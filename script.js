@@ -76,24 +76,24 @@ const minimissionsDeck = [
 ];
 
 const PartyGoalsDeck = [
-    ...Array(1).fill("5 de Mayo: Most guests should be Latin music fans and most songs played should be Latin <br> <br>(20 coins)"), 
-    ...Array(1).fill("Underground Rave: Most guests should be Trance fans and most songs played should be Techno/Trance <br> <br>(20 coins)"), 
-    ...Array(1).fill("Disco Fever: Most guests should be Disco fans and most songs played should be Disco <br> <br> (20 coins)"), 
-    ...Array(1).fill("Karaoke Vibes: Most guests should be Pop fans and most songs played should be Pop <br> <br>   (20 coins)"), 
-    ...Array(1).fill("Mosh Pit: Most guests should be Rock fans and most songs played should be Rock <br> <br>  (20 coins)"),
-    ...Array(1).fill("Rap Battle: Most guests should be Hip-Hop fans and most songs played should be Hip-Hop <br> <br> (20 coins)"), 
+    ...Array(1).fill("5 de Mayo: <br>Most guests should be Latin music fans and most songs played should be Latin <br> <br>(20 coins)"), 
+    ...Array(1).fill("Underground Rave:<br> Most guests should be Trance fans and most songs played should be Techno/Trance <br> <br>(20 coins)"), 
+    ...Array(1).fill("Disco Fever: <br>Most guests should be Disco fans and most songs played should be Disco <br> <br> (20 coins)"), 
+    ...Array(1).fill("Karaoke Vibes: <br>   Most guests should be Pop fans and most songs played should be Pop <br> <br>   (20 coins)"), 
+    ...Array(1).fill("Mosh Pit: <br>    Most guests should be Rock fans and most songs played should be Rock <br> <br>  (20 coins)"),
+    ...Array(1).fill("Rap Battle: <br>Most guests should be Hip-Hop fans and most songs played should be Hip-Hop <br> <br> (20 coins)"), 
 
-    ...Array(1).fill("A Proper Mixer: Have 8 or more guests of each gernre at the end of the party <br> <br> (20 coins)"),  
+    ...Array(1).fill("A Proper Mixer: <br>Have 8 or more guests of each gernre at the end of the party <br> <br> (20 coins)"),  
 
-    ...Array(1).fill("Hood Party Ese: Have a mayority Hip-Hop and Latin music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("Electro Clash: Have a mayority Techno and Rock music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("Disco Divas Night: Have a mayority Disco and Pop music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("Rage Against the Public Enemy: Have a mayority Rock and Hip-Hop music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("K-Pop night: Have a mayority Pop and Techno music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("Hood Party Ese: <br>Have a mayority Hip-Hop and Latin music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("Electro Clash: <br>Have a mayority Techno and Rock music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("Disco Divas Night: <br>Have a mayority Disco and Pop music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("Rage Against the Public Enemy: <br>Have a mayority Rock and Hip-Hop music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("K-Pop night: <br>Have a mayority Pop and Techno music fans at the end of the party <br> <br> (15 coins)"),
 
-    ...Array(1).fill("Beer Fest: Have 3 or more drink stations running at the end of the party <br> <br>    (10 coins)"),
-    ...Array(1).fill("Disco Guards: Have a disco queen in every room at the end of the party <br> <br> (10 coins)"),   
-    ...Array(1).fill("TikTok Dance Crew: Have a group of 6 poppers dancing together at the end of the party <br> <br> (10 coins)"),  
+    ...Array(1).fill("Beer Fest: <br>Have 3 or more drink stations running at the end of the party <br> <br>    (10 coins)"),
+    ...Array(1).fill("Disco Guards: <br>Have a disco queen in every room at the end of the party <br> <br> (10 coins)"),   
+    ...Array(1).fill("TikTok Dance Crew: <br>Have a group of 6 poppers dancing together at the end of the party <br> <br> (10 coins)"),  
 ];
 
 /*const htmlOutput = playerDeck.join('<br><br>').replace(/\n/g, '<br>');
@@ -133,6 +133,7 @@ actionsSection.insertBefore(discardDuplicatesBtn, document.getElementById('playe
 const findDuplicateCards = () => {
     const cardCounts = {};
     let hasDuplicates = false;
+    let duplicateSets = [];
     
     playerHand.forEach((card, index) => {
         if (cardCounts[card]) {
@@ -143,57 +144,106 @@ const findDuplicateCards = () => {
             cardCounts[card] = { count: 1, indices: [index] };
         }
     });
+
+    // Create array of duplicate sets
+    Object.entries(cardCounts).forEach(([card, info]) => {
+        if (info.count > 1) {
+            duplicateSets.push({
+                card: card,
+                indices: info.indices,
+                count: info.count
+            });
+        }
+    });
     
-    return { hasDuplicates, cardCounts };
+    return { hasDuplicates, duplicateSets };
 };
+
+// Colors for different duplicate sets
+const duplicateColors = [
+    { border: '#FF4081', glow: '#FF4081', hover: '#F50057' },  // Pink
+    { border: '#64B5F6', glow: '#64B5F6', hover: '#2196F3' },  // Blue
+    { border: '#81C784', glow: '#81C784', hover: '#4CAF50' }   // Green
+];
 
 // Function to highlight duplicate cards
 const highlightDuplicateCards = () => {
-    const { hasDuplicates, cardCounts } = findDuplicateCards();
+    const { hasDuplicates, duplicateSets } = findDuplicateCards();
     const cardElements = playerCardsDiv.querySelectorAll('.card');
     
-    // Remove existing duplicate class from all cards
-    cardElements.forEach(card => card.classList.remove('duplicate'));
+    // Remove existing duplicate classes and buttons
+    cardElements.forEach(card => {
+        card.classList.remove('duplicate');
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+    });
     
-    // Show/hide the discard duplicates button
-    discardDuplicatesBtn.style.display = hasDuplicates ? 'block' : 'none';
-    
+    const existingButtons = document.querySelectorAll('.duplicate-discard-btn');
+    existingButtons.forEach(btn => btn.remove());
+
     if (hasDuplicates) {
-        // Add duplicate class to cards that appear more than once
-        Object.values(cardCounts).forEach(({ count, indices }) => {
-            if (count > 1) {
-                indices.forEach(index => {
-                    cardElements[index].classList.add('duplicate');
-                });
-            }
+        // Create container for discard buttons if it doesn't exist
+        let btnContainer = document.querySelector('.duplicate-buttons-container');
+        if (!btnContainer) {
+            btnContainer = document.createElement('div');
+            btnContainer.className = 'duplicate-buttons-container';
+            actionsSection.insertBefore(btnContainer, document.getElementById('player-cards'));
+        } else {
+            btnContainer.innerHTML = ''; // Clear existing buttons
+        }
+
+        // Add buttons and highlight cards for each duplicate set
+        duplicateSets.forEach((set, index) => {
+            const color = duplicateColors[index % duplicateColors.length];
+            
+            // Create discard button for this set
+            const discardBtn = document.createElement('button');
+            discardBtn.className = 'duplicate-discard-btn';
+            discardBtn.innerHTML = `🔄 Discard ${set.count} ${set.card.split('<')[0].trim()}`;
+            discardBtn.style.backgroundColor = color.border;
+            discardBtn.style.display = 'block';
+            
+            // Add hover effect
+            discardBtn.addEventListener('mouseover', () => {
+                discardBtn.style.backgroundColor = color.hover;
+            });
+            discardBtn.addEventListener('mouseout', () => {
+                discardBtn.style.backgroundColor = color.border;
+            });
+
+            // Add click handler for this specific set
+            discardBtn.addEventListener('click', () => removeDuplicateSet(set.indices));
+            
+            btnContainer.appendChild(discardBtn);
+
+            // Highlight cards in this set
+            set.indices.forEach(cardIndex => {
+                const cardElement = cardElements[cardIndex];
+                cardElement.classList.add('duplicate');
+                cardElement.style.borderColor = color.border;
+                cardElement.style.boxShadow = `0 0 10px ${color.glow}`;
+            });
         });
     }
 };
 
-// Function to remove duplicate cards with animation
-const removeDuplicateCards = () => {
+// Function to remove a specific set of duplicate cards
+const removeDuplicateSet = (indices) => {
     playSound(SoundEffects.removeDuplicates);
-    const { cardCounts } = findDuplicateCards();
     const cardElements = playerCardsDiv.querySelectorAll('.card');
-    const duplicateIndices = new Set();
     
-    // Collect indices of all duplicate cards
-    Object.values(cardCounts).forEach(({ count, indices }) => {
-        if (count > 1) {
-            indices.forEach(index => duplicateIndices.add(index));
-        }
-    });
-    
-    // Animate and remove duplicate cards
-    duplicateIndices.forEach(index => {
+    // Animate cards in this set
+    indices.forEach(index => {
         const card = cardElements[index];
-        card.style.animation = 'cardRemoval 0.5s ease-in-out forwards';
+        if (card) {
+            card.style.animation = 'cardRemoval 0.5s ease-in-out forwards';
+        }
     });
     
     // Wait for animation to complete before removing cards
     setTimeout(() => {
         // Remove cards from playerHand (in reverse order to maintain correct indices)
-        Array.from(duplicateIndices)
+        Array.from(indices)
             .sort((a, b) => b - a)
             .forEach(index => {
                 playerHand.splice(index, 1);
@@ -203,12 +253,9 @@ const removeDuplicateCards = () => {
         paintPlayerHand();
         highlightDuplicateCards();
         
-        logList.innerHTML += `<li>Removed ${duplicateIndices.size} duplicate cards</li>`;
+        logList.innerHTML += `<li>Removed ${indices.length} duplicate cards</li>`;
     }, 500);
 };
-
-// Add click handler for the discard duplicates button
-discardDuplicatesBtn.addEventListener('click', removeDuplicateCards);
 
 // Modify the existing paintPlayerHand function to check for duplicates
 const paintPlayerHand = () => {
@@ -344,6 +391,7 @@ const PARTY_GOAL_COUNT = 3;  // Number of party goals to draw per click
 // Game State
 let totalCoinsEarned = 0;
 let totalFckupsResolved = 0;
+let hasUnresolvedFckup = false;
 
 // Deck States
 let currentFckupDeck = [];
@@ -401,6 +449,11 @@ const updateFckupsDisplay = () => {
 
 // Modify Round Card (FCKUP) drawing
 document.getElementById("round-card-btn").addEventListener("click", () => {
+    // Don't allow drawing if there's an unresolved FCKUP
+    if (hasUnresolvedFckup) {
+        return;
+    }
+
     // Initialize deck if it's empty
     if (currentFckupDeck.length === 0 && discardedFckupCards.length === 0) {
         initializeDecks();
@@ -437,6 +490,11 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
     roundCardDiv.innerHTML = '';
     roundCardDiv.appendChild(newCardDiv);
 
+    // Set unresolved state and disable buttons
+    hasUnresolvedFckup = true;
+    document.getElementById("round-card-btn").disabled = true;
+    document.getElementById("your-turn-btn").disabled = true;
+
     // Add resolve button functionality
     const resolveBtn = newCardDiv.querySelector(".resolve-btn");
     resolveBtn.addEventListener("click", () => {
@@ -444,6 +502,11 @@ document.getElementById("round-card-btn").addEventListener("click", () => {
         updateFckupsDisplay();
         newCardDiv.innerHTML = `<div class="resolved-state">✔ RESOLVED</div>`;
         logList.innerHTML += `<li>FCKUP resolved! (Total resolved: ${totalFckupsResolved})</li>`;
+        
+        // Reset unresolved state and enable buttons
+        hasUnresolvedFckup = false;
+        document.getElementById("round-card-btn").disabled = false;
+        document.getElementById("your-turn-btn").disabled = false;
     });
     
     logList.innerHTML += `<li>FCKUP/ ${card} (${currentFckupDeck.length} cards remaining)</li>`;
@@ -487,7 +550,15 @@ document.getElementById("mini-mission-btn").addEventListener("click", () => {
         playSound(SoundEffects.earnCoins);
         const coinCount = extractCoinCount(card);
         totalCoinsEarned += coinCount;
-        newCardDiv.innerHTML = `💸`.repeat(coinCount);
+        newCardDiv.innerHTML = `
+            <div class="resolved-card">
+                <h3>COMPLETED!</h3>
+                <div class="coin-reward">
+                    <span class="coin-icon">💰</span>
+                    <span class="coin-amount">+${coinCount}</span>
+                </div>
+            </div>
+        `;
         updateCoinsDisplay();
         logList.innerHTML += `<li>Earned ${coinCount} coins from Mini Mission!</li>`;
     });
@@ -537,7 +608,15 @@ document.getElementById("party-goals-btn").addEventListener("click", () => {
         resolveBtn.addEventListener("click", () => {
             playSound(SoundEffects.earnCoins);
             totalCoinsEarned += coinCount;
-            cardDiv.innerHTML = `⭐`.repeat(coinCount);
+            cardDiv.innerHTML = `
+                <div class="resolved-card">
+                    <h3>GOAL ACHIEVED!</h3>
+                    <div class="coin-reward">
+                        <span class="coin-icon">💰</span>
+                        <span class="coin-amount">+${coinCount}</span>
+                    </div>
+                </div>
+            `;
             updateCoinsDisplay();
             logList.innerHTML += `<li>Earned ${coinCount} coins from Party Goal!</li>`;
         });
@@ -647,3 +726,81 @@ function main() {
 }
 
 main();*/
+
+// Create and add YOUR TURN button
+const yourTurnBtn = document.createElement('button');
+yourTurnBtn.id = 'your-turn-btn';
+yourTurnBtn.textContent = '🎲 YOUR TURN 🎲';
+
+// Insert the button at the top of the page
+document.querySelector('.container').insertBefore(
+    yourTurnBtn,
+    document.querySelector('.container').firstChild
+);
+
+// Function to simulate clicking the dice
+const simulateDiceRolls = () => {
+    const dice1 = document.getElementById("dice");
+    const dice2 = document.getElementById("dice2");
+    
+    // Trigger dice roll animations
+    dice1.classList.add("roll");
+    dice2.classList.add("roll");
+
+    // Generate random numbers
+    setTimeout(() => {
+        const randomNumber1 = Math.floor(Math.random() * 6) + 1;
+        const randomNumber2 = Math.floor(Math.random() * 6) + 1;
+        
+        dice1.querySelector(".number").textContent = randomNumber1;
+        dice2.querySelector(".number2").textContent = randomNumber2;
+        
+        // Remove roll classes
+        dice1.classList.remove("roll");
+        dice2.classList.remove("roll");
+    }, 250);
+};
+
+// Function to perform all turn actions
+const performTurnActions = async () => {
+    // Don't proceed if there's an unresolved FCKUP
+    if (hasUnresolvedFckup) {
+        return;
+    }
+    
+    // Disable the YOUR TURN button temporarily
+    yourTurnBtn.disabled = true;
+    
+    // 1. Fill up action cards
+    document.getElementById("grab-action-cards-btn").click();
+    
+    // Small delay between actions for better visual feedback
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // 2. Grab mini mission if not disabled
+    const miniMissionBtn = document.getElementById("mini-mission-btn");
+    if (!miniMissionBtn.disabled) {
+        miniMissionBtn.click();
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // 3. Grab FCKUP if not disabled
+    const fckupBtn = document.getElementById("round-card-btn");
+    if (!fckupBtn.disabled && !hasUnresolvedFckup) {
+        fckupBtn.click();
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // 4. Roll the dice
+    simulateDiceRolls();
+    
+    // Re-enable the YOUR TURN button only if there's no unresolved FCKUP
+    setTimeout(() => {
+        yourTurnBtn.disabled = hasUnresolvedFckup;
+    }, 500);
+};
+
+// Add click event listener to YOUR TURN button
+yourTurnBtn.addEventListener('click', performTurnActions);
