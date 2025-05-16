@@ -58,42 +58,42 @@ const fuckupsDeck = [
 
 
 const minimissionsDeck = [
-    ...Array(1).fill("🧚 Fairy Dusk: <br><br>Visit the 🚾 and bring 2 guests with you (5 coins)"), 
-    ...Array(1).fill("🛏️ Hooked: <br><br>Be alone in a bedroom with another guest (10 coins)"), 
-    ...Array(1).fill("🧳 Nomad: <br><br>Visit 3 different rooms in a single turn (5 coins)"), 
-    ...Array(1).fill("🧑‍🤝‍🧑 Hook-Up: <br><br>Meet someone alone in the corridor (5 coins)"), 
-    ...Array(1).fill("🦠 Germophobe: <br><br>Wash your hands, leave the 🚾, go back and wash again (5 coins)"), 
-    ...Array(1).fill("💊 Get Enhancers: <br><br>Catch a disco queen in the corner of the room (5 coins)"), 
+    ...Array(1).fill("🧚 Fairy Dusk: <br><br>Visit the 🚾 and bring 2 guests with you <br> <br> (5 coins)"), 
+    ...Array(1).fill("🛏️ Hooked: <br><br>Be alone in a bedroom with another guest <br> <br> (10 coins)"), 
+    ...Array(1).fill("🧳 Nomad: <br><br>Visit 3 different rooms in a single turn <br> <br> (5 coins)"), 
+    ...Array(1).fill("🧑‍🤝‍🧑 Hook-Up: <br><br>Meet someone alone in the corridor <br> <br> (5 coins)"), 
+    ...Array(1).fill("🦠 Germophobe: <br><br>Wash your hands, leave the 🚾, go back and wash again <br> <br>  (5 coins)"), 
+    ...Array(1).fill("💊 Get Enhancers: <br><br>Catch a disco queen in the corner of the room <br> <br>(5 coins)"), 
 
-    ...Array(1).fill("📚 Sophisto Prick: <br><br>Suddenly feel like reading a book from the library (1 coin)"), 
-    ...Array(1).fill("😴 Powernap: <br><br>Take a quick break in the bedroom (1 coin)"), 
-    ...Array(1).fill("🕵️ Creeper: <br><br>Watch people dancing from a non-danceable corner (1 coin)"), 
+    ...Array(1).fill("📚 Sophisto Prick: <br><br>Suddenly feel like reading a book from the library <br> <br> (1 coin)"), 
+    ...Array(1).fill("😴 Powernap: <br><br>Take a quick break in the bedroom <br> <br> (1 coin)"), 
+    ...Array(1).fill("🕵️ Creeper: <br><br>Watch people dancing from a non-danceable corner <br> <br> (1 coin)"), 
 
-    ...Array(1).fill("🍾 Barman: <br><br>Serve drinks at a full drinking station (10 coins)"),
-    ...Array(1).fill("🧑‍🍳 House Chef: <br><br>Chill out in a full kitchen (10 coins)"), 
-    ...Array(1).fill("💃 Sweaty Dancefloor: <br><br>Dance with 7 other guests on the dancefloor (10 coins)"), 
+    ...Array(1).fill("🍾 Barman: <br><br>Serve drinks at a full drinking station <br> <br> (10 coins)"),
+    ...Array(1).fill("🧑‍🍳 House Chef: <br><br>Chill out in a full kitchen <br> <br> (10 coins)"), 
+    ...Array(1).fill("💃 Sweaty Dancefloor: <br><br>Dance with 7 other guests on the dancefloor <br> <br> (10 coins)"), 
 
 ];
 
 const PartyGoalsDeck = [
-    ...Array(1).fill("5 de Mayo: Most guests should be Latin music fans and most songs played should be Latin (20 coins)"), 
-    ...Array(1).fill("Underground Rave: Most guests should be Trance fans and most songs played should be Techno/Trance (20 coins)"), 
-    ...Array(1).fill("Disco Fever: Most guests should be Disco fans and most songs played should be Disco (20 coins)"), 
-    ...Array(1).fill("Karaoke Vibes: Most guests should be Pop fans and most songs played should be Pop (20 coins)"), 
-    ...Array(1).fill("Mosh Pit: Most guests should be Rock fans and most songs played should be Rock (20 coins)"),
-    ...Array(1).fill("Rap Battle: Most guests should be Hip-Hop fans and most songs played should be Hip-Hop (20 coins)"), 
+    ...Array(1).fill("5 de Mayo: Most guests should be Latin music fans and most songs played should be Latin <br> <br>(20 coins)"), 
+    ...Array(1).fill("Underground Rave: Most guests should be Trance fans and most songs played should be Techno/Trance <br> <br>(20 coins)"), 
+    ...Array(1).fill("Disco Fever: Most guests should be Disco fans and most songs played should be Disco <br> <br> (20 coins)"), 
+    ...Array(1).fill("Karaoke Vibes: Most guests should be Pop fans and most songs played should be Pop <br> <br>   (20 coins)"), 
+    ...Array(1).fill("Mosh Pit: Most guests should be Rock fans and most songs played should be Rock <br> <br>  (20 coins)"),
+    ...Array(1).fill("Rap Battle: Most guests should be Hip-Hop fans and most songs played should be Hip-Hop <br> <br> (20 coins)"), 
 
-    ...Array(1).fill("A Proper Mixer: Have 8 or more guests of each gernre at the end of the party (20 coins)"),  
+    ...Array(1).fill("A Proper Mixer: Have 8 or more guests of each gernre at the end of the party <br> <br> (20 coins)"),  
 
-    ...Array(1).fill("Hood Party Ese: Have a mayority Hip-Hop and Latin music fans at the end of the party (15 coins)"),
-    ...Array(1).fill("Electro Clash: Have a mayority Techno and Rock music fans at the end of the party (15 coins)"),
-    ...Array(1).fill("Disco Divas Night: Have a mayority Disco and Pop music fans at the end of the party (15 coins)"),
-    ...Array(1).fill("Rage Against the Public Enemy: Have a mayority Rock and Hip-Hop music fans at the end of the party (15 coins)"),
-    ...Array(1).fill("K-Pop night: Have a mayority Pop and Techno music fans at the end of the party (15 coins)"),
+    ...Array(1).fill("Hood Party Ese: Have a mayority Hip-Hop and Latin music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("Electro Clash: Have a mayority Techno and Rock music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("Disco Divas Night: Have a mayority Disco and Pop music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("Rage Against the Public Enemy: Have a mayority Rock and Hip-Hop music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("K-Pop night: Have a mayority Pop and Techno music fans at the end of the party <br> <br> (15 coins)"),
 
-    ...Array(1).fill("Beer Fest: Have 3 or more drink stations running at the end of the party (10 coins)"),
-    ...Array(1).fill("Disco Guards: Have a disco queen in every room at the end of the party (10 coins)"),   
-    ...Array(1).fill("TikTok Dance Crew: Have a group of 6 poppers dancing together at the end of the party (10 coins)"),  
+    ...Array(1).fill("Beer Fest: Have 3 or more drink stations running at the end of the party <br> <br>    (10 coins)"),
+    ...Array(1).fill("Disco Guards: Have a disco queen in every room at the end of the party <br> <br> (10 coins)"),   
+    ...Array(1).fill("TikTok Dance Crew: Have a group of 6 poppers dancing together at the end of the party <br> <br> (10 coins)"),  
 ];
 
 /*const htmlOutput = playerDeck.join('<br><br>').replace(/\n/g, '<br>');

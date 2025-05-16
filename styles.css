@@ -203,7 +203,7 @@ button:active {
     flex-direction: column;
     justify-content: space-between;
     font-family: 'Georgia', serif;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* Card Type Specific Styles */
