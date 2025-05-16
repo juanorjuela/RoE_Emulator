@@ -1,3 +1,26 @@
+// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// Get Firebase instances from window object
+const db = window.db;
+const auth = window.auth;
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDDJ3g2PKE-A_1wn5axTeO4nfNIlIsBJXY",
+    authDomain: "rave-tycoon.firebaseapp.com",
+    projectId: "rave-tycoon",
+    storageBucket: "rave-tycoon.firebasestorage.app",
+    messagingSenderId: "230788414135",
+    appId: "1:230788414135:web:be2732ed317f9d6fdd6b32",
+    measurementId: "G-P4XSYXE1S9"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
 // Card Decks
 let playerDeck = [
 
@@ -804,3 +827,323 @@ const performTurnActions = async () => {
 
 // Add click event listener to YOUR TURN button
 yourTurnBtn.addEventListener('click', performTurnActions);
+
+// Multiplayer Lobby Logic
+const createRoomBtn = document.getElementById("create-room-btn");
+const joinRoomBtn = document.getElementById("join-room-btn");
+const playerNameInput = document.getElementById("player-name");
+const roomIdInput = document.getElementById("room-id");
+const roomInfoDiv = document.getElementById("room-info");
+
+let currentRoomId = null;
+let currentPlayerId = null;
+
+// Generate random room code
+const generateRoomCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
+// Initialize authentication
+async function initializeAuth() {
+    try {
+        // Check if auth is initialized
+        if (!auth) {
+            console.error("❌ Auth not initialized");
+            return false;
+        }
+
+        // Check if we're already signed in
+        if (auth.currentUser) {
+            console.log("✅ Already signed in:", auth.currentUser.uid);
+            return true;
+        }
+
+        // Try to sign in anonymously with retries
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                const userCredential = await signInAnonymously(auth);
+                console.log("✅ Signed in anonymously:", userCredential.user.uid);
+                
+                // Wait a short moment to ensure the auth state is fully propagated
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                return true;
+            } catch (error) {
+                console.warn(`Authentication attempt failed (${retries} retries left):`, error);
+                if (error.code === 'auth/configuration-not-found') {
+                    console.error("Please enable Anonymous Authentication in Firebase Console");
+                    alert("Anonymous Authentication is not enabled. Please contact the administrator.");
+                    return false;
+                }
+                retries--;
+                if (retries === 0) {
+                    console.error("❌ All authentication attempts failed");
+                    return false;
+                }
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error("❌ Authentication error:", error);
+        return false;
+    }
+}
+
+// Create Room
+createRoomBtn.addEventListener("click", async () => {
+    const name = playerNameInput.value.trim();
+    if (!name) {
+        alert("Please enter your player name");
+        return;
+    }
+
+    try {
+        // Ensure authentication
+        const authSuccess = await initializeAuth();
+        if (!authSuccess) {
+            alert("Failed to authenticate. Please try again.");
+            return;
+        }
+
+        // Double check we're authenticated
+        if (!auth.currentUser) {
+            alert("Authentication state is invalid. Please refresh the page and try again.");
+            return;
+        }
+
+        // Generate room code and create room document
+        const roomCode = generateRoomCode();
+        const roomRef = doc(db, "rooms", roomCode);
+        
+        // Create room with retries
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                await setDoc(roomRef, {
+                    status: "waiting",
+                    createdAt: Date.now(),
+                    hostId: auth.currentUser.uid,
+                    players: [name],
+                    lastUpdated: Date.now()
+                });
+
+                currentRoomId = roomCode;
+                currentPlayerId = name;
+
+                showRoomInfo(roomCode);
+                listenToPlayers(roomCode);
+                
+                console.log("✅ Room created successfully:", roomCode);
+                return;
+            } catch (error) {
+                console.warn(`Room creation attempt failed (${retries} retries left):`, error);
+                if (error.code === 'permission-denied') {
+                    console.error("Permission denied. Please check Firebase rules and authentication.");
+                    alert("Permission denied. Please ensure you're properly signed in.");
+                    return;
+                }
+                retries--;
+                if (retries === 0) {
+                    throw error;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    } catch (error) {
+        console.error("❌ Error creating room:", error);
+        alert("Failed to create room. Please try again.");
+    }
+});
+
+// Join Room
+joinRoomBtn.addEventListener("click", async () => {
+    const name = playerNameInput.value.trim();
+    const roomCode = roomIdInput.value.trim().toUpperCase();
+    
+    if (!name || !roomCode) {
+        alert("Please enter both your name and the room code");
+        return;
+    }
+
+    try {
+        // Ensure authentication
+        const authSuccess = await initializeAuth();
+        if (!authSuccess) {
+            alert("Failed to authenticate. Please try again.");
+            return;
+        }
+
+        // Double check we're authenticated
+        if (!auth.currentUser) {
+            alert("Authentication state is invalid. Please refresh the page and try again.");
+            return;
+        }
+
+        // Try to join room with retries
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                const roomRef = doc(db, "rooms", roomCode);
+                const roomSnap = await getDoc(roomRef);
+                
+                if (!roomSnap.exists()) {
+                    alert("Room not found. Please check the room code.");
+                    return;
+                }
+
+                // Update room with new player
+                await setDoc(roomRef, {
+                    players: [...(roomSnap.data().players || []), name],
+                    lastUpdated: Date.now()
+                }, { merge: true });
+
+                currentRoomId = roomCode;
+                currentPlayerId = name;
+
+                showRoomInfo(roomCode);
+                listenToPlayers(roomCode);
+                
+                console.log("✅ Joined room successfully:", roomCode);
+                return;
+            } catch (error) {
+                console.warn(`Room join attempt failed (${retries} retries left):`, error);
+                if (error.code === 'permission-denied') {
+                    console.error("Permission denied. Please check Firebase rules and authentication.");
+                    alert("Permission denied. Please ensure you're properly signed in.");
+                    return;
+                }
+                retries--;
+                if (retries === 0) {
+                    throw error;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    } catch (error) {
+        console.error("❌ Error joining room:", error);
+        alert("Failed to join room. Please try again.");
+    }
+});
+
+// Display room info with better error handling
+function showRoomInfo(roomCode) {
+    try {
+        if (!roomCode) {
+            console.warn("No room code provided to showRoomInfo");
+            return;
+        }
+        roomInfoDiv.innerHTML = `
+            <div class="room-info">
+                <h3>Room: ${roomCode}</h3>
+                <p>Share this code with other players to join!</p>
+            </div>
+        `;
+    } catch (error) {
+        console.error("Error showing room info:", error);
+    }
+}
+
+// Listen for player list changes with error handling
+function listenToPlayers(roomCode) {
+    if (!roomCode) {
+        console.warn("No room code provided to listenToPlayers");
+        return;
+    }
+
+    try {
+        const roomRef = doc(db, "rooms", roomCode);
+        const unsubscribe = onSnapshot(roomRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                const players = data.players || [];
+                roomInfoDiv.innerHTML = `
+                    <div class="room-info">
+                        <h3>Room: ${roomCode}</h3>
+                        <h4>Players:</h4>
+                        <ul>
+                            ${players.map(player => `<li>${player}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        }, (error) => {
+            console.error("Error listening to players:", error);
+        });
+
+        // Store unsubscribe function for cleanup
+        window.currentRoomListener = unsubscribe;
+    } catch (error) {
+        console.error("Error setting up player listener:", error);
+    }
+}
+
+// Firebase Configuration Verification
+async function verifyFirebaseSetup() {
+    console.log("🔍 Verifying Firebase setup...");
+    
+    // Check if Firebase is initialized
+    if (!window.db || !window.auth) {
+        console.error("❌ Firebase is not properly initialized");
+        alert("Firebase initialization failed. Please check your configuration.");
+        return false;
+    }
+
+    // Test authentication
+    try {
+        const authResult = await initializeAuth();
+        if (!authResult) {
+            console.error("❌ Firebase Authentication test failed");
+            alert("Firebase Authentication is not properly configured. Please check your Firebase Console settings.");
+            return false;
+        }
+    } catch (error) {
+        console.error("❌ Authentication test error:", error);
+        alert("Failed to test Firebase Authentication. Error: " + error.message);
+        return false;
+    }
+
+    // Test Firestore access
+    try {
+        const testRoomId = `test_${Math.random().toString(36).substring(2, 7)}`;
+        const testRef = doc(db, "rooms", testRoomId);
+        
+        // Try to write
+        await setDoc(testRef, { test: true });
+        
+        // Try to read
+        const docSnap = await getDoc(testRef);
+        if (!docSnap.exists()) {
+            throw new Error("Test document not found after writing");
+        }
+        
+        // Clean up test document
+        await deleteDoc(testRef);
+        
+        console.log("✅ Firestore read/write test successful");
+    } catch (error) {
+        console.error("❌ Firestore test error:", error);
+        alert("Failed to access Firestore. Please check your Firebase Console and security rules. Error: " + error.message);
+        return false;
+    }
+
+    console.log("✅ Firebase setup verification completed successfully");
+    return true;
+}
+
+// Run verification when the page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    const verificationResult = await verifyFirebaseSetup();
+    if (!verificationResult) {
+        // Disable room creation and joining if verification fails
+        createRoomBtn.disabled = true;
+        joinRoomBtn.disabled = true;
+        roomInfoDiv.innerHTML = `
+            <div class="error-message">
+                ❌ Firebase setup verification failed. Please check the console for details.
+            </div>
+        `;
+    }
+});

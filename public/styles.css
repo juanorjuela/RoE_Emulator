@@ -626,3 +626,37 @@ button:disabled:hover {
     cursor: not-allowed;
     transform: none;
 }
+
+.lobby-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.lobby-section input {
+    padding: 10px;
+    margin: 10px;
+    font-size: 16px;
+    width: 200px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.lobby-section button {
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #42A5F5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.lobby-section button:hover {
+    background-color: #1E88E5;
+}
+
+#room-info {
+    margin-top: 15px;
+    font-size: 16px;
+    font-weight: bold;
+}
