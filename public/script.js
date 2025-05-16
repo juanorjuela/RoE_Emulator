@@ -1,6 +1,6 @@
 // Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // Get Firebase instances from window object
@@ -251,7 +251,7 @@ const highlightDuplicateCards = () => {
 };
 
 // Function to remove a specific set of duplicate cards
-const removeDuplicateSet = (indices) => {
+const removeDuplicateSet = async (indices) => {
     playSound(SoundEffects.removeDuplicates);
     const cardElements = playerCardsDiv.querySelectorAll('.card');
     
@@ -264,13 +264,19 @@ const removeDuplicateSet = (indices) => {
     });
     
     // Wait for animation to complete before removing cards
-    setTimeout(() => {
+    setTimeout(async () => {
+        // Collect cards to discard
+        const cardsToDiscard = indices.map(index => playerHand[index]);
+        
         // Remove cards from playerHand (in reverse order to maintain correct indices)
         Array.from(indices)
             .sort((a, b) => b - a)
             .forEach(index => {
                 playerHand.splice(index, 1);
             });
+        
+        // Discard the cards to the shared discard pile
+        await discardToSharedPile(cardsToDiscard);
         
         // Update the display
         paintPlayerHand();
@@ -287,12 +293,12 @@ const paintPlayerHand = () => {
         const cardElement = document.createElement("div");
         cardElement.className = "card";
         cardElement.innerHTML = card;
-        cardElement.addEventListener("click", () => {
+        cardElement.addEventListener("click", async () => {
             playSound(SoundEffects.playCard);
-            playerCardsDiv.removeChild(cardElement);
-            playerHand.splice(i, 1);
+            const playedCard = playerHand.splice(i, 1)[0];
+            await discardToSharedPile([playedCard]);
             paintPlayerHand();
-            console.log(playerHand);
+            logList.innerHTML += `<li>Played card: ${playedCard}</li>`;
         });
         playerCardsDiv.appendChild(cardElement);
     });
@@ -385,15 +391,13 @@ const playSound = (sound) => {
     }
 };
 
-// Grab/Refill Action Cards
-document.getElementById("grab-action-cards-btn").addEventListener("click", () => {
-    if (!playerDeck.length) {
-        playSound(SoundEffects.error);
-        logList.innerHTML += `<li>No more cards to select</li>`;
+// Modify the existing grab-action-cards-btn click handler
+document.getElementById("grab-action-cards-btn").addEventListener("click", async () => {
+    if (!currentRoomId) {
+        alert("Please join a room first!");
         return;
     }
 
-    playSound(SoundEffects.drawCard);
     const handLength = playerHand.length;
     const missing = 6 - handLength;
 
@@ -401,23 +405,16 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
         return;
     }
 
-    // Shuffle the player deck before drawing new cards
-    playerDeck = shuffle(playerDeck);
-
-    const selectedCards = [];
-    for (let i = 0; i < missing; i++) {
-        const poppedCard = playerDeck.pop();
-        if (poppedCard) {
-            selectedCards.push(poppedCard);
-        }
+    playSound(SoundEffects.drawCard);
+    
+    const drawnCards = await drawFromSharedDeck(missing);
+    if (drawnCards.length > 0) {
+        playerHand.push(...drawnCards);
+        paintPlayerHand();
+    } else {
+        playSound(SoundEffects.error);
+        alert("No cards available to draw!");
     }
-    playerHand.push(...selectedCards);
-
-    paintPlayerHand();
-
-    logList.innerHTML += `<li>Player selected: ${selectedCards.join(", ")}. Actions deck has now ${playerDeck.length} cards</li>`;
-
-    console.log(playerHand);
 });
 
 // Game Constants
@@ -904,7 +901,104 @@ async function initializeAuth() {
     }
 }
 
-// Create Room
+// Initialize shared deck in room
+async function initializeSharedDeck(roomId) {
+    try {
+        const roomRef = doc(db, "rooms", roomId);
+        const roomSnap = await getDoc(roomRef);
+        
+        // Only initialize deck if it doesn't exist
+        if (!roomSnap.data().deck) {
+            await setDoc(roomRef, {
+                deck: shuffle([...playerDeck]),
+                discardPile: [],
+                lastUpdated: Date.now()
+            }, { merge: true });
+            console.log("✅ Shared deck initialized");
+        }
+    } catch (error) {
+        console.error("❌ Error initializing shared deck:", error);
+    }
+}
+
+// Draw cards from shared deck
+async function drawFromSharedDeck(count) {
+    if (!currentRoomId) {
+        console.error("❌ Not in a room");
+        return [];
+    }
+
+    try {
+        const roomRef = doc(db, "rooms", currentRoomId);
+        
+        // Use a transaction to ensure atomic updates
+        return await db.runTransaction(async (transaction) => {
+            const roomDoc = await transaction.get(roomRef);
+            const roomData = roomDoc.data();
+            
+            if (!roomData.deck || roomData.deck.length === 0) {
+                // If deck is empty, shuffle discard pile back in
+                if (roomData.discardPile && roomData.discardPile.length > 0) {
+                    const newDeck = shuffle([...roomData.discardPile]);
+                    transaction.update(roomRef, {
+                        deck: newDeck,
+                        discardPile: [],
+                        lastUpdated: Date.now()
+                    });
+                    roomData.deck = newDeck;
+                    roomData.discardPile = [];
+                } else {
+                    console.warn("No cards available to draw");
+                    return [];
+                }
+            }
+
+            const cardsToDrawCount = Math.min(count, roomData.deck.length);
+            const drawnCards = roomData.deck.slice(0, cardsToDrawCount);
+            const remainingDeck = roomData.deck.slice(cardsToDrawCount);
+
+            // Update the deck in Firestore
+            transaction.update(roomRef, {
+                deck: remainingDeck,
+                lastUpdated: Date.now()
+            });
+
+            logList.innerHTML += `<li>Drew ${cardsToDrawCount} cards. ${remainingDeck.length} cards remaining in deck.</li>`;
+            return drawnCards;
+        });
+    } catch (error) {
+        console.error("❌ Error drawing cards:", error);
+        return [];
+    }
+}
+
+// Discard cards to shared discard pile
+async function discardToSharedPile(cards) {
+    if (!currentRoomId || !cards.length) return;
+
+    try {
+        const roomRef = doc(db, "rooms", currentRoomId);
+        await updateDoc(roomRef, {
+            discardPile: arrayUnion(...cards),
+            lastUpdated: Date.now()
+        });
+    } catch (error) {
+        console.error("❌ Error discarding cards:", error);
+    }
+}
+
+// Listen to deck changes
+function listenToDeckChanges(roomId) {
+    const roomRef = doc(db, "rooms", roomId);
+    return onSnapshot(roomRef, (snapshot) => {
+        const data = snapshot.data();
+        if (data) {
+            logList.innerHTML += `<li>Deck update: ${data.deck ? data.deck.length : 0} cards remaining</li>`;
+        }
+    });
+}
+
+// Update room creation to initialize deck
 createRoomBtn.addEventListener("click", async () => {
     const name = playerNameInput.value.trim();
     if (!name) {
@@ -949,6 +1043,8 @@ createRoomBtn.addEventListener("click", async () => {
                 listenToPlayers(roomCode);
                 
                 console.log("✅ Room created successfully:", roomCode);
+                await initializeSharedDeck(roomCode);
+                listenToDeckChanges(roomCode);
                 return;
             } catch (error) {
                 console.warn(`Room creation attempt failed (${retries} retries left):`, error);
@@ -970,7 +1066,7 @@ createRoomBtn.addEventListener("click", async () => {
     }
 });
 
-// Join Room
+// Update room joining to listen to deck
 joinRoomBtn.addEventListener("click", async () => {
     const name = playerNameInput.value.trim();
     const roomCode = roomIdInput.value.trim().toUpperCase();
@@ -1019,6 +1115,8 @@ joinRoomBtn.addEventListener("click", async () => {
                 listenToPlayers(roomCode);
                 
                 console.log("✅ Joined room successfully:", roomCode);
+                await initializeSharedDeck(roomCode);
+                listenToDeckChanges(roomCode);
                 return;
             } catch (error) {
                 console.warn(`Room join attempt failed (${retries} retries left):`, error);
