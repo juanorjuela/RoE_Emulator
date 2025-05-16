@@ -91,19 +91,6 @@
             const db = getFirestore(app);
             const auth = getAuth(app);
 
-            // Initialize Firestore with persistence
-            const firestoreSettings = {
-                cache: {
-                    persistenceEnabled: true,
-                    persistenceSettings: {
-                        synchronizeTabs: true
-                    }
-                }
-            };
-            
-            // Apply settings to Firestore
-            await initializeFirestore(app, firestoreSettings);
-
             // Make Firebase instances available globally
             window.db = db;
             window.auth = auth;

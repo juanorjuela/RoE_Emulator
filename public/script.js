@@ -303,15 +303,15 @@ const paintPlayerHand = () => {
 
 // Sound Effects System
 const SoundEffects = {
-    drawCard: new Audio('https://assets.mixkit.co/active_storage/sfx/2832/2832-preview.mp3'), // Card shuffle sound
-    playCard: new Audio('https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3'),
-    discardCard: new Audio('https://assets.mixkit.co/active_storage/sfx/2032/2032-preview.mp3'),
-    resolveMission: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
-    earnCoins: new Audio('https://assets.mixkit.co/active_storage/sfx/2075/2075-preview.mp3'),
-    drawFckup: new Audio('https://assets.mixkit.co/active_storage/sfx/2205/2205-preview.mp3'),
-    resolveFckup: new Audio('https://assets.mixkit.co/active_storage/sfx/1997/1997-preview.mp3'),
-    removeDuplicates: new Audio('https://assets.mixkit.co/active_storage/sfx/2031/2031-preview.mp3'),
-    error: new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+    drawCard: new Audio('sounds/card-shuffle.mp3'),
+    playCard: new Audio('sounds/card-play.mp3'),
+    discardCard: new Audio('sounds/card-discard.mp3'),
+    resolveMission: new Audio('sounds/mission-complete.mp3'),
+    earnCoins: new Audio('sounds/coins.mp3'),
+    drawFckup: new Audio('sounds/fckup.mp3'),
+    resolveFckup: new Audio('sounds/fckup-resolve.mp3'),
+    removeDuplicates: new Audio('sounds/remove-duplicates.mp3'),
+    error: new Audio('sounds/error.mp3')
 };
 
 // Global mute state
@@ -364,12 +364,24 @@ const toggleMute = () => {
 // Add click handler for mute button
 muteButton.addEventListener('click', toggleMute);
 
-// Function to play sound with volume control
+// Function to play sound with error handling
 const playSound = (sound) => {
-    if (!isMuted) {
-        sound.volume = 0.3; // Set volume to 30%
-        sound.currentTime = 0; // Reset sound to start
-        sound.play().catch(err => console.log('Sound play prevented:', err));
+    if (!isMuted && sound) {
+        try {
+            sound.volume = 0.3; // Set volume to 30%
+            sound.currentTime = 0; // Reset sound to start
+            const playPromise = sound.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn('Sound play prevented:', error);
+                    // Don't show errors to users as sound is not critical
+                });
+            }
+        } catch (error) {
+            console.warn('Sound play error:', error);
+            // Don't show errors to users as sound is not critical
+        }
     }
 };
 
