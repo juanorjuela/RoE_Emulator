@@ -22,6 +22,12 @@
             <input type="text" id="room-id" placeholder="Enter room code to join" />
             <button id="join-room-btn">Join Room</button>
             <div id="room-info"></div>
+            
+            <!-- Host Controls (Start Game + Bot Control) -->
+            <div class="host-controls">
+                <button class="start-game-btn">START GAME</button>
+                <button id="add-bot-btn" class="add-bot-btn">ADD BOT (0/3)</button>
+            </div>
         </section>
 
         <main class="game-area">
@@ -88,9 +94,12 @@
         // Initialize Firebase
         try {
             const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const auth = getAuth(app);
-
+            window.app = app;  // Make app available globally
+            
+            // Initialize Firestore and Auth
+            const db = getFirestore();
+            const auth = getAuth();
+            
             // Make Firebase instances available globally
             window.db = db;
             window.auth = auth;
@@ -101,6 +110,8 @@
         }
     </script>
     
+    <script type="module" src="constants.js"></script>
     <script type="module" src="script.js"></script>
+    <script type="module" src="bot.js"></script>
 </body>
 </html>
