@@ -2,49 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#8B4513">
     <title>Rave Tycoon Game Cards Management</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Rave Tycoon</h1>
-        <h2>Board Game Assistant</h2>
+        <header class="game-header">
+            <h1>Rave Tycoon</h1>
+            <h2>Board Game Assistant</h2>
+        </header>
         
-        <div class="game-area">
-            <!--<div class="dice-results" id="dice-results"></div>-->
-            <div class="dice-box" style="max-width: 200px; display: flex; padding: 20px; justify-content: space-between; width: 50%;margin: auto;">
-                <div id="dice" class="dice">
-                  <span class="number">1</span> <!-- You can change this to show numbers from 1 to 6 -->
+        <main class="game-area">
+            <section class="dice-section">
+                <div class="dice-box">
+                    <div id="dice" class="dice">
+                        <span class="number">1</span>
+                    </div>
+                    <div id="dice2" class="dice">
+                        <span class="number2">1</span>
+                    </div>
                 </div>
-                <div id="dice2" class="dice">
-                  <span class="number2">1</span> <!-- You can change this to show numbers from 1 to 6 -->
+            </section>
+
+            <section class="actions-section">
+                <button id="grab-action-cards-btn">Fill up your ACTIONS</button>
+                <div class="player-cards" id="player-cards"></div>
+            </section>
+
+            <section class="fuckups-section">
+                <button id="round-card-btn">Grab a FUCKUP</button>
+                <div id="fuckups-container">
+                    <div class="round-card fuckup-card" id="round-card"></div>
                 </div>
-            </div>
-            <button id="grab-action-cards-btn">Fill up your ACTIONS</button>
-            </br>
-            <div class="player-cards" id="player-cards"></div>
-        </br></br>
-            <button id="round-card-btn">Grab a FUCKUP</button>
-            <div id="fuckups-container"><div class="round-card fuckup-card" id="round-card"></div> </div>
-            
-        </br></br>
-             <button id="mini-mission-btn">Grab a Mini Mission</button>
-            <!-- <div class="round-card" id="mini-mission"></div> -->
-            <div id="mini-mission-container"></div>
-        </br></br>
-            <button id="party-goals-btn">Grab Party Goals</button>
+            </section>
 
-            <div id="party-goals-frame"> <div id="party-goal-container"></div></div>
-            <div id="resolved-count">Resolved Goals: 0</div>
+            <section class="missions-section">
+                <button id="mini-mission-btn">Grab a Mini Mission</button>
+                <div id="mini-mission-container"></div>
+            </section>
 
+            <section class="goals-section">
+                <button id="party-goals-btn">Grab Party Goals</button>
+                <div id="party-goals-frame">
+                    <div id="party-goal-container"></div>
+                </div>
 
+            </section>
+        </main>
 
-        </div>
-        <div class="log-section">
+        <aside class="log-section">
             <h2>Round Log</h2>
             <ul id="log-list"></ul>
-        </div>
+        </aside>
     </div>
     <script src="script.js"></script>
 </body>

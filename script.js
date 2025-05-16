@@ -119,7 +119,98 @@ const shuffle = (deck) => {
     return shuffledDeck;
 };
 
-// Paint Player Hand
+// Create the discard duplicates button
+const discardDuplicatesBtn = document.createElement('button');
+discardDuplicatesBtn.id = 'discard-duplicates-btn';
+discardDuplicatesBtn.textContent = '🔄 Discard Duplicates';
+discardDuplicatesBtn.style.display = 'none';
+
+// Insert the button into the actions-section before the player-cards div
+const actionsSection = document.querySelector('.actions-section');
+actionsSection.insertBefore(discardDuplicatesBtn, document.getElementById('player-cards'));
+
+// Function to find duplicate cards
+const findDuplicateCards = () => {
+    const cardCounts = {};
+    let hasDuplicates = false;
+    
+    playerHand.forEach((card, index) => {
+        if (cardCounts[card]) {
+            cardCounts[card].count++;
+            cardCounts[card].indices.push(index);
+            hasDuplicates = true;
+        } else {
+            cardCounts[card] = { count: 1, indices: [index] };
+        }
+    });
+    
+    return { hasDuplicates, cardCounts };
+};
+
+// Function to highlight duplicate cards
+const highlightDuplicateCards = () => {
+    const { hasDuplicates, cardCounts } = findDuplicateCards();
+    const cardElements = playerCardsDiv.querySelectorAll('.card');
+    
+    // Remove existing duplicate class from all cards
+    cardElements.forEach(card => card.classList.remove('duplicate'));
+    
+    // Show/hide the discard duplicates button
+    discardDuplicatesBtn.style.display = hasDuplicates ? 'block' : 'none';
+    
+    if (hasDuplicates) {
+        // Add duplicate class to cards that appear more than once
+        Object.values(cardCounts).forEach(({ count, indices }) => {
+            if (count > 1) {
+                indices.forEach(index => {
+                    cardElements[index].classList.add('duplicate');
+                });
+            }
+        });
+    }
+};
+
+// Function to remove duplicate cards with animation
+const removeDuplicateCards = () => {
+    playSound(SoundEffects.removeDuplicates);
+    const { cardCounts } = findDuplicateCards();
+    const cardElements = playerCardsDiv.querySelectorAll('.card');
+    const duplicateIndices = new Set();
+    
+    // Collect indices of all duplicate cards
+    Object.values(cardCounts).forEach(({ count, indices }) => {
+        if (count > 1) {
+            indices.forEach(index => duplicateIndices.add(index));
+        }
+    });
+    
+    // Animate and remove duplicate cards
+    duplicateIndices.forEach(index => {
+        const card = cardElements[index];
+        card.style.animation = 'cardRemoval 0.5s ease-in-out forwards';
+    });
+    
+    // Wait for animation to complete before removing cards
+    setTimeout(() => {
+        // Remove cards from playerHand (in reverse order to maintain correct indices)
+        Array.from(duplicateIndices)
+            .sort((a, b) => b - a)
+            .forEach(index => {
+                playerHand.splice(index, 1);
+            });
+        
+        // Update the display
+        paintPlayerHand();
+        highlightDuplicateCards();
+        
+        logList.innerHTML += `<li>Removed ${duplicateIndices.size} duplicate cards</li>`;
+    }, 500);
+};
+
+// Add click handler for the discard duplicates button
+discardDuplicatesBtn.addEventListener('click', removeDuplicateCards);
+
+// Modify the existing paintPlayerHand function to check for duplicates
 const paintPlayerHand = () => {
     playerCardsDiv.innerHTML = "";
     playerHand.forEach((card, i) => {
@@ -127,6 +218,7 @@ const paintPlayerHand = () => {
         cardElement.className = "card";
         cardElement.innerHTML = card;
         cardElement.addEventListener("click", () => {
+            playSound(SoundEffects.playCard);
             playerCardsDiv.removeChild(cardElement);
             playerHand.splice(i, 1);
             paintPlayerHand();
@@ -134,15 +226,92 @@ const paintPlayerHand = () => {
         });
         playerCardsDiv.appendChild(cardElement);
     });
+    
+    // Check for duplicates after painting the hand
+    highlightDuplicateCards();
+};
+
+// Sound Effects System
+const SoundEffects = {
+    drawCard: new Audio('https://assets.mixkit.co/active_storage/sfx/2832/2832-preview.mp3'), // Card shuffle sound
+    playCard: new Audio('https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3'),
+    discardCard: new Audio('https://assets.mixkit.co/active_storage/sfx/2032/2032-preview.mp3'),
+    resolveMission: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
+    earnCoins: new Audio('https://assets.mixkit.co/active_storage/sfx/2075/2075-preview.mp3'),
+    drawFckup: new Audio('https://assets.mixkit.co/active_storage/sfx/2205/2205-preview.mp3'),
+    resolveFckup: new Audio('https://assets.mixkit.co/active_storage/sfx/1997/1997-preview.mp3'),
+    removeDuplicates: new Audio('https://assets.mixkit.co/active_storage/sfx/2031/2031-preview.mp3'),
+    error: new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+};
+
+// Global mute state
+let isMuted = false;
+
+// Create mute button
+const muteButton = document.createElement('button');
+muteButton.id = 'mute-button';
+muteButton.className = 'mute-button';
+muteButton.innerHTML = '🔊';
+
+// Style the mute button
+muteButton.style.position = 'fixed';
+muteButton.style.top = '20px';
+muteButton.style.left = '20px';
+muteButton.style.padding = '10px 15px';
+muteButton.style.fontSize = '24px';
+muteButton.style.backgroundColor = '#fff';
+muteButton.style.border = '2px solid #333';
+muteButton.style.borderRadius = '50%';
+muteButton.style.cursor = 'pointer';
+muteButton.style.zIndex = '1000';
+muteButton.style.transition = 'all 0.3s ease';
+muteButton.style.width = '50px';
+muteButton.style.height = '50px';
+
+// Add hover effect
+muteButton.addEventListener('mouseover', () => {
+    muteButton.style.transform = 'scale(1.1)';
+    muteButton.style.backgroundColor = '#f0f0f0';
+});
+
+muteButton.addEventListener('mouseout', () => {
+    muteButton.style.transform = 'scale(1)';
+    muteButton.style.backgroundColor = '#fff';
+});
+
+document.body.appendChild(muteButton);
+
+// Function to toggle mute state
+const toggleMute = () => {
+    isMuted = !isMuted;
+    muteButton.innerHTML = isMuted ? '🔇' : '🔊';
+    // Update all audio elements
+    Object.values(SoundEffects).forEach(sound => {
+        sound.muted = isMuted;
+    });
+};
+
+// Add click handler for mute button
+muteButton.addEventListener('click', toggleMute);
+
+// Function to play sound with volume control
+const playSound = (sound) => {
+    if (!isMuted) {
+        sound.volume = 0.3; // Set volume to 30%
+        sound.currentTime = 0; // Reset sound to start
+        sound.play().catch(err => console.log('Sound play prevented:', err));
+    }
 };
 
 // Grab/Refill Action Cards
 document.getElementById("grab-action-cards-btn").addEventListener("click", () => {
     if (!playerDeck.length) {
+        playSound(SoundEffects.error);
         logList.innerHTML += `<li>No more cards to select</li>`;
         return;
     }
 
+    playSound(SoundEffects.drawCard);
     const handLength = playerHand.length;
     const missing = 6 - handLength;
 
@@ -169,143 +338,244 @@ document.getElementById("grab-action-cards-btn").addEventListener("click", () =>
     console.log(playerHand);
 });
 
-// Grab Round Card
+// Game Constants
+const PARTY_GOAL_COUNT = 3;  // Number of party goals to draw per click
+
+// Game State
+let totalCoinsEarned = 0;
+let totalFckupsResolved = 0;
+
+// Deck States
+let currentFckupDeck = [];
+let discardedFckupCards = [];
+let currentMiniMissionDeck = [];
+let discardedMiniMissionCards = [];
+let currentPartyGoalsDeck = [];
+let discardedPartyGoalsCards = [];
+
+// Initialize decks
+const initializeDecks = () => {
+    currentFckupDeck = shuffle([...fuckupsDeck]);
+    discardedFckupCards = [];
+    currentMiniMissionDeck = shuffle([...minimissionsDeck]);
+    discardedMiniMissionCards = [];
+    currentPartyGoalsDeck = shuffle([...PartyGoalsDeck]);
+    discardedPartyGoalsCards = [];
+    totalCoinsEarned = 0;
+    totalFckupsResolved = 0;
+    updateCoinsDisplay();
+    updateFckupsDisplay();
+    logList.innerHTML += `<li>FCKUP deck initialized with ${currentFckupDeck.length} cards</li>`;
+    logList.innerHTML += `<li>Mini Mission deck initialized with ${currentMiniMissionDeck.length} cards</li>`;
+    logList.innerHTML += `<li>Party Goals deck initialized with ${currentPartyGoalsDeck.length} cards</li>`;
+};
+
+// Reshuffle discarded cards back into deck
+const reshuffleFckupDeck = () => {
+    if (currentFckupDeck.length === 0 && discardedFckupCards.length > 0) {
+        currentFckupDeck = shuffle([...discardedFckupCards]);
+        discardedFckupCards = [];
+        logList.innerHTML += `<li>FCKUP deck reshuffled with ${currentFckupDeck.length} cards</li>`;
+    }
+};
+
+const reshuffleMiniMissionDeck = () => {
+    if (currentMiniMissionDeck.length === 0 && discardedMiniMissionCards.length > 0) {
+        currentMiniMissionDeck = shuffle([...discardedMiniMissionCards]);
+        discardedMiniMissionCards = [];
+        logList.innerHTML += `<li>Mini Mission deck reshuffled with ${currentMiniMissionDeck.length} cards</li>`;
+    }
+};
+
+// Function to update the FCKUPS display
+const updateFckupsDisplay = () => {
+    const fckupsDisplay = document.getElementById("fckups-display");
+    if (!fckupsDisplay) {
+        const display = document.createElement("div");
+        display.id = "fckups-display";
+        display.className = "fckups-display";
+        document.body.appendChild(display);
+    }
+    document.getElementById("fckups-display").innerHTML = `🚫 FCKUPS Resolved: ${totalFckupsResolved}`;
+};
+
+// Modify Round Card (FCKUP) drawing
 document.getElementById("round-card-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(fuckupsDeck);
-    const card = shuffledDeck[0];
-    roundCardDiv.innerHTML = `<h3>FCKUP</h3><br><br> ${card}<br><br>`;
-    logList.innerHTML += `<li>FCKUP/ ${card}</li>`;
+    // Initialize deck if it's empty
+    if (currentFckupDeck.length === 0 && discardedFckupCards.length === 0) {
+        initializeDecks();
+    }
+    
+    // Try to reshuffle if deck is empty
+    reshuffleFckupDeck();
+    
+    // Check if we have cards to draw
+    if (currentFckupDeck.length === 0) {
+        logList.innerHTML += `<li>No more FCKUP cards available!</li>`;
+        return;
+    }
+    
+    playSound(SoundEffects.drawFckup);
+    // Draw a card
+    const card = currentFckupDeck.pop();
+    discardedFckupCards.push(card);
+    
+    const newCardDiv = document.createElement("div");
+    newCardDiv.className = "monopoly-card fckup-card";
+    
+    newCardDiv.innerHTML = `
+        <div class="card-header">
+            <h3>FCKUP</h3>
+        </div>
+        <div class="card-content">
+            ${card}
+        </div>
+        <button class="resolve-btn">✔ Resolved</button>
+    `;
+    
+    // Clear previous card and add new one
+    roundCardDiv.innerHTML = '';
+    roundCardDiv.appendChild(newCardDiv);
+
+    // Add resolve button functionality
+    const resolveBtn = newCardDiv.querySelector(".resolve-btn");
+    resolveBtn.addEventListener("click", () => {
+        totalFckupsResolved++;
+        updateFckupsDisplay();
+        newCardDiv.innerHTML = `<div class="resolved-state">✔ RESOLVED</div>`;
+        logList.innerHTML += `<li>FCKUP resolved! (Total resolved: ${totalFckupsResolved})</li>`;
+    });
+    
+    logList.innerHTML += `<li>FCKUP/ ${card} (${currentFckupDeck.length} cards remaining)</li>`;
 });
 
 // Grab Mini Mission
-/*
 document.getElementById("mini-mission-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(minimissionsDeck);
-    const card = shuffledDeck[0];
-    miniMissionDiv.textContent += `MINI MISSION/ ${card}`;
-    logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
-});
-*/
+    // Initialize deck if it's empty
+    if (currentMiniMissionDeck.length === 0 && discardedMiniMissionCards.length === 0) {
+        initializeDecks();
+    }
+    
+    // Try to reshuffle if deck is empty
+    reshuffleMiniMissionDeck();
+    
+    // Check if we have cards to draw
+    if (currentMiniMissionDeck.length === 0) {
+        playSound(SoundEffects.error);
+        logList.innerHTML += `<li>No more Mini Mission cards available!</li>`;
+        return;
+    }
 
-document.getElementById("mini-mission-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(minimissionsDeck);
-    const drawnCards = shuffledDeck.slice(0, 1); // Or however many you want
-
+    // Draw a card
+    playSound(SoundEffects.drawCard);
+    const card = currentMiniMissionDeck.pop();
+    discardedMiniMissionCards.push(card);
+    
     const container = document.getElementById("mini-mission-container");
+    const newCardDiv = document.createElement("div");
+    newCardDiv.className = "round-card";
 
-    drawnCards.forEach(card => {
-        const newCardDiv = document.createElement("div");
-        newCardDiv.className = "round-card";
+    newCardDiv.innerHTML = `
+        <span><h3>MINI MISSION</h3><br><br> ${card}<br><br></span>
+        <button class="resolve-btn">✔ Resolved</button>
+    `;
 
-        newCardDiv.innerHTML = `
-            <span><h3>MINI MISSION</h3><br><br> ${card}<br><br></span>
-            <button class="resolve-btn">✔ Resolved</button>
+    container.appendChild(newCardDiv);
+
+    const resolveBtn = newCardDiv.querySelector(".resolve-btn");
+    resolveBtn.addEventListener("click", () => {
+        playSound(SoundEffects.earnCoins);
+        const coinCount = extractCoinCount(card);
+        totalCoinsEarned += coinCount;
+        newCardDiv.innerHTML = `💸`.repeat(coinCount);
+        updateCoinsDisplay();
+        logList.innerHTML += `<li>Earned ${coinCount} coins from Mini Mission!</li>`;
+    });
+
+    logList.innerHTML += `<li>MINI MISSION/ ${card} (${currentMiniMissionDeck.length} cards remaining)</li>`;
+});
+
+document.getElementById("party-goals-btn").addEventListener("click", () => {
+    // Initialize deck if it's empty
+    if (currentPartyGoalsDeck.length === 0 && discardedPartyGoalsCards.length === 0) {
+        initializeDecks();
+    }
+    
+    // Check if we have enough cards to draw
+    if (currentPartyGoalsDeck.length === 0) {
+        playSound(SoundEffects.error);
+        logList.innerHTML += `<li>No more Party Goals available!</li>`;
+        return;
+    }
+
+    playSound(SoundEffects.drawCard);
+    const container = document.getElementById("party-goal-container");
+    const cardsToDraw = Math.min(PARTY_GOAL_COUNT, currentPartyGoalsDeck.length);
+    
+    for (let i = 0; i < cardsToDraw; i++) {
+        // Draw a card
+        const card = currentPartyGoalsDeck.pop();
+        discardedPartyGoalsCards.push(card);
+
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "round-card";
+
+        // Extract coin count from the card text
+        const coinCount = extractCoinCount(card);
+
+        // Set the inner HTML of the card
+        cardDiv.innerHTML = `
+            <span><h3>PARTY GOAL</h3> <br> <br> ${card} <br> <br></span>
+            <div class="card-buttons">
+                <button class="resolve-btn">✔ Resolved</button>
+                <button class="discard-btn">✖ Discard</button>
+            </div>
         `;
 
-        container.appendChild(newCardDiv);
-
-        const resolveBtn = newCardDiv.querySelector(".resolve-btn");
+        // Add event listener for the "Resolve" button
+        const resolveBtn = cardDiv.querySelector(".resolve-btn");
         resolveBtn.addEventListener("click", () => {
-            // Extract coin number from card text (e.g. "(3 coins)")
-            const match = card.match(/\((\d+)\s*coins?\)/i);
-            const coinCount = match ? parseInt(match[1], 10) : 1;
-
-            // Replace with that many emojis
-            newCardDiv.innerHTML = `💸`.repeat(coinCount);
+            playSound(SoundEffects.earnCoins);
+            totalCoinsEarned += coinCount;
+            cardDiv.innerHTML = `⭐`.repeat(coinCount);
+            updateCoinsDisplay();
+            logList.innerHTML += `<li>Earned ${coinCount} coins from Party Goal!</li>`;
         });
 
-        logList.innerHTML += `<li>MINI MISSION/ ${card}</li>`;
-    });
+        // Add event listener for the "Discard" button
+        const discardBtn = cardDiv.querySelector(".discard-btn");
+        discardBtn.addEventListener("click", () => {
+            playSound(SoundEffects.discardCard);
+            cardDiv.remove();
+        });
 
-});
-
-// Grab Party Goal
-/*
-document.getElementById("party-goals-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(PartyGoalsDeck);
-    const card = shuffledDeck[0];
-    partyGoalDiv.textContent += `PARTY GOAL/ ${card}`;
-    logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
-});
-
-*/
-// Initialize a Set to keep track of drawn party goals
-const drawnPartyGoals = new Set();
-
-// Number of party goals to draw per click
-const PARTY_GOAL_COUNT = 3;
-
-document.getElementById("party-goals-btn").addEventListener("click", () => {
-    const shuffledDeck = shuffle(PartyGoalsDeck);
-    const container = document.getElementById("party-goal-container");
-    let drawn = 0;
-
-    for (let i = 0; i < shuffledDeck.length && drawn < PARTY_GOAL_COUNT; i++) {
-        const card = shuffledDeck[i];
-        if (!drawnPartyGoals.has(card)) {
-            drawnPartyGoals.add(card);
-            drawn++;
-
-            const cardDiv = document.createElement("div");
-            cardDiv.className = "round-card";
-
-            // Extract coin count from the card text
-            const match = card.match(/\((\d+)\s*coins?\)/i);
-            const coinCount = match ? parseInt(match[1], 10) : 1;
-
-            // Set the inner HTML of the card
-            cardDiv.innerHTML = `
-                <span><h3>PARTY GOAL</h3> <br> <br> ${card} <br> <br></span>
-                <div class="card-buttons">
-                    <button class="resolve-btn">✔ Resolved</button>
-                    <button class="discard-btn">✖ Discard</button>
-                </div>
-            `;
-
-            // Append the card to the container
-            container.appendChild(cardDiv);
-
-            // Add event listener for the "Resolve" button
-            const resolveBtn = cardDiv.querySelector(".resolve-btn");
-            resolveBtn.addEventListener("click", () => {
-                cardDiv.innerHTML = `⭐`.repeat(coinCount);
-                updateResolvedCount();
-            });
-
-            // Add event listener for the "Discard" button
-            const discardBtn = cardDiv.querySelector(".discard-btn");
-            discardBtn.addEventListener("click", () => {
-                cardDiv.remove();
-                drawnPartyGoals.delete(card);
-                updateResolvedCount();
-            });
-
-            // Log the drawn card
-            logList.innerHTML += `<li>PARTY GOAL/ ${card}</li>`;
-        }
+        container.appendChild(cardDiv);
+        logList.innerHTML += `<li>PARTY GOAL/ ${card} (${currentPartyGoalsDeck.length} cards remaining)</li>`;
     }
 
-    if (drawn < PARTY_GOAL_COUNT) {
-        alert("No more unique party goals available.");
+    if (cardsToDraw < PARTY_GOAL_COUNT) {
+        logList.innerHTML += `<li>Warning: Only ${cardsToDraw} Party Goals remaining!</li>`;
     }
 });
 
-// Function to update the count of resolved goals
-function updateResolvedCount() {
-    const container = document.getElementById("party-goal-container");
-    const resolvedCards = container.querySelectorAll(".round-card");
-    let resolvedCount = 0;
+// Function to extract coin count from card text
+const extractCoinCount = (cardText) => {
+    const match = cardText.match(/\((\d+)\s*coins?\)/i);
+    return match ? parseInt(match[1], 10) : 1;
+};
 
-    resolvedCards.forEach(card => {
-        if (!card.querySelector(".resolve-btn")) {
-            resolvedCount++;
-        }
-    });
-
-    // Display the resolved count
-    document.getElementById("resolved-count").textContent = `Resolved Goals: ${resolvedCount}`;
-}
-
+// Function to update the coins display
+const updateCoinsDisplay = () => {
+    const coinsDisplay = document.getElementById("coins-display");
+    if (!coinsDisplay) {
+        const display = document.createElement("div");
+        display.id = "coins-display";
+        display.className = "coins-display";
+        document.body.appendChild(display);
+    }
+    document.getElementById("coins-display").innerHTML = `💰 Total Coins: ${totalCoinsEarned}`;
+    logList.innerHTML += `<li>Coins updated: ${totalCoinsEarned} total</li>`;
+};
 
 /*
 // Roll Dice
