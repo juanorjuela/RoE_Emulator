@@ -102,62 +102,80 @@ h2 {
 }
 
 #board-container {
-    width: 1000px;
-    height: 1000px;
+    width: 100%;
+    height: 700px;
     position: relative;
-    background-color: #f5f5f5;
-    border: 2px solid #333;
-    margin: 20px auto;
+    background-color: #E6FFE6; /* Light pastel green */
+    border: 1px solid #ACC8AA; /* Slightly darker green border */
     overflow: hidden;
+    margin: 20px auto;
+    cursor: grab;
+    transform-origin: top left;
 }
 
 .grid-container {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 1000px;
+    height: 1000px;
     display: grid;
-    grid-template-columns: repeat(20, 1fr);
-    grid-template-rows: repeat(20, 1fr);
-    gap: 1px;
-    background-color: #ddd;
+    grid-template-columns: repeat(20, 50px);
+    grid-template-rows: repeat(20, 50px);
+    gap: 0;
+    background-color: transparent; /* Transparent, relies on board-container bg */
+    transform-origin: top left;
+    will-change: transform;
 }
 
 .grid-cell {
-    background-color: white;
-    border: 1px solid #ccc;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #B0DAB0; /* Light green-gray border for cells */
+    background-color: rgba(255, 255, 255, 0.2); /* Very subtle white tint for cells */
     position: relative;
+    transform: translate3d(0, 0, 0);
+    will-change: transform, background-color;
 }
 
 .pieces-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-    padding: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1000px;
+    height: 1000px;
+    pointer-events: none;
+    transform-origin: top left;
+    will-change: transform;
+    z-index: 10;
 }
 
 .piece {
-    width: 90%;
-    height: 90%;
-    border-radius: 50%;
-    position: absolute;
-    cursor: grab;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
+    cursor: grab;
     user-select: none;
-    z-index: 10;
+    background: white;
+    border: 2px solid #333;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    margin: 10px;
 }
 
 .piece.dragging {
-    cursor: grabbing;
+    position: absolute;
     transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 100;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 1000;
+    pointer-events: none;
 }
 
 .piece:hover {
@@ -170,10 +188,13 @@ h2 {
 }
 
 .piece-label {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: 12px;
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    pointer-events: none;
+    white-space: nowrap;
+    color: #333;
 }
 
 /* Add draggable styles */
@@ -216,8 +237,8 @@ h2 {
 .piece-category {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
+    gap: 10px;
+    margin: 10px 0;
 }
 
 .finish-turn-btn {
@@ -825,6 +846,72 @@ button:disabled:hover {
     transform: none;
 }
 
+/* UI Toggle Menu */
+.ui-toggle-menu {
+    position: fixed;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: rgba(51, 51, 51, 0.7);
+    border-radius: 10px;
+    padding: 10px;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ui-toggle-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333;
+    color: white;
+    font-size: 20px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ui-toggle-btn:hover {
+    transform: scale(1.1);
+    background-color: #444;
+}
+
+.ui-toggle-btn.active {
+    background-color: #4CAF50;
+}
+
+/* Hide elements when toggled */
+.hidden-element {
+    display: none !important;
+}
+
+/* Mobile adjustments for UI toggle menu */
+@media (max-width: 768px) {
+    .ui-toggle-menu {
+        left: 10px;
+        padding: 5px;
+    }
+
+    .ui-toggle-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+}
+
+/* Style for chosen goals */
+.chosen-goal {
+    border: 3px solid #4CAF50;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+    transform: scale(1.05);
+}
+
 .lobby-section {
     text-align: center;
     margin-bottom: 30px;
@@ -1083,21 +1170,30 @@ body.loading .game-area {
 
 /* Game Pieces Section */
 .game-pieces-section {
+    position: relative;
     width: 100%;
-    max-width: 1000px;
-    margin: 20px auto;
     padding: 20px;
-    background: white;
+    background: #fff;
     border-radius: 10px;
+    margin-top: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 20;
 }
 
-.pieces-container {
+.game-pieces-section .pieces-container {
+    position: relative;
+    width: 100%;
+    height: auto;
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     justify-content: center;
-    padding: 20px;
+    pointer-events: auto;
+    transform: none;
+}
+
+.game-pieces-section .pieces-container .piece {
+    margin: 5px;
 }
 
 .piece:hover {
@@ -1110,10 +1206,13 @@ body.loading .game-area {
 }
 
 .piece-label {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: 12px;
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    pointer-events: none;
+    white-space: nowrap;
+    color: #333;
 }
 
 .piece:hover .piece-label {
@@ -1121,12 +1220,12 @@ body.loading .game-area {
 }
 
 /* Guest Types */
-.piece.rocker { background-color: #000000; color: white; }
-.piece.hopper { background-color: #3498db; color: white; }
-.piece.diva { background-color: #8b4513; color: white; }
-.piece.princess { background-color: #e91e63; color: white; }
-.piece.latino { background-color: #f39c12; color: white; }
-.piece.raver { background-color: #2ecc71; color: white; }
+.piece.rocker, .board-piece.rocker { border-color: #000000; }
+.piece.hopper, .board-piece.hopper { border-color: #3498db; }
+.piece.diva, .board-piece.diva { border-color: #8b4513; }
+.piece.princess, .board-piece.princess { border-color: #e91e63; }
+.piece.latino, .board-piece.latino { border-color: #f39c12; }
+.piece.raver, .board-piece.raver { border-color: #2ecc71; }
 
 /* Board piece styles */
 .board-piece {
@@ -1177,12 +1276,4 @@ body.loading .game-area {
 .game-area > * {
     position: relative;
     z-index: 2;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 1024px) {
-    #board-container {
-        width: 90vw;
-        height: 90vw;
-    }
 }
