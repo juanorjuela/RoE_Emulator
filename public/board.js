@@ -98,45 +98,49 @@ export class Board {
                 
                 // Try to create application with WebGL first
                 try {
-                    app = new PIXI.Application({
+                    // Check if WebGL is available
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    const hasWebGL = !!gl;
+                    console.log("WebGL available:", hasWebGL);
+
+                    const options = {
                         width: BOARD_WIDTH,
                         height: BOARD_HEIGHT,
                         backgroundColor: 0x1a1a1a,
-                        resolution: window.devicePixelRatio || 1,
-                        antialias: true,
-                        autoDensity: true,
-                        powerPreference: 'high-performance'
-                    });
+                        resolution: 1,
+                        antialias: true
+                    };
+
+                    if (!hasWebGL) {
+                        console.log("WebGL not available, forcing canvas renderer");
+                        options.forceCanvas = true;
+                    }
+
+                    app = new PIXI.Application(options);
+                    console.log("PIXI Application created:", app);
+                    console.log("Renderer type:", app.renderer.type);
                 } catch (error) {
-                    console.log("WebGL initialization failed, trying canvas renderer...");
-                    // Fallback to canvas renderer
-                    app = new PIXI.Application({
-                        width: BOARD_WIDTH,
-                        height: BOARD_HEIGHT,
-                        backgroundColor: 0x1a1a1a,
-                        forceCanvas: true,
-                        resolution: window.devicePixelRatio || 1
-                    });
+                    console.error("Error creating PIXI application:", error);
+                    throw error;
                 }
 
                 // Verify renderer was created
                 if (!app || !app.renderer) {
+                    console.error("No renderer available after initialization");
                     throw new Error('Failed to initialize PIXI renderer');
                 }
             }
 
-            // Set up stage interaction
-            app.stage.interactive = true;
-            app.stage.hitArea = app.screen;
-            app.stage.sortableChildren = true;
-
+            // Find and prepare the container
             console.log("Finding board container...");
             this.container = document.getElementById('board-container');
             if (!this.container) {
+                console.error("Board container element not found");
                 throw new Error('Board container not found');
             }
 
-            // Remove any existing canvas
+            // Clear the container
             while (this.container.firstChild) {
                 this.container.removeChild(this.container.firstChild);
             }
@@ -196,6 +200,26 @@ export class Board {
             console.log("Board initialization complete!");
         } catch (error) {
             console.error('Error initializing board:', error);
+            // Try to recover by forcing canvas renderer
+            if (!app && error.message.includes('WebGL')) {
+                console.log("Attempting recovery with canvas renderer...");
+                try {
+                    app = new PIXI.Application({
+                        width: BOARD_WIDTH,
+                        height: BOARD_HEIGHT,
+                        backgroundColor: 0x1a1a1a,
+                        forceCanvas: true,
+                        resolution: 1
+                    });
+                    if (app && app.renderer) {
+                        console.log("Recovery successful with canvas renderer");
+                        this.initialize(); // Retry initialization
+                        return;
+                    }
+                } catch (recoveryError) {
+                    console.error("Recovery failed:", recoveryError);
+                }
+            }
             // Don't throw the error, just log it
             // This allows the rest of the game to initialize even if the board fails
         }

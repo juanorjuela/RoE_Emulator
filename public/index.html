@@ -7,6 +7,10 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
     <title>Rave Tycoon Game Cards Management</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Load external libraries first with integrity checks -->
+    <script src="https://pixijs.download/v7.3.2/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div class="container">
@@ -113,10 +117,6 @@
             <ul id="log-list"></ul>
         </aside>
     </div>
-
-    <!-- Load external libraries first -->
-    <script src="https://pixijs.download/release/pixi.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
     <!-- Firebase SDK and App Initialization -->
     <script type="module">
