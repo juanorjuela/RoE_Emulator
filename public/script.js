@@ -2297,60 +2297,6 @@ function displayPartyGoals(goals) {
     }
 }
 
-// Helper function to display a chosen party goal
-function displayChosenPartyGoal(card, container) {
-    const cardDiv = document.createElement("div");
-    cardDiv.className = "round-card chosen-goal";
-    const coinCount = extractCoinCount(card);
-
-    cardDiv.innerHTML = `
-        <span><h3>CHOSEN PARTY GOAL</h3> <br> <br> ${card} <br> <br></span>
-        <div class="card-buttons">
-            <button class="resolve-btn">✔ RESOLVE</button>
-        </div>
-    `;
-
-    // Add event listener for the "RESOLVE" button
-    const resolveBtn = cardDiv.querySelector(".resolve-btn");
-    resolveBtn.addEventListener("click", async () => {
-        try {
-            const roomRef = doc(db, "rooms", currentRoomId);
-            await runTransaction(db, async (transaction) => {
-                const roomDoc = await transaction.get(roomRef);
-                const roomData = roomDoc.data();
-                const playerGoals = roomData.playerGoals || {};
-                const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
-                
-                // Move goal from active to completed
-                myGoals.goals = [];
-                myGoals.chosenGoal = null;
-                myGoals.completed.push(card);
-                playerGoals[currentPlayerId] = myGoals;
-                
-                transaction.update(roomRef, { playerGoals });
-            });
-
-            totalCoinsEarned += coinCount;
-            cardDiv.innerHTML = `
-                <div class="resolved-card">
-                    <h3>GOAL ACHIEVED!</h3>
-                    <div class="coin-reward">
-                        <span class="coin-icon">💰</span>
-                        <span class="coin-amount">+${coinCount}</span>
-                    </div>
-                </div>
-            `;
-            updateCoinsDisplay();
-            logList.innerHTML += `<li>Earned ${coinCount} coins from Party Goal!</li>`;
-            await discardToPile('partyGoals', [card]);
-        } catch (error) {
-            console.error("Error resolving party goal:", error);
-        }
-    });
-
-    container.appendChild(cardDiv);
-}
-
 // Add start game button functionality
 document.querySelector('.start-game-btn').addEventListener('click', () => {
     if (confirm('Are you sure you want to start the game with the current players?')) {
