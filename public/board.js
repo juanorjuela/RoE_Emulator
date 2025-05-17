@@ -148,6 +148,9 @@ class Board {
         this.pieces = new Map();
         this.isDragging = false;
         this.draggedPiece = null;
+        this.dragOffset = { x: 0, y: 0 };
+        this.piecePositions = new Map(); // Track piece positions
+        this.lastKnownPositions = new Map(); // Backup of last known valid positions
         
         boardInstance = this;
     }
@@ -247,155 +250,169 @@ class Board {
     }
 
     setupDragAndDrop() {
-        let isDragging = false;
         let startX, startY;
-        let scrollLeft, scrollTop;
+        let initialPieceX, initialPieceY;
 
-        // Pan functionality
-        this.boardContainer.addEventListener('mousedown', (e) => {
-            if (!e.target.classList.contains('board-piece') && !e.target.classList.contains('piece')) {
-                isDragging = true;
-                this.boardContainer.style.cursor = 'grabbing';
-                startX = e.pageX - this.boardContainer.offsetLeft;
-                startY = e.pageY - this.boardContainer.offsetTop;
-                scrollLeft = this.boardContainer.scrollLeft;
-                scrollTop = this.boardContainer.scrollTop;
-            }
-        });
-
-        this.boardContainer.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const x = e.pageX - this.boardContainer.offsetLeft;
-            const y = e.pageY - this.boardContainer.offsetTop;
-            const moveX = (x - startX);
-            const moveY = (y - startY);
-
-            this.boardContainer.scrollLeft = scrollLeft - moveX;
-            this.boardContainer.scrollTop = scrollTop - moveY;
-        });
-
-        this.boardContainer.addEventListener('mouseup', () => {
-            isDragging = false;
-            this.boardContainer.style.cursor = 'grab';
-        });
-
-        this.boardContainer.addEventListener('mouseleave', () => {
-            isDragging = false;
-            this.boardContainer.style.cursor = 'grab';
-        });
-
-        // Zoom functionality
-        this.boardContainer.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const scale = e.deltaY > 0 ? 0.9 : 1.1;
-            const currentScale = parseFloat(this.gridContainer.style.transform.replace('scale(', '')) || 1;
-            const newScale = Math.min(Math.max(currentScale * scale, 0.5), 2);
+        const onMouseDown = (e, piece) => {
+            if (this.isDragging) return;
             
-            this.gridContainer.style.transform = `scale(${newScale})`;
-            this.piecesContainer.style.transform = `scale(${newScale})`;
-        });
-
-        // Setup drag and drop for guest pieces
-        const guestPieces = document.querySelectorAll('.piece');
-        guestPieces.forEach(piece => {
-            piece.setAttribute('draggable', true);
+            const rect = piece.getBoundingClientRect();
+            this.dragOffset.x = e.clientX - rect.left;
+            this.dragOffset.y = e.clientY - rect.top;
             
-            piece.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', piece.dataset.type);
-                piece.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
+            startX = e.clientX;
+            startY = e.clientY;
+            initialPieceX = parseInt(piece.style.left) || 0;
+            initialPieceY = parseInt(piece.style.top) || 0;
+            
+            this.isDragging = true;
+            this.draggedPiece = piece;
+            piece.classList.add('dragging');
+            
+            // Store initial position
+            this.lastKnownPositions.set(piece.id, {
+                x: initialPieceX,
+                y: initialPieceY
             });
             
-            piece.addEventListener('dragend', () => {
-                piece.classList.remove('dragging');
-            });
-        });
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
 
-        // Handle dropping on the board
-        this.boardContainer.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
+        const onMouseMove = (e) => {
+            if (!this.isDragging || !this.draggedPiece) return;
             
-            // Calculate grid position for preview
-            const rect = this.boardContainer.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const gridX = Math.floor(x / CELL_SIZE);
-            const gridY = Math.floor(y / CELL_SIZE);
-            
-            // Highlight the target cell
-            const cells = this.gridContainer.querySelectorAll('.grid-cell');
-            cells.forEach(cell => cell.classList.remove('drop-target'));
-            if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-                const targetCell = this.gridContainer.children[gridY * GRID_SIZE + gridX];
-                if (targetCell) {
-                    targetCell.classList.add('drop-target');
-                }
-            }
-        });
-
-        this.boardContainer.addEventListener('dragleave', () => {
-            // Remove all drop target highlights
-            const cells = this.gridContainer.querySelectorAll('.grid-cell');
-            cells.forEach(cell => cell.classList.remove('drop-target'));
-        });
-
-        this.boardContainer.addEventListener('drop', (e) => {
             e.preventDefault();
             
-            // Remove all drop target highlights
-            const cells = this.gridContainer.querySelectorAll('.grid-cell');
-            cells.forEach(cell => cell.classList.remove('drop-target'));
+            // Calculate new position with drag offset
+            const newX = e.clientX - this.dragOffset.x;
+            const newY = e.clientY - this.dragOffset.y;
             
-            const pieceType = e.dataTransfer.getData('text/plain');
-            const rect = this.boardContainer.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            // Get board container bounds
+            const boardRect = this.boardContainer.getBoundingClientRect();
+            
+            // Calculate position relative to board
+            const relativeX = newX - boardRect.left;
+            const relativeY = newY - boardRect.top;
+            
+            // Apply position with hardware acceleration
+            this.draggedPiece.style.transform = `translate3d(${relativeX}px, ${relativeY}px, 0)`;
+        };
+
+        const onMouseUp = (e) => {
+            if (!this.isDragging || !this.draggedPiece) return;
+            
+            const finalX = e.clientX;
+            const finalY = e.clientY;
+            
+            // Get the target cell
+            const boardRect = this.boardContainer.getBoundingClientRect();
+            const relativeX = finalX - boardRect.left;
+            const relativeY = finalY - boardRect.top;
             
             // Calculate grid position
-            const gridX = Math.floor(x / CELL_SIZE);
-            const gridY = Math.floor(y / CELL_SIZE);
+            const gridX = Math.floor(relativeX / CELL_SIZE);
+            const gridY = Math.floor(relativeY / CELL_SIZE);
             
-            // Only place if within grid bounds
+            // Check if position is valid
             if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-                const piece = this.createPiece(pieceType);
-                piece.style.left = `${gridX * CELL_SIZE}px`;
-                piece.style.top = `${gridY * CELL_SIZE}px`;
-                this.piecesContainer.appendChild(piece);
+                // Snap to grid
+                const snappedX = gridX * CELL_SIZE;
+                const snappedY = gridY * CELL_SIZE;
+                
+                // Update piece position
+                this.draggedPiece.style.transform = 'none';
+                this.draggedPiece.style.left = `${snappedX}px`;
+                this.draggedPiece.style.top = `${snappedY}px`;
+                
+                // Store new position
+                this.piecePositions.set(this.draggedPiece.id, {
+                    x: snappedX,
+                    y: snappedY
+                });
+            } else {
+                // Revert to last known position
+                const lastPos = this.lastKnownPositions.get(this.draggedPiece.id);
+                if (lastPos) {
+                    this.draggedPiece.style.transform = 'none';
+                    this.draggedPiece.style.left = `${lastPos.x}px`;
+                    this.draggedPiece.style.top = `${lastPos.y}px`;
+                }
+            }
+            
+            this.draggedPiece.classList.remove('dragging');
+            this.isDragging = false;
+            this.draggedPiece = null;
+            
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        // Add drag handlers to pieces
+        this.piecesContainer.addEventListener('mousedown', (e) => {
+            const piece = e.target.closest('.piece');
+            if (piece) {
+                onMouseDown(e, piece);
             }
         });
     }
 
     createPiece(type) {
         const piece = document.createElement('div');
-        piece.className = `board-piece ${type}`;
-        piece.style.width = `${CELL_SIZE}px`;
-        piece.style.height = `${CELL_SIZE}px`;
-        piece.style.position = 'absolute';
-        piece.style.display = 'flex';
-        piece.style.alignItems = 'center';
-        piece.style.justifyContent = 'center';
-        piece.style.fontSize = `${CELL_SIZE * 0.6}px`;
-        piece.style.cursor = 'grab';
-        piece.style.userSelect = 'none';
-        piece.style.zIndex = '10';
-        piece.setAttribute('draggable', true);
-
-        // Add the guest type's emoji
+        piece.className = `piece ${type}`;
+        piece.id = `piece-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         piece.innerHTML = GUEST_TYPES[type].icon;
-
-        // Make the piece draggable within the board
-        piece.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', type);
-            piece.classList.add('dragging');
+        
+        // Set initial position
+        const initialX = 0;
+        const initialY = 0;
+        piece.style.left = `${initialX}px`;
+        piece.style.top = `${initialY}px`;
+        
+        // Store initial position
+        this.piecePositions.set(piece.id, {
+            x: initialX,
+            y: initialY
         });
-
-        piece.addEventListener('dragend', () => {
-            piece.classList.remove('dragging');
-        });
-
+        
+        this.piecesContainer.appendChild(piece);
+        this.pieces.set(piece.id, piece);
+        
         return piece;
+    }
+
+    // Save board state
+    getBoardState() {
+        const state = {
+            pieces: Array.from(this.piecePositions.entries()).map(([id, pos]) => ({
+                id,
+                type: this.pieces.get(id).className.split(' ')[1],
+                x: pos.x,
+                y: pos.y
+            }))
+        };
+        return state;
+    }
+
+    // Restore board state
+    restoreBoardState(state) {
+        // Clear existing pieces
+        this.piecesContainer.innerHTML = '';
+        this.pieces.clear();
+        this.piecePositions.clear();
+        
+        // Restore pieces
+        state.pieces.forEach(pieceData => {
+            const piece = this.createPiece(pieceData.type);
+            piece.id = pieceData.id;
+            piece.style.left = `${pieceData.x}px`;
+            piece.style.top = `${pieceData.y}px`;
+            
+            this.piecePositions.set(piece.id, {
+                x: pieceData.x,
+                y: pieceData.y
+            });
+        });
     }
 
     snapToGrid(x, y) {

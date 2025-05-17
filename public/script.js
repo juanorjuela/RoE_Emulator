@@ -1477,46 +1477,41 @@ function updateTimerDisplay() {
 
 // Function to end turn
 async function endTurn() {
-    console.log("Attempting to end turn...");
-    if (!currentRoomId || currentTurnPlayer !== currentPlayerId) {
-        console.log("Cannot end turn - not current player's turn");
-        return;
+    try {
+        if (!currentTurnPlayer || currentTurnPlayer !== auth.currentUser.uid) {
+            console.warn('Not your turn to end');
+            return;
+        }
+        
+        showLoading('Ending turn...');
+        
+        // Save final board state
+        const board = getBoard();
+        if (board) {
+            const boardState = board.getBoardState();
+            await updateDoc(doc(db, 'rooms', currentRoomId), {
+                boardState: boardState
+            });
+        }
+        
+        // Clear turn timer
+        if (turnTimer) {
+            clearInterval(turnTimer);
+            turnTimer = null;
+        }
+        
+        // Get next player
+        const nextPlayerIndex = (playerOrder.indexOf(currentTurnPlayer) + 1) % playerOrder.length;
+        const nextPlayer = playerOrder[nextPlayerIndex];
+        
+        // Update turn
+        await handleTurnChange(nextPlayer);
+        
+    } catch (error) {
+        console.error('Error ending turn:', error);
+    } finally {
+        hideLoading();
     }
-
-    // Clear the turn timer
-    clearInterval(turnTimer);
-    
-    // Update UI elements
-    const timerContainer = document.querySelector('.timer-container');
-    const finishTurnBtn = document.querySelector('.finish-turn-btn');
-    
-    if (timerContainer) timerContainer.style.display = 'none';
-    if (finishTurnBtn) {
-        finishTurnBtn.style.display = 'none';
-        finishTurnBtn.classList.remove('visible');
-    }
-
-    // Get the next player
-    const roomRef = doc(db, "rooms", currentRoomId);
-    const roomDoc = await getDoc(roomRef);
-    const roomData = roomDoc.data();
-    
-    if (!roomData) {
-        console.error("Room data not found");
-        return;
-    }
-
-    const currentPlayerIndex = playerOrder.indexOf(currentTurnPlayer);
-    const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length;
-    const nextPlayer = playerOrder[nextPlayerIndex];
-
-    // Update the turn in the room
-    await updateTurnInRoom(nextPlayer);
-    
-    // Reset remaining time for next turn
-    remainingTime = TURN_TIME;
-    
-    console.log(`Turn ended. Next player: ${nextPlayer}`);
 }
 
 // Function to show/hide finish turn button based on current player
@@ -1535,47 +1530,161 @@ function updateFinishTurnButton() {
     }
 }
 
-// Add this to the game state listener
-function listenToGameState(roomId) {
-    const roomRef = doc(db, "rooms", roomId);
+// Loading state management
+let loadingState = {
+    isLoading: false,
+    message: '',
+    isBotTurn: false,
+    isThirdPlayer: false
+};
+
+function showLoading(message = '', options = {}) {
+    loadingState = {
+        isLoading: true,
+        message,
+        isBotTurn: options.isBotTurn || false,
+        isThirdPlayer: options.isThirdPlayer || false
+    };
     
-    return onSnapshot(roomRef, (snapshot) => {
-        if (!snapshot.exists()) return;
+    const loadingOverlay = document.querySelector('.loading-overlay');
+    const messageElement = loadingOverlay.querySelector('.current-player-message');
+    
+    if (loadingState.isThirdPlayer) {
+        loadingOverlay.classList.add('third-player');
+    } else {
+        loadingOverlay.classList.remove('third-player');
+    }
+    
+    if (loadingState.isBotTurn) {
+        document.querySelector('.game-area').classList.add('bot-turn');
+    }
+    
+    messageElement.textContent = message;
+    loadingOverlay.classList.add('visible');
+    document.body.classList.add('loading');
+}
+
+function hideLoading() {
+    loadingState.isLoading = false;
+    
+    const loadingOverlay = document.querySelector('.loading-overlay');
+    document.querySelector('.game-area').classList.remove('bot-turn');
+    loadingOverlay.classList.remove('visible', 'third-player');
+    document.body.classList.remove('loading');
+    
+    // Small delay to ensure smooth transition
+    setTimeout(() => {
+        if (!loadingState.isLoading) {
+            loadingOverlay.querySelector('.current-player-message').textContent = '';
+        }
+    }, 300);
+}
+
+// Turn management
+async function handleTurnChange(nextPlayer) {
+    try {
+        const currentPlayer = auth.currentUser.uid;
+        const isBot = nextPlayer.startsWith('bot-');
+        const isCurrentPlayer = nextPlayer === currentPlayer;
         
-        const data = snapshot.data();
-        if (!data) return;
+        // Save current board state before turn change
+        const board = getBoard();
+        if (board) {
+            const boardState = board.getBoardState();
+            await updateDoc(doc(db, 'rooms', currentRoomId), {
+                boardState: boardState
+            });
+        }
         
-        // Update current turn player
-        currentTurnPlayer = data.currentTurn;
+        // Show appropriate loading state
+        if (isBot) {
+            showLoading('Bot is thinking...', { isBotTurn: true });
+        } else if (isCurrentPlayer) {
+            showLoading('Your turn!');
+            setTimeout(hideLoading, 1000);
+        } else {
+            showLoading(`Waiting for ${getPlayerName(nextPlayer)}...`, {
+                isThirdPlayer: true
+            });
+        }
         
-        // Update player order if it exists
-        if (data.playerOrder) {
-            playerOrder = data.playerOrder;
+        // Update turn in room
+        await updateTurnInRoom(nextPlayer);
+        
+        // Handle bot turn if needed
+        if (isBot) {
+            await handleBotTurn(nextPlayer);
         }
         
         // Update UI elements
         updateFinishTurnButton();
         updateGameAreaState();
         
-        // Start timer if it's the current player's turn
-        if (currentTurnPlayer === currentPlayerId) {
-            startTimer();
+    } catch (error) {
+        console.error('Error handling turn change:', error);
+        hideLoading();
+    }
+}
+
+async function handleBotTurn(botId) {
+    try {
+        const bot = new RaveTycoonBot(botId);
+        await bot.performTurn();
+        
+        // Add delay for visual feedback
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // End bot's turn
+        await endTurn();
+        
+    } catch (error) {
+        console.error('Error during bot turn:', error);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Update the listenToGameState function
+function listenToGameState(roomId) {
+    return onSnapshot(doc(db, 'rooms', roomId), async (snapshot) => {
+        const data = snapshot.data();
+        if (!data) return;
+        
+        // Update game state
+        gameState = data.state;
+        
+        // Handle turn changes
+        if (data.currentTurn !== currentTurnPlayer) {
+            currentTurnPlayer = data.currentTurn;
+            
+            // Restore board state
+            const board = getBoard();
+            if (board && data.boardState) {
+                board.restoreBoardState(data.boardState);
+            }
+            
+            // Update UI for turn change
+            if (currentTurnPlayer === auth.currentUser.uid) {
+                showLoading('Your turn!');
+                setTimeout(hideLoading, 1000);
+                startTimer();
+            }
         }
         
-        // Update room info display
-        const roomInfo = document.getElementById('room-info');
-        if (roomInfo) {
-            roomInfo.innerHTML = `
-                <div class="room-info">
-                    <p>Room Code: ${roomId}</p>
-                    <p>Current Turn: ${data.players[currentTurnPlayer]?.name || 'Unknown'}</p>
-                    <p>Players: ${Object.values(data.players).map(p => p.name).join(', ')}</p>
-                </div>
-            `;
-        }
+        // Update player list and turn indicator
+        updatePlayerList(data.players || [], currentTurnPlayer);
         
-        // Update player list
-        updatePlayerList(data.players, currentTurnPlayer);
+        // Update game area visibility
+        if (gameState === GAME_STATES.PLAYING) {
+            const gameArea = document.querySelector('.game-area');
+            if (gameArea) {
+                gameArea.style.display = 'block';
+                // Use RAF for smooth transition
+                requestAnimationFrame(() => {
+                    gameArea.classList.add('visible');
+                });
+            }
+        }
     });
 }
 

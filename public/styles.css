@@ -19,6 +19,8 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 html {
@@ -112,24 +114,25 @@ h2 {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 1000px; /* Explicit width: 20 cells * 50px */
+    height: 1000px; /* Explicit height: 20 cells * 50px */
     display: grid;
     grid-template-columns: repeat(20, 50px);
     grid-template-rows: repeat(20, 50px);
-    gap: 1px;
+    gap: 0;
     background-color: #222;
-    transform-origin: center;
-    transform: scale(1);
-    transition: transform 0.3s ease;
+    transform-origin: top left;
+    will-change: transform;
 }
 
 .grid-cell {
     width: 50px;
     height: 50px;
     border: 1px solid #333;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
+    background-color: #1a1a1a;
+    position: relative;
+    transform: translate3d(0, 0, 0);
+    will-change: transform, background-color;
 }
 
 .grid-cell.drop-target {
@@ -141,15 +144,15 @@ h2 {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 1000px; /* Match grid container */
+    height: 1000px; /* Match grid container */
     pointer-events: none;
-    transform-origin: center;
-    transform: scale(1);
-    transition: transform 0.3s ease;
+    transform-origin: top left;
+    will-change: transform;
 }
 
 .piece {
+    position: absolute;
     width: 50px;
     height: 50px;
     border-radius: 8px;
@@ -159,19 +162,19 @@ h2 {
     font-size: 24px;
     cursor: grab;
     user-select: none;
-    transition: transform 0.2s ease;
     background: white;
     border: 2px solid #333;
-    margin: 5px;
-    position: relative;
-    z-index: 100;
     pointer-events: auto;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
 }
 
 .piece.dragging {
-    transform: scale(1.1);
-    opacity: 0.8;
+    transform: translate3d(0, 0, 0) scale(1.1);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 1000;
+    transition: none;
 }
 
 .piece:hover {
@@ -920,21 +923,55 @@ button:disabled:hover {
 
 /* Loading Animation */
 .loading-overlay {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
-    z-index: 2000;
-    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
     align-items: center;
-    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 9999;
+    pointer-events: none;
 }
 
 .loading-overlay.visible {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.loading-overlay .dice-loading {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Ensure loading overlay is always on top */
+body.loading {
+    overflow: hidden;
+}
+
+body.loading .game-area {
+    pointer-events: none;
+}
+
+/* Prevent interaction during bot turns */
+.game-area.bot-turn {
+    pointer-events: none;
+}
+
+.game-area.bot-turn .piece {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Improve loading visibility for third player */
+.loading-overlay.third-player {
+    background: rgba(0, 0, 0, 0.85);
 }
 
 .dice-loading {
