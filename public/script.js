@@ -1774,8 +1774,15 @@ async function startGame(roomId) {
         if (!roomSnap.exists()) return;
         
         const roomData = roomSnap.data();
+        
+        // Ensure we have players before starting
+        if (!roomData.players || roomData.players.length === 0) {
+            console.error("No players in room");
+            return;
+        }
+        
         playerOrder = [...roomData.players];
-        currentTurnPlayer = playerOrder[0];
+        currentTurnPlayer = playerOrder[0]; // Set first player's turn
 
         // Initialize player goals in Firestore
         const playerGoals = {};
@@ -1790,17 +1797,22 @@ async function startGame(roomId) {
             };
         }
 
-        // Update room with all players' goals
+        // Update room with all players' goals and game state
         await updateDoc(roomRef, {
             gameState: GAME_STATES.STARTED,
-            currentTurn: currentTurnPlayer,
+            currentTurn: playerOrder[0], // Explicitly set first player
             turnStartTime: Date.now(),
             playerOrder: playerOrder,
-            playerGoals: playerGoals
+            playerGoals: playerGoals,
+            lastUpdated: Date.now()
         });
         
         // Show game area
-        document.querySelector('.game-area').classList.add('visible');
+        const gameArea = document.querySelector('.game-area');
+        if (gameArea) {
+            gameArea.classList.add('visible');
+            gameArea.style.display = 'block';
+        }
         
         // Start timer for first player
         if (currentTurnPlayer === currentPlayerId) {
@@ -1808,7 +1820,11 @@ async function startGame(roomId) {
         }
         
         // Hide start game button
-        document.querySelector('.start-game-btn')?.classList.remove('visible');
+        const startGameBtn = document.querySelector('.start-game-btn');
+        if (startGameBtn) {
+            startGameBtn.classList.remove('visible');
+            startGameBtn.style.display = 'none';
+        }
         
         // Initialize game state for all players
         updateGameAreaState();
@@ -1816,6 +1832,7 @@ async function startGame(roomId) {
         console.log("✅ Game started successfully with", playerOrder.length, "players");
     } catch (error) {
         console.error("Error starting game:", error);
+        alert("Failed to start game. Please try again.");
     }
 }
 

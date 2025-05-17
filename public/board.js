@@ -105,6 +105,15 @@ export class Board {
                     powerPreference: 'high-performance'
                 });
 
+                // Wait for the renderer to be ready
+                await new Promise(resolve => {
+                    if (app.renderer) {
+                        resolve();
+                    } else {
+                        app.renderer.on('init', resolve);
+                    }
+                });
+
                 // Set up stage interaction
                 app.stage.interactive = true;
                 app.stage.hitArea = app.screen;
