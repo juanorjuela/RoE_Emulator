@@ -107,45 +107,19 @@ let boardInstance = null;
 
 async function initializeRenderer(options) {
     try {
-        // First try WebGL2
-        options.forceCanvas = false;
-        options.powerPreference = "high-performance";
-        options.preserveDrawingBuffer = true;
-        options.antialias = true;
-        options.backgroundAlpha = 1;
-        options.clearBeforeRender = true;
-        
-        // Add WebGL2 specific options
-        options.context = {
-            alpha: true,
-            antialias: true,
-            desynchronized: false,
-            depth: true,
-            failIfMajorPerformanceCaveat: false,
-            powerPreference: "high-performance",
-            premultipliedAlpha: true,
-            preserveDrawingBuffer: true,
-            stencil: true
-        };
-        
-        console.log("Attempting WebGL2 renderer initialization...");
+        // Try Canvas first as it's more reliable
+        options.forceCanvas = true;
+        console.log("Attempting Canvas renderer initialization...");
         return new PIXI.Application(options);
-    } catch (webglError) {
-        console.warn("WebGL2 initialization failed, trying WebGL1:", webglError);
+    } catch (canvasError) {
+        console.warn("Canvas initialization failed, trying WebGL:", canvasError);
         try {
-            // Try WebGL1
+            // Try WebGL as fallback
             options.forceCanvas = false;
             return new PIXI.Application(options);
-        } catch (webgl1Error) {
-            console.warn("WebGL1 initialization failed, falling back to Canvas:", webgl1Error);
-            try {
-                // Try Canvas as final fallback
-                options.forceCanvas = true;
-                return new PIXI.Application(options);
-            } catch (canvasError) {
-                console.error("All renderer initialization attempts failed:", canvasError);
-                throw new Error("Could not initialize any renderer");
-            }
+        } catch (webglError) {
+            console.error("All renderer initialization attempts failed:", webglError);
+            throw new Error("Could not initialize any renderer");
         }
     }
 }
@@ -625,15 +599,8 @@ class Board {
     }
 }
 
-// Export singleton instance and helper functions
-export const initializeBoard = async () => {
-    if (!boardInstance) {
-        boardInstance = new Board();
-    }
-    return boardInstance.initialize();
-};
-
-export const getBoard = () => boardInstance;
+// Export both the class and helper functions
+export { Board, initializeBoard, getBoard };
 
 // Initialize board when document is loaded
 document.addEventListener('DOMContentLoaded', async () => {

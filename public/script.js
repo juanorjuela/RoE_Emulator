@@ -8,8 +8,8 @@ import { RaveTycoonBot } from './bot.js';
 // Import game constants
 import { GAME_STATES, TURN_TIME, PLAYER_MESSAGES } from './constants.js';
 
-// Import and initialize the board
-import { initializeBoard, getBoard } from './board.js';
+// Import board components
+import { Board, initializeBoard, getBoard } from './board.js';
 
 // Game State Variables
 let gameState = GAME_STATES.WAITING;
@@ -46,12 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Function to initialize the game
 async function initializeGame() {
     try {
-        // Initialize the game board only if it doesn't exist
-        if (!window.gameBoard) {
-            console.log("Creating new game board...");
-            window.gameBoard = new Board();
-        }
-
+        // Initialize the game board
+        console.log("Initializing game board...");
+        await initializeBoard();
+        
         // Initialize all other game components
         initializeDecks();
         

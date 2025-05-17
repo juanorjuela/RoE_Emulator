@@ -33,9 +33,6 @@
                         if (!PIXI.Application) {
                             throw new Error('PIXI.Application not found');
                         }
-                        if (!PIXI.utils.isWebGLSupported()) {
-                            console.warn('WebGL not supported, will use Canvas renderer');
-                        }
                         console.log('✅ PIXI.js loaded successfully');
                         return true;
                     }
@@ -57,20 +54,44 @@
                 console.error('PIXI.js failed to load! Attempting to reload...');
                 location.reload();
             }
-            
-            // Check if board container is visible
-            const boardContainer = document.getElementById('board-container');
-            if (boardContainer) {
-                const style = window.getComputedStyle(boardContainer);
-                console.log('Board container visibility:', {
-                    display: style.display,
-                    visibility: style.visibility,
-                    opacity: style.opacity,
-                    width: style.width,
-                    height: style.height
-                });
-            }
         });
+    </script>
+
+    <!-- Firebase SDK and App Initialization -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDJ3g2PKE-A_1wn5axTeO4nfNIlIsBJXY",
+            authDomain: "rave-tycoon.firebaseapp.com",
+            projectId: "rave-tycoon",
+            storageBucket: "rave-tycoon.firebasestorage.app",
+            messagingSenderId: "230788414135",
+            appId: "1:230788414135:web:be2732ed317f9d6fdd6b32",
+            measurementId: "G-P4XSYXE1S9"
+        };
+
+        // Initialize Firebase
+        try {
+            const app = initializeApp(firebaseConfig);
+            window.app = app;  // Make app available globally
+            
+            // Initialize Firestore and Auth
+            const db = getFirestore();
+            const auth = getAuth();
+            
+            // Make Firebase instances available globally
+            window.db = db;
+            window.auth = auth;
+            
+            console.log("✅ Firebase initialized successfully");
+        } catch (error) {
+            console.error("❌ Error initializing Firebase:", error);
+        }
     </script>
 </head>
 <body>
@@ -179,43 +200,6 @@
         </aside>
     </div>
 
-    <!-- Firebase SDK and App Initialization -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        // Your Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyDDJ3g2PKE-A_1wn5axTeO4nfNIlIsBJXY",
-            authDomain: "rave-tycoon.firebaseapp.com",
-            projectId: "rave-tycoon",
-            storageBucket: "rave-tycoon.firebasestorage.app",
-            messagingSenderId: "230788414135",
-            appId: "1:230788414135:web:be2732ed317f9d6fdd6b32",
-            measurementId: "G-P4XSYXE1S9"
-        };
-
-        // Initialize Firebase
-        try {
-            const app = initializeApp(firebaseConfig);
-            window.app = app;  // Make app available globally
-            
-            // Initialize Firestore and Auth
-            const db = getFirestore();
-            const auth = getAuth();
-            
-            // Make Firebase instances available globally
-            window.db = db;
-            window.auth = auth;
-            
-            console.log("✅ Firebase initialized successfully");
-        } catch (error) {
-            console.error("❌ Error initializing Firebase:", error);
-        }
-    </script>
-    
     <!-- Load our application modules -->
     <script type="module" src="constants.js"></script>
     <script type="module" src="board.js"></script>
