@@ -105,8 +105,8 @@ h2 {
     width: 100%;
     height: 700px;
     position: relative;
-    background-color: #1a1a1a;
-    border: 1px solid #333;
+    background-color: #E6FFE6; /* Light pastel green */
+    border: 1px solid #ACC8AA; /* Slightly darker green border */
     overflow: hidden;
     margin: 20px auto;
     cursor: grab;
@@ -123,9 +123,19 @@ h2 {
     grid-template-columns: repeat(20, 50px);
     grid-template-rows: repeat(20, 50px);
     gap: 0;
-    background-color: #222;
+    background-color: transparent; /* Transparent, relies on board-container bg */
     transform-origin: top left;
     will-change: transform;
+}
+
+.grid-cell {
+    width: 50px;
+    height: 50px;
+    border: 1px solid #B0DAB0; /* Light green-gray border for cells */
+    background-color: rgba(255, 255, 255, 0.2); /* Very subtle white tint for cells */
+    position: relative;
+    transform: translate3d(0, 0, 0);
+    will-change: transform, background-color;
 }
 
 .pieces-container {
@@ -198,6 +208,8 @@ h2 {
 
 .grid-container.hidden {
     opacity: 0;
+    /* Ensure it's still in the flow or explicitly set display: none if needed */
+    /* For now, opacity 0 should be enough given it's for visual toggling */
 }
 
 /* Board controls */
@@ -1114,6 +1126,10 @@ body.loading .game-area {
     transform: none;
 }
 
+.game-pieces-section .pieces-container .piece {
+    margin: 5px;
+}
+
 .piece:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -1157,7 +1173,7 @@ body.loading .game-area {
     background: white;
     border: 2px solid #333;
     border-radius: 8px;
-    cursor: move;
+    cursor: grab;
     user-select: none;
     transition: transform 0.2s ease;
     z-index: 10;
