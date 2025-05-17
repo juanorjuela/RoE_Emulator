@@ -36,9 +36,9 @@ async function waitForPixi() {
 }
 
 // Board initialization and rendering
-let boardContainer = null;
-let gridContainer = null;
-let piecesContainer = null;
+const boardContainer = null;
+const gridContainer = null;
+const piecesContainer = null;
 
 // Board configuration
 const GRID_SIZE = 70;
@@ -108,13 +108,17 @@ const GUEST_TYPES = {
 // Board state management
 export class Board {
     constructor() {
+        this.app = null;
+        this.boardContainer = null;
+        this.gridContainer = null;
+        this.piecesContainer = null;
         this.initialize();
     }
 
     async initialize() {
+        console.log("Initializing board with simplified approach...");
+        
         try {
-            console.log("Initializing board with simplified approach...");
-            
             // 1. First try: Basic Canvas renderer
             const options = {
                 width: BOARD_WIDTH,
@@ -125,34 +129,34 @@ export class Board {
                 resolution: 1
             };
 
-            app = new PIXI.Application(options);
+            this.app = new PIXI.Application(options);
             
             // Get the container and clear it
-            boardContainer = document.getElementById('board-container');
-            if (!boardContainer) {
+            this.boardContainer = document.getElementById('board-container');
+            if (!this.boardContainer) {
                 throw new Error('Board container not found');
             }
             
-            while (boardContainer.firstChild) {
-                boardContainer.removeChild(boardContainer.firstChild);
+            while (this.boardContainer.firstChild) {
+                this.boardContainer.removeChild(this.boardContainer.firstChild);
             }
 
             // Add the canvas with a fade-in effect
-            app.view.style.opacity = '0';
-            boardContainer.appendChild(app.view);
+            this.app.view.style.opacity = '0';
+            this.boardContainer.appendChild(this.app.view);
             
             // Fade in the canvas
             setTimeout(() => {
-                app.view.style.transition = 'opacity 0.5s ease-in';
-                app.view.style.opacity = '1';
+                this.app.view.style.transition = 'opacity 0.5s ease-in';
+                this.app.view.style.opacity = '1';
             }, 100);
 
             // Create main containers
-            gridContainer = new PIXI.Container();
-            piecesContainer = new PIXI.Container();
+            this.gridContainer = new PIXI.Container();
+            this.piecesContainer = new PIXI.Container();
             
-            app.stage.addChild(gridContainer);
-            app.stage.addChild(piecesContainer);
+            this.app.stage.addChild(this.gridContainer);
+            this.app.stage.addChild(this.piecesContainer);
 
             // Draw the grid
             const grid = new PIXI.Graphics();
@@ -170,50 +174,50 @@ export class Board {
                 grid.lineTo(BOARD_WIDTH, y);
             }
 
-            gridContainer.addChild(grid);
+            this.gridContainer.addChild(grid);
 
             // Add basic interaction
-            app.stage.interactive = true;
-            app.stage.hitArea = app.screen;
+            this.app.stage.interactive = true;
+            this.app.stage.hitArea = this.app.screen;
 
             // Simple pan functionality
             let isDragging = false;
             let lastPosition = null;
 
-            app.stage.on('pointerdown', (event) => {
+            this.app.stage.on('pointerdown', (event) => {
                 isDragging = true;
                 lastPosition = event.data.global.clone();
             });
 
-            app.stage.on('pointermove', (event) => {
+            this.app.stage.on('pointermove', (event) => {
                 if (isDragging && lastPosition) {
                     const newPosition = event.data.global;
                     const dx = newPosition.x - lastPosition.x;
                     const dy = newPosition.y - lastPosition.y;
 
-                    gridContainer.x += dx;
-                    gridContainer.y += dy;
-                    piecesContainer.x += dx;
-                    piecesContainer.y += dy;
+                    this.gridContainer.x += dx;
+                    this.gridContainer.y += dy;
+                    this.piecesContainer.x += dx;
+                    this.piecesContainer.y += dy;
 
                     lastPosition = newPosition.clone();
                 }
             });
 
-            app.stage.on('pointerup', () => {
+            this.app.stage.on('pointerup', () => {
                 isDragging = false;
                 lastPosition = null;
             });
 
             // Simple zoom with mouse wheel
-            boardContainer.addEventListener('wheel', (event) => {
+            this.boardContainer.addEventListener('wheel', (event) => {
                 event.preventDefault();
                 const scale = event.deltaY > 0 ? 0.95 : 1.05;
                 
-                gridContainer.scale.x *= scale;
-                gridContainer.scale.y *= scale;
-                piecesContainer.scale.x *= scale;
-                piecesContainer.scale.y *= scale;
+                this.gridContainer.scale.x *= scale;
+                this.gridContainer.scale.y *= scale;
+                this.piecesContainer.scale.x *= scale;
+                this.piecesContainer.scale.y *= scale;
             });
 
             console.log("Board initialized successfully!");
@@ -231,33 +235,36 @@ export class Board {
             this.startRenderLoop();
             
             console.log("Board initialization complete!");
+            return true;
         } catch (error) {
             console.error("Error initializing board:", error);
             
             // Show error message to user
-            if (boardContainer) {
+            if (this.boardContainer) {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error-message';
                 errorDiv.style.color = 'red';
                 errorDiv.style.padding = '20px';
                 errorDiv.style.textAlign = 'center';
                 errorDiv.textContent = 'Unable to initialize game board. Please try refreshing the page.';
-                boardContainer.appendChild(errorDiv);
+                this.boardContainer.appendChild(errorDiv);
             }
+            
+            return false;
         }
     }
 
     startRenderLoop() {
-        if (!app) return;
+        if (!this.app) return;
         
         // Remove any existing ticker
-        app.ticker.remove(this.render, this);
+        this.app.ticker.remove(this.render, this);
         
         // Add new render function with error handling
         this.render = () => {
             try {
-                if (app && app.renderer) {
-                    app.renderer.render(app.stage);
+                if (this.app && this.app.renderer) {
+                    this.app.renderer.render(this.app.stage);
                 }
             } catch (e) {
                 console.error("Render error:", e);
@@ -266,19 +273,19 @@ export class Board {
             }
         };
         
-        app.ticker.add(this.render, this);
-        app.ticker.start();
+        this.app.ticker.add(this.render, this);
+        this.app.ticker.start();
     }
 
     handleRenderError(error) {
         console.log("Handling render error:", error);
-        if (app && app.ticker) {
-            app.ticker.stop();
+        if (this.app && this.app.ticker) {
+            this.app.ticker.stop();
             
             // Try to restart the render loop
             setTimeout(() => {
-                if (app && app.ticker) {
-                    app.ticker.start();
+                if (this.app && this.app.ticker) {
+                    this.app.ticker.start();
                 }
             }, 1000);
         }
@@ -514,21 +521,7 @@ export class Board {
 
 // Initialize board when document is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    initializeBoard().then(success => {
-        if (success) {
-            console.log("Board setup complete!");
-            // Make board instance globally available
-            window.gameBoard = {
-                app,
-                boardContainer,
-                gridContainer,
-                piecesContainer,
-                initializeBoard
-            };
-        } else {
-            console.error("Board initialization failed!");
-        }
-    });
+    new Board();
 });
 
 // Export necessary functions and variables
