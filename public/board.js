@@ -153,7 +153,8 @@ class Board {
         this.lastKnownPositions = new Map();
         this.scale = 1;
         this.position = { x: 0, y: 0 };
-        this.onBoardStateChange = null; // Callback for board state changes
+        this.onBoardStateChange = null;
+        this.isDraggingFromSource = false;
         
         boardInstance = this;
     }
@@ -318,6 +319,36 @@ class Board {
         let startX, startY;
         let initialPieceX, initialPieceY;
 
+        // Handle dragging from game pieces section
+        const gamePiecesSection = document.querySelector('.game-pieces-section');
+        if (gamePiecesSection) {
+            gamePiecesSection.addEventListener('mousedown', (e) => {
+                const piece = e.target.closest('.piece');
+                if (!piece) return;
+
+                // Create a clone of the piece for dragging
+                const clone = piece.cloneNode(true);
+                clone.style.position = 'absolute';
+                clone.style.zIndex = '1000';
+                document.body.appendChild(clone);
+
+                const rect = piece.getBoundingClientRect();
+                this.dragOffset.x = e.clientX - rect.left;
+                this.dragOffset.y = e.clientY - rect.top;
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                this.isDragging = true;
+                this.isDraggingFromSource = true;
+                this.draggedPiece = clone;
+                clone.classList.add('dragging');
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
         const onMouseDown = (e, piece) => {
             if (this.isDragging) return;
             
@@ -331,10 +362,10 @@ class Board {
             initialPieceY = parseInt(piece.style.top) || 0;
             
             this.isDragging = true;
+            this.isDraggingFromSource = false;
             this.draggedPiece = piece;
             piece.classList.add('dragging');
             
-            // Store initial position
             this.lastKnownPositions.set(piece.id, {
                 x: initialPieceX,
                 y: initialPieceY
@@ -349,76 +380,100 @@ class Board {
             
             e.preventDefault();
             
-            // Calculate new position with drag offset
             const newX = e.clientX - this.dragOffset.x;
             const newY = e.clientY - this.dragOffset.y;
             
-            // Get board container bounds
-            const boardRect = this.boardContainer.getBoundingClientRect();
-            
-            // Calculate position relative to board
-            const relativeX = newX - boardRect.left;
-            const relativeY = newY - boardRect.top;
-            
-            // Apply position with hardware acceleration
-            this.draggedPiece.style.transform = `translate3d(${relativeX}px, ${relativeY}px, 0)`;
+            if (this.isDraggingFromSource) {
+                this.draggedPiece.style.left = `${newX}px`;
+                this.draggedPiece.style.top = `${newY}px`;
+            } else {
+                const boardRect = this.boardContainer.getBoundingClientRect();
+                const relativeX = newX - boardRect.left;
+                const relativeY = newY - boardRect.top;
+                this.draggedPiece.style.transform = `translate3d(${relativeX}px, ${relativeY}px, 0)`;
+            }
         };
 
         const onMouseUp = (e) => {
             if (!this.isDragging || !this.draggedPiece) return;
             
-            const finalX = e.clientX;
-            const finalY = e.clientY;
-            
-            // Get the target cell
-            const boardRect = this.boardContainer.getBoundingClientRect();
-            const relativeX = finalX - boardRect.left;
-            const relativeY = finalY - boardRect.top;
-            
-            // Calculate grid position
-            const gridX = Math.floor(relativeX / CELL_SIZE);
-            const gridY = Math.floor(relativeY / CELL_SIZE);
-            
-            // Check if position is valid
-            if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-                // Snap to grid
-                const snappedX = gridX * CELL_SIZE;
-                const snappedY = gridY * CELL_SIZE;
+            if (this.isDraggingFromSource) {
+                const boardRect = this.boardContainer.getBoundingClientRect();
+                const relativeX = e.clientX - boardRect.left;
+                const relativeY = e.clientY - boardRect.top;
                 
-                // Update piece position
-                this.draggedPiece.style.transform = 'none';
-                this.draggedPiece.style.left = `${snappedX}px`;
-                this.draggedPiece.style.top = `${snappedY}px`;
+                const gridX = Math.floor(relativeX / CELL_SIZE);
+                const gridY = Math.floor(relativeY / CELL_SIZE);
                 
-                // Store new position
-                this.piecePositions.set(this.draggedPiece.id, {
-                    x: snappedX,
-                    y: snappedY
-                });
+                if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+                    const snappedX = gridX * CELL_SIZE;
+                    const snappedY = gridY * CELL_SIZE;
+                    
+                    // Create new piece on the board
+                    const type = this.draggedPiece.className.split(' ')[1];
+                    const newPiece = this.createPiece(type);
+                    newPiece.style.left = `${snappedX}px`;
+                    newPiece.style.top = `${snappedY}px`;
+                    
+                    this.piecePositions.set(newPiece.id, {
+                        x: snappedX,
+                        y: snappedY
+                    });
 
-                // Notify of board state change
-                if (this.onBoardStateChange) {
-                    this.onBoardStateChange(this.getBoardState());
+                    if (this.onBoardStateChange) {
+                        this.onBoardStateChange(this.getBoardState());
+                    }
                 }
+                
+                // Remove the dragged clone
+                this.draggedPiece.remove();
             } else {
-                // Revert to last known position
-                const lastPos = this.lastKnownPositions.get(this.draggedPiece.id);
-                if (lastPos) {
+                const finalX = e.clientX;
+                const finalY = e.clientY;
+                
+                const boardRect = this.boardContainer.getBoundingClientRect();
+                const relativeX = finalX - boardRect.left;
+                const relativeY = finalY - boardRect.top;
+                
+                const gridX = Math.floor(relativeX / CELL_SIZE);
+                const gridY = Math.floor(relativeY / CELL_SIZE);
+                
+                if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+                    const snappedX = gridX * CELL_SIZE;
+                    const snappedY = gridY * CELL_SIZE;
+                    
                     this.draggedPiece.style.transform = 'none';
-                    this.draggedPiece.style.left = `${lastPos.x}px`;
-                    this.draggedPiece.style.top = `${lastPos.y}px`;
+                    this.draggedPiece.style.left = `${snappedX}px`;
+                    this.draggedPiece.style.top = `${snappedY}px`;
+                    
+                    this.piecePositions.set(this.draggedPiece.id, {
+                        x: snappedX,
+                        y: snappedY
+                    });
+
+                    if (this.onBoardStateChange) {
+                        this.onBoardStateChange(this.getBoardState());
+                    }
+                } else {
+                    const lastPos = this.lastKnownPositions.get(this.draggedPiece.id);
+                    if (lastPos) {
+                        this.draggedPiece.style.transform = 'none';
+                        this.draggedPiece.style.left = `${lastPos.x}px`;
+                        this.draggedPiece.style.top = `${lastPos.y}px`;
+                    }
                 }
             }
             
             this.draggedPiece.classList.remove('dragging');
             this.isDragging = false;
+            this.isDraggingFromSource = false;
             this.draggedPiece = null;
             
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
         };
 
-        // Add drag handlers to pieces
+        // Add drag handlers to pieces in the board
         this.piecesContainer.addEventListener('mousedown', (e) => {
             const piece = e.target.closest('.piece');
             if (piece) {
