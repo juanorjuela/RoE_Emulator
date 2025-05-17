@@ -95,6 +95,11 @@ export class Board {
             // Create the application only if it doesn't exist
             if (!app) {
                 console.log("Creating PIXI application...");
+                
+                // Force PIXI to use canvas renderer
+                PIXI.utils.skipHello();
+                const contextType = window.WebGL2RenderingContext ? 'webgl2' : 'webgl';
+                
                 app = new PIXI.Application({
                     width: BOARD_WIDTH,
                     height: BOARD_HEIGHT,
@@ -102,11 +107,16 @@ export class Board {
                     resolution: window.devicePixelRatio || 1,
                     antialias: true,
                     autoDensity: true,
-                    powerPreference: 'high-performance'
+                    powerPreference: 'high-performance',
+                    forceCanvas: false,
+                    clearBeforeRender: true,
+                    preserveDrawingBuffer: true,
+                    context: null,
+                    contextType: contextType
                 });
 
                 // Wait for the application to be fully initialized
-                await new Promise((resolve) => {
+                await new Promise((resolve, reject) => {
                     if (app && app.renderer) {
                         resolve();
                     } else {
@@ -115,8 +125,21 @@ export class Board {
                             if (app && app.renderer) {
                                 resolve();
                             } else {
-                                console.error('Failed to initialize PIXI renderer');
-                                resolve(); // Resolve anyway to prevent hanging
+                                // Try canvas renderer as fallback
+                                app = new PIXI.Application({
+                                    width: BOARD_WIDTH,
+                                    height: BOARD_HEIGHT,
+                                    backgroundColor: 0x1a1a1a,
+                                    forceCanvas: true,
+                                    resolution: window.devicePixelRatio || 1
+                                });
+                                
+                                if (app && app.renderer) {
+                                    console.log('Fallback to canvas renderer successful');
+                                    resolve();
+                                } else {
+                                    reject(new Error('Failed to initialize PIXI renderer'));
+                                }
                             }
                         });
                     }
@@ -188,6 +211,13 @@ export class Board {
             
             // Initialize control buttons after board is fully set up
             this.initializeControlButtons();
+            
+            // Start the render loop
+            app.ticker.add(() => {
+                if (app && app.renderer) {
+                    app.renderer.render(app.stage);
+                }
+            });
             
             console.log("Board initialization complete!");
         } catch (error) {
