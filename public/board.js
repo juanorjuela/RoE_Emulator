@@ -105,20 +105,33 @@ export class Board {
                     powerPreference: 'high-performance'
                 });
 
-                // Wait for the renderer to be ready
-                await new Promise(resolve => {
-                    if (app.renderer) {
+                // Wait for the application to be fully initialized
+                await new Promise((resolve) => {
+                    if (app && app.renderer) {
                         resolve();
                     } else {
-                        app.renderer.on('init', resolve);
+                        // If renderer isn't immediately available, wait for the next frame
+                        requestAnimationFrame(() => {
+                            if (app && app.renderer) {
+                                resolve();
+                            } else {
+                                console.error('Failed to initialize PIXI renderer');
+                                resolve(); // Resolve anyway to prevent hanging
+                            }
+                        });
                     }
                 });
-
-                // Set up stage interaction
-                app.stage.interactive = true;
-                app.stage.hitArea = app.screen;
-                app.stage.sortableChildren = true;
             }
+
+            // Verify that we have a valid renderer
+            if (!app || !app.renderer) {
+                throw new Error('PIXI renderer initialization failed');
+            }
+
+            // Set up stage interaction
+            app.stage.interactive = true;
+            app.stage.hitArea = app.screen;
+            app.stage.sortableChildren = true;
 
             console.log("Finding board container...");
             this.container = document.getElementById('board-container');
@@ -179,7 +192,8 @@ export class Board {
             console.log("Board initialization complete!");
         } catch (error) {
             console.error('Error initializing board:', error);
-            throw error;
+            // Don't throw the error, just log it
+            // This allows the rest of the game to initialize even if the board fails
         }
     }
 

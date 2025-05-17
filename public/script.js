@@ -53,28 +53,15 @@ async function initializeGame() {
             window.gameBoard = new Board();
         }
 
-        // Wait for board to be fully initialized
-        await new Promise((resolve, reject) => {
-            const checkBoard = () => {
-                if (window.gameBoard && 
-                    window.gameBoard.container && 
-                    window.gameBoard.gridContainer && 
-                    window.gameBoard.piecesContainer) {
-                    resolve();
-                } else if (document.querySelector('.error-message')) {
-                    reject(new Error('Board initialization failed'));
-                } else {
-                    setTimeout(checkBoard, 100);
-                }
-            };
-            checkBoard();
-        });
-        
         // Initialize all other game components
         initializeDecks();
         
         // Hide game area initially
-        document.querySelector('.game-area').classList.remove('visible');
+        const gameArea = document.querySelector('.game-area');
+        if (gameArea) {
+            gameArea.classList.remove('visible');
+            gameArea.style.display = 'none';
+        }
         
         // Create and add timer container if it doesn't exist
         let timerContainer = document.querySelector('.timer-container');
@@ -122,10 +109,13 @@ async function initializeGame() {
                     ❌ Firebase setup verification failed. Please check the console for details.
                 </div>
             `;
+            return;
         }
 
         // Initialize game controls
         initializeGameControls();
+        
+        console.log("✅ Game initialization complete");
     } catch (error) {
         console.error("❌ Error initializing game:", error);
         // Add error message to the page
@@ -133,7 +123,6 @@ async function initializeGame() {
         errorDiv.className = 'error-message';
         errorDiv.textContent = `❌ Error initializing game: ${error.message}`;
         document.querySelector('.container').prepend(errorDiv);
-        throw error;
     }
 }
 
