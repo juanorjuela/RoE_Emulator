@@ -77,16 +77,16 @@ h2 {
 .game-area {
     display: none;
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    will-change: transform, opacity;
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: var(--bg-color);
+    transition: opacity 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
 .game-area.visible {
-    display: block !important;
     opacity: 1;
 }
 
@@ -903,13 +903,16 @@ button:disabled:hover {
 
 /* Disabled Game Area */
 .game-area.disabled {
+    opacity: 0.8;
     pointer-events: none;
-    opacity: 0.7;
+    filter: grayscale(30%);
 }
 
 .card.disabled {
+    opacity: 0.6;
     pointer-events: none;
-    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(30%);
 }
 
 /* Loading Animation */
@@ -917,8 +920,8 @@ button:disabled:hover {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
@@ -927,13 +930,11 @@ button:disabled:hover {
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
     z-index: 9999;
-    pointer-events: none;
 }
 
 .loading-overlay.visible {
     opacity: 1;
     visibility: visible;
-    pointer-events: auto;
 }
 
 .loading-overlay .dice-loading {
@@ -1178,4 +1179,19 @@ body.loading .game-area {
     text-align: center;
     font-weight: bold;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Add smooth transitions for all interactive elements */
+.card,
+.button,
+.piece,
+.timer-container,
+.finish-turn-btn {
+    transition: all 0.3s ease;
+}
+
+/* Ensure proper stacking context */
+.game-area > * {
+    position: relative;
+    z-index: 2;
 }

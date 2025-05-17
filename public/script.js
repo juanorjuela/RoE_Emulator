@@ -1661,7 +1661,7 @@ function listenToGameState(roomId) {
         if (!data) return;
         
         // Update game state
-        gameState = data.state;
+        gameState = data.gameState;
         
         // Handle turn changes
         if (data.currentTurn !== currentTurnPlayer) {
@@ -1674,7 +1674,7 @@ function listenToGameState(roomId) {
             }
             
             // Update UI for turn change
-            if (currentTurnPlayer === auth.currentUser.uid) {
+            if (currentTurnPlayer === currentPlayerId) {
                 showLoading('Your turn!');
                 setTimeout(hideLoading, 1000);
                 startTimer();
@@ -1684,17 +1684,15 @@ function listenToGameState(roomId) {
         // Update player list and turn indicator
         updatePlayerList(data.players || [], currentTurnPlayer);
         
-        // Update game area visibility
-        if (gameState === GAME_STATES.PLAYING) {
-            const gameArea = document.querySelector('.game-area');
-            if (gameArea) {
-                gameArea.style.display = 'block';
-                // Use RAF for smooth transition
-                requestAnimationFrame(() => {
-                    gameArea.classList.add('visible');
-                });
-            }
-        }
+        // Update game area visibility and state
+        updateGameAreaState();
+        
+        // Log state changes
+        console.log("Game state updated:", {
+            gameState: gameState,
+            currentTurn: currentTurnPlayer,
+            isMyTurn: currentTurnPlayer === currentPlayerId
+        });
     });
 }
 
@@ -1750,10 +1748,20 @@ function updateGameAreaState() {
         currentPlayerId: currentPlayerId
     });
 
-    // Always ensure game area is visible when game has started
+    // Show/hide game area based on game state
     if (gameState === GAME_STATES.STARTED) {
+        // First make it visible but with opacity 0
         gameArea.style.display = 'block';
-        gameArea.classList.add('visible');
+        gameArea.style.opacity = '0';
+        
+        // Force a reflow
+        gameArea.offsetHeight;
+        
+        // Then add the visible class for smooth transition
+        requestAnimationFrame(() => {
+            gameArea.classList.add('visible');
+            gameArea.style.opacity = '1';
+        });
         
         // Show/hide timer and finish turn button based on current player
         if (currentTurnPlayer === currentPlayerId) {
@@ -1776,14 +1784,27 @@ function updateGameAreaState() {
             }
         }
     } else {
-        // Only hide if game hasn't started
+        // Hide game area if game hasn't started
         gameArea.classList.remove('visible');
+        gameArea.style.opacity = '0';
         setTimeout(() => {
             if (gameState !== GAME_STATES.STARTED) {
                 gameArea.style.display = 'none';
             }
         }, 300);
     }
+
+    // Update player controls visibility
+    const playerControls = document.querySelectorAll('.player-controls button');
+    playerControls.forEach(button => {
+        button.disabled = currentTurnPlayer !== currentPlayerId || gameState !== GAME_STATES.STARTED;
+    });
+
+    // Update cards state
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.classList.toggle('disabled', currentTurnPlayer !== currentPlayerId || gameState !== GAME_STATES.STARTED);
+    });
 }
 
 // Add CSS styles for disabled cards
