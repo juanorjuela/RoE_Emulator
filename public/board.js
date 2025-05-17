@@ -3,6 +3,7 @@ let PIXI;
 let app = null;
 let contextLostCount = 0;
 const MAX_CONTEXT_LOST_RETRIES = 3;
+let isRecoveringContext = false;
 
 async function waitForPixi() {
     console.log("Waiting for PIXI.js to load...");
@@ -309,22 +310,98 @@ export class Board {
     }
 
     handleContextLoss() {
+        if (isRecoveringContext) return;
+        isRecoveringContext = true;
+        
         console.log("Handling context loss");
         if (app && app.ticker) {
             app.ticker.stop();
         }
+
+        // Save current state
+        const currentState = {
+            pieces: Array.from(this.pieces.entries()),
+            gridVisible: this.gridContainer ? this.gridContainer.visible : true,
+            zoom: this.gridContainer ? this.gridContainer.scale.x : 1,
+            position: this.gridContainer ? { x: this.gridContainer.x, y: this.gridContainer.y } : { x: 0, y: 0 }
+        };
+
+        // Attempt recovery after a short delay
+        setTimeout(async () => {
+            try {
+                if (contextLostCount <= MAX_CONTEXT_LOST_RETRIES) {
+                    // Try to restore the context
+                    if (app) {
+                        app.destroy(true);
+                        app = null;
+                    }
+                    
+                    // Reinitialize with current state
+                    await this.initialize();
+                    this.restoreState(currentState);
+                } else {
+                    // Fall back to canvas renderer
+                    console.log("Too many context losses, forcing canvas renderer");
+                    this.forceCanvasRenderer();
+                }
+            } catch (error) {
+                console.error("Context recovery failed:", error);
+            } finally {
+                isRecoveringContext = false;
+            }
+        }, 1000);
     }
 
     handleContextRestore() {
         console.log("Handling context restore");
         if (app && app.ticker) {
+            // Clear existing content
+            this.gridContainer.removeChildren();
+            this.piecesContainer.removeChildren();
+            
             // Redraw everything
             this.setupGrid();
-            this.pieces.forEach(piece => {
-                this.piecesContainer.addChild(piece);
+            this.pieces.forEach((piece, id) => {
+                const newPiece = this.createPiece(piece.type);
+                newPiece.id = id;
+                newPiece.position.set(piece.x, piece.y);
+                this.pieces.set(id, newPiece);
             });
-            app.ticker.start();
+            
+            // Restart the render loop
+            this.startRenderLoop();
         }
+    }
+
+    restoreState(state) {
+        if (!state || !this.gridContainer || !this.piecesContainer) return;
+
+        // Restore grid visibility
+        if (this.gridContainer) {
+            this.gridContainer.visible = state.gridVisible;
+        }
+
+        // Restore zoom level
+        if (state.zoom) {
+            this.gridContainer.scale.set(state.zoom);
+            this.piecesContainer.scale.set(state.zoom);
+        }
+
+        // Restore position
+        if (state.position) {
+            this.gridContainer.position.set(state.position.x, state.position.y);
+            this.piecesContainer.position.set(state.position.x, state.position.y);
+        }
+
+        // Restore pieces
+        state.pieces.forEach(([id, piece]) => {
+            if (!this.pieces.has(id)) {
+                const newPiece = this.createPiece(piece.type);
+                newPiece.id = id;
+                newPiece.position.set(piece.x, piece.y);
+                this.pieces.set(id, newPiece);
+            }
+        });
     }
 
     startRenderLoop() {
