@@ -8,6 +8,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="force-rendering" content="webkit">
+    <meta name="HandheldFriendly" content="true">
+    <meta name="MobileOptimized" content="320">
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
     <title>Rave Tycoon Game Cards Management</title>
@@ -52,6 +56,19 @@
             if (!pixiLoaded) {
                 console.error('PIXI.js failed to load! Attempting to reload...');
                 location.reload();
+            }
+            
+            // Check if board container is visible
+            const boardContainer = document.getElementById('board-container');
+            if (boardContainer) {
+                const style = window.getComputedStyle(boardContainer);
+                console.log('Board container visibility:', {
+                    display: style.display,
+                    visibility: style.visibility,
+                    opacity: style.opacity,
+                    width: style.width,
+                    height: style.height
+                });
             }
         });
     </script>

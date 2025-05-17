@@ -107,18 +107,45 @@ let boardInstance = null;
 
 async function initializeRenderer(options) {
     try {
-        // First try WebGL
+        // First try WebGL2
         options.forceCanvas = false;
+        options.powerPreference = "high-performance";
+        options.preserveDrawingBuffer = true;
+        options.antialias = true;
+        options.backgroundAlpha = 1;
+        options.clearBeforeRender = true;
+        
+        // Add WebGL2 specific options
+        options.context = {
+            alpha: true,
+            antialias: true,
+            desynchronized: false,
+            depth: true,
+            failIfMajorPerformanceCaveat: false,
+            powerPreference: "high-performance",
+            premultipliedAlpha: true,
+            preserveDrawingBuffer: true,
+            stencil: true
+        };
+        
+        console.log("Attempting WebGL2 renderer initialization...");
         return new PIXI.Application(options);
     } catch (webglError) {
-        console.log("WebGL initialization failed, falling back to Canvas:", webglError);
+        console.warn("WebGL2 initialization failed, trying WebGL1:", webglError);
         try {
-            // Try Canvas as fallback
-            options.forceCanvas = true;
+            // Try WebGL1
+            options.forceCanvas = false;
             return new PIXI.Application(options);
-        } catch (canvasError) {
-            console.error("Canvas initialization also failed:", canvasError);
-            throw new Error("Could not initialize any renderer");
+        } catch (webgl1Error) {
+            console.warn("WebGL1 initialization failed, falling back to Canvas:", webgl1Error);
+            try {
+                // Try Canvas as final fallback
+                options.forceCanvas = true;
+                return new PIXI.Application(options);
+            } catch (canvasError) {
+                console.error("All renderer initialization attempts failed:", canvasError);
+                throw new Error("Could not initialize any renderer");
+            }
         }
     }
 }
@@ -131,11 +158,33 @@ function setupContextRecovery(app) {
         console.log("WebGL context changed");
     });
 
-    app.renderer.on('contextlost', () => {
-        console.log("WebGL context lost - will attempt recovery");
-        setTimeout(() => {
-            if (app && app.renderer) {
-                app.renderer.reset();
+    app.renderer.on('contextlost', (event) => {
+        event.preventDefault(); // Prevent default handling
+        console.log("WebGL context lost - attempting recovery");
+        
+        // Stop all rendering
+        app.ticker.stop();
+        
+        // Clear the stage
+        app.stage.removeChildren();
+        
+        setTimeout(async () => {
+            try {
+                // Attempt to reset the renderer
+                if (app && app.renderer) {
+                    await app.renderer.reset();
+                    console.log("Renderer reset successful");
+                    
+                    // Restart rendering
+                    app.ticker.start();
+                    
+                    // Reinitialize the board
+                    initializeBoard();
+                }
+            } catch (error) {
+                console.error("Failed to recover from context loss:", error);
+                // Force page reload as last resort
+                location.reload();
             }
         }, 1000);
     });

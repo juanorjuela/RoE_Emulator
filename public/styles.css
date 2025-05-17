@@ -89,53 +89,30 @@ h2 {
 }
 
 .board-section {
-    position: relative;
     width: 100%;
-    height: 100%;
+    min-height: 700px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     margin: 20px 0;
 }
 
 #board-container {
-    position: relative;
-    width: 700px;
+    width: 100%;
     height: 700px;
+    position: relative;
     background-color: #1a1a1a;
-    border: 2px solid #333;
+    border: 1px solid #333;
     overflow: hidden;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    perspective: 1000px;
-    -webkit-perspective: 1000px;
-    will-change: transform;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    margin: 20px auto;
 }
 
 #board-container canvas {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    will-change: transform;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 .board-controls {
