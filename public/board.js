@@ -105,13 +105,21 @@ const GUEST_TYPES = {
     }
 };
 
-// Board state management
+// Create a singleton instance
+let boardInstance = null;
+
 export class Board {
     constructor() {
+        if (boardInstance) {
+            return boardInstance;
+        }
+        
         this.app = null;
         this.boardContainer = null;
         this.gridContainer = null;
         this.piecesContainer = null;
+        
+        boardInstance = this;
         this.initialize();
     }
 
@@ -519,10 +527,21 @@ export class Board {
     }
 }
 
+// Export singleton instance and helper functions
+export const initializeBoard = () => {
+    if (!boardInstance) {
+        boardInstance = new Board();
+    }
+    return boardInstance.initialize();
+};
+
+export const getBoard = () => boardInstance;
+
 // Initialize board when document is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new Board();
-});
-
-// Export necessary functions and variables
-export { app, boardContainer, gridContainer, piecesContainer, initializeBoard }; 
+    initializeBoard().then(() => {
+        console.log("Board setup complete!");
+    }).catch(error => {
+        console.error("Board initialization failed:", error);
+    });
+}); 

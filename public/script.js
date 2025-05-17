@@ -9,8 +9,7 @@ import { RaveTycoonBot } from './bot.js';
 import { GAME_STATES, TURN_TIME, PLAYER_MESSAGES } from './constants.js';
 
 // Import and initialize the board
-import { Board } from './board.js';
-let gameBoard;
+import { initializeBoard, getBoard } from './board.js';
 
 // Game State Variables
 let gameState = GAME_STATES.WAITING;
