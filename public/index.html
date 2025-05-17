@@ -15,6 +15,12 @@
             <h2>Board Game Assistant</h2>
         </header>
         
+        <!-- Add timer container -->
+        <div class="timer-container">2:00</div>
+        
+        <!-- Add finish turn button -->
+        <button class="finish-turn-btn">✅ Finish Turn</button>
+        
         <section class="lobby-section">
             <h2>Multiplayer Lobby</h2>
             <input type="text" id="player-name" placeholder="Enter your player name" />
@@ -31,6 +37,40 @@
         </section>
 
         <main class="game-area">
+            <section class="board-section">
+                <div id="board-container"></div>
+                <div class="board-controls">
+                    <button id="reset-view-btn">Reset View</button>
+                    <button id="toggle-grid-btn">Toggle Grid</button>
+                </div>
+            </section>
+
+            <section class="game-pieces-section">
+                <h3>Party Guests</h3>
+                <div class="pieces-container">
+                    <div class="piece-category" id="guest-pieces">
+                        <div class="piece rocker" data-type="rocker">
+                            <span class="piece-label">Rocker</span>
+                        </div>
+                        <div class="piece hopper" data-type="hopper">
+                            <span class="piece-label">Hip Hopper</span>
+                        </div>
+                        <div class="piece diva" data-type="diva">
+                            <span class="piece-label">Disco Diva</span>
+                        </div>
+                        <div class="piece princess" data-type="princess">
+                            <span class="piece-label">Pop Princess</span>
+                        </div>
+                        <div class="piece latino" data-type="latino">
+                            <span class="piece-label">Latino</span>
+                        </div>
+                        <div class="piece raver" data-type="raver">
+                            <span class="piece-label">Raver</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="dice-section">
                 <div class="dice-box">
                     <div id="dice" class="dice">
@@ -73,6 +113,11 @@
             <ul id="log-list"></ul>
         </aside>
     </div>
+
+    <!-- Load external libraries first -->
+    <script src="https://pixijs.download/release/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
     <!-- Firebase SDK and App Initialization -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -110,6 +155,7 @@
         }
     </script>
     
+    <!-- Load our application modules -->
     <script type="module" src="constants.js"></script>
     <script type="module" src="script.js"></script>
     <script type="module" src="bot.js"></script>

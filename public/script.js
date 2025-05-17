@@ -8,6 +8,10 @@ import { RaveTycoonBot } from './bot.js';
 // Import game constants
 import { GAME_STATES, TURN_TIME, PLAYER_MESSAGES } from './constants.js';
 
+// Import and initialize the board
+import { Board } from './board.js';
+let gameBoard;
+
 // Game State Variables
 let gameState = GAME_STATES.WAITING;
 let currentTurnPlayer = null;
@@ -42,45 +46,91 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Function to initialize the game
 async function initializeGame() {
-    // Initialize all the game components here
-    initializeDecks();
-    
-    // Hide game area initially
-    document.querySelector('.game-area').classList.remove('visible');
-    
-    // Add timer container to the DOM
-    const timerContainer = document.createElement('div');
-    timerContainer.className = 'timer-container';
-    timerContainer.innerHTML = '2:00';
-    document.body.appendChild(timerContainer);
-    
-    // Add finish turn button
-    const finishTurnBtn = document.createElement('button');
-    finishTurnBtn.className = 'finish-turn-btn';
-    finishTurnBtn.textContent = '✅ Finish Turn';
-    finishTurnBtn.addEventListener('click', endTurn);
-    document.body.appendChild(finishTurnBtn);
-    
-    // Add loading overlay
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.className = 'loading-overlay';
-    loadingOverlay.innerHTML = `
-        <div class="dice-loading"></div>
-        <div class="current-player-message"></div>
-    `;
-    document.body.appendChild(loadingOverlay);
-    
-    // Verify Firebase setup
-    const verificationResult = await verifyFirebaseSetup();
-    if (!verificationResult) {
-        // Disable room creation and joining if verification fails
-        document.getElementById('create-room-btn').disabled = true;
-        document.getElementById('join-room-btn').disabled = true;
-        document.getElementById('room-info').innerHTML = `
-            <div class="error-message">
-                ❌ Firebase setup verification failed. Please check the console for details.
-            </div>
-        `;
+    try {
+        // Initialize the game board only if it doesn't exist
+        if (!window.gameBoard) {
+            console.log("Creating new game board...");
+            window.gameBoard = new Board();
+        }
+
+        // Wait for board to be fully initialized
+        await new Promise((resolve, reject) => {
+            const checkBoard = () => {
+                if (window.gameBoard && 
+                    window.gameBoard.container && 
+                    window.gameBoard.gridContainer && 
+                    window.gameBoard.piecesContainer) {
+                    resolve();
+                } else if (document.querySelector('.error-message')) {
+                    reject(new Error('Board initialization failed'));
+                } else {
+                    setTimeout(checkBoard, 100);
+                }
+            };
+            checkBoard();
+        });
+        
+        // Initialize all other game components
+        initializeDecks();
+        
+        // Hide game area initially
+        document.querySelector('.game-area').classList.remove('visible');
+        
+        // Create and add timer container if it doesn't exist
+        let timerContainer = document.querySelector('.timer-container');
+        if (!timerContainer) {
+            timerContainer = document.createElement('div');
+            timerContainer.className = 'timer-container';
+            timerContainer.innerHTML = '2:00';
+            document.body.appendChild(timerContainer);
+        }
+        
+        // Create and add finish turn button if it doesn't exist
+        let finishTurnBtn = document.querySelector('.finish-turn-btn');
+        if (!finishTurnBtn) {
+            finishTurnBtn = document.createElement('button');
+            finishTurnBtn.className = 'finish-turn-btn';
+            finishTurnBtn.textContent = '✅ Finish Turn';
+            finishTurnBtn.addEventListener('click', () => {
+                if (currentTurnPlayer === currentPlayerId) {
+                    endTurn();
+                }
+            });
+            document.body.appendChild(finishTurnBtn);
+        }
+        
+        // Create and add loading overlay if it doesn't exist
+        let loadingOverlay = document.querySelector('.loading-overlay');
+        if (!loadingOverlay) {
+            loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'loading-overlay';
+            loadingOverlay.innerHTML = `
+                <div class="dice-loading"></div>
+                <div class="current-player-message"></div>
+            `;
+            document.body.appendChild(loadingOverlay);
+        }
+        
+        // Verify Firebase setup
+        const verificationResult = await verifyFirebaseSetup();
+        if (!verificationResult) {
+            // Disable room creation and joining if verification fails
+            document.getElementById('create-room-btn').disabled = true;
+            document.getElementById('join-room-btn').disabled = true;
+            document.getElementById('room-info').innerHTML = `
+                <div class="error-message">
+                    ❌ Firebase setup verification failed. Please check the console for details.
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error("❌ Error initializing game:", error);
+        // Add error message to the page
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = `❌ Error initializing game: ${error.message}`;
+        document.querySelector('.container').prepend(errorDiv);
+        throw error;
     }
 }
 
@@ -871,43 +921,47 @@ async function initializeSharedDeck(roomId) {
         
         // Initialize all decks and dice if they don't exist
         if (!roomData.decks) {
-            // Split the initialization into separate updates to avoid large transactions
-            await updateDoc(roomRef, {
-                "decks.actions": {
-                    deck: shuffle([...playerDeck]),
-                    discardPile: []
+            // Use a transaction to handle concurrent initialization
+            await runTransaction(db, async (transaction) => {
+                const roomDoc = await transaction.get(roomRef);
+                if (!roomDoc.exists()) {
+                    throw new Error("Room not found during transaction");
                 }
-            });
-
-            await updateDoc(roomRef, {
-                "decks.fuckups": {
-                    deck: shuffle([...fuckupsDeck]),
-                    discardPile: []
+                
+                const currentData = roomDoc.data();
+                if (currentData.decks) {
+                    // Another client already initialized the decks
+                    return;
                 }
-            });
-
-            await updateDoc(roomRef, {
-                "decks.miniMissions": {
-                    deck: shuffle([...minimissionsDeck]),
-                    discardPile: []
-                }
-            });
-
-            await updateDoc(roomRef, {
-                "decks.partyGoals": {
-                    deck: shuffle([...PartyGoalsDeck]),
-                    discardPile: []
-                }
-            });
-
-            await updateDoc(roomRef, {
-                dice: {
-                    dice1: 1,
-                    dice2: 1,
-                    lastRolled: Date.now(),
-                    rolledBy: "Game Start"
-                },
-                lastUpdated: Date.now()
+                
+                // Initialize all decks in a single transaction
+                transaction.update(roomRef, {
+                    decks: {
+                        actions: {
+                            deck: shuffle([...playerDeck]),
+                            discardPile: []
+                        },
+                        fuckups: {
+                            deck: shuffle([...fuckupsDeck]),
+                            discardPile: []
+                        },
+                        miniMissions: {
+                            deck: shuffle([...minimissionsDeck]),
+                            discardPile: []
+                        },
+                        partyGoals: {
+                            deck: shuffle([...PartyGoalsDeck]),
+                            discardPile: []
+                        }
+                    },
+                    dice: {
+                        dice1: 1,
+                        dice2: 1,
+                        lastRolled: Date.now(),
+                        rolledBy: "Game Start"
+                    },
+                    lastUpdated: Date.now()
+                });
             });
             
             console.log("✅ All shared decks and dice initialized");
@@ -1407,6 +1461,11 @@ function startTimer() {
     const timerContainer = document.querySelector('.timer-container');
     const finishTurnBtn = document.querySelector('.finish-turn-btn');
     
+    if (!timerContainer || !finishTurnBtn) {
+        console.error('Timer container or finish turn button not found');
+        return;
+    }
+    
     timerContainer.classList.add('active');
     finishTurnBtn.classList.add('visible');
     
@@ -1431,27 +1490,58 @@ function startTimer() {
 
 function updateTimerDisplay() {
     const timerContainer = document.querySelector('.timer-container');
+    if (!timerContainer) {
+        console.error('Timer container not found');
+        return;
+    }
     timerContainer.innerHTML = formatTime(remainingTime);
 }
 
+// Function to end turn
 function endTurn() {
+    console.log("Attempting to end turn...");
+    if (!currentRoomId || currentTurnPlayer !== currentPlayerId) {
+        console.log("Cannot end turn - not current player's turn");
+        return;
+    }
+
+    // Clear the turn timer
     clearInterval(turnTimer);
+    
+    // Update UI elements
     const timerContainer = document.querySelector('.timer-container');
     const finishTurnBtn = document.querySelector('.finish-turn-btn');
     
-    timerContainer.classList.remove('active', 'warning');
-    finishTurnBtn.classList.remove('visible');
-    
-    // Move to next player
-    const currentIndex = playerOrder.indexOf(currentTurnPlayer);
-    const nextIndex = (currentIndex + 1) % playerOrder.length;
-    const nextPlayer = playerOrder[nextIndex];
-    
-    // Update turn in Firestore and wait for it to complete
-    updateTurnInRoom(nextPlayer).then(() => {
-        // Update local state after Firestore update
-        currentTurnPlayer = nextPlayer;
-        updateGameAreaState();
+    if (timerContainer) timerContainer.style.display = 'none';
+    if (finishTurnBtn) {
+        finishTurnBtn.style.display = 'none';
+        finishTurnBtn.classList.remove('visible');
+    }
+
+    // Get the next player and update turn
+    const roomRef = doc(db, "rooms", currentRoomId);
+    getDoc(roomRef).then((roomDoc) => {
+        const data = roomDoc.data();
+        const players = data.players || [];
+        // Find current player index by name, not by ID
+        const currentIndex = players.indexOf(currentTurnPlayer);
+        if (currentIndex === -1) {
+            console.error("Current player not found in player list");
+            return;
+        }
+        const nextIndex = (currentIndex + 1) % players.length;
+        const nextPlayer = players[nextIndex];
+
+        console.log("Ending turn, next player:", nextPlayer);
+        
+        // Update turn in room
+        updateTurnInRoom(nextPlayer).then(() => {
+            console.log("Turn ended successfully");
+        }).catch((error) => {
+            console.error("Error updating turn:", error);
+        });
+    }).catch((error) => {
+        console.error("Error getting room data:", error);
     });
 }
 
@@ -1462,7 +1552,8 @@ async function updateTurnInRoom(nextPlayer) {
         const roomRef = doc(db, "rooms", currentRoomId);
         await updateDoc(roomRef, {
             currentTurn: nextPlayer,
-            turnStartTime: Date.now()
+            turnStartTime: Date.now(),
+            lastUpdated: Date.now()
         });
     } catch (error) {
         console.error("Error updating turn:", error);
@@ -1554,70 +1645,42 @@ function updateGameAreaState() {
     const roundCardBtn = document.getElementById("round-card-btn");
     const miniMissionBtn = document.getElementById("mini-mission-btn");
     
-    if (!gameArea || !loadingOverlay || !currentPlayerMessage) {
-        console.error("Required elements not found");
+    if (!gameArea) {
+        console.error("Game area not found");
         return;
     }
 
-    // Always show the game area, but control its interactivity
-    gameArea.classList.add('visible');
+    // Always show the game area when game has started
+    if (gameState === GAME_STATES.STARTED) {
+        gameArea.classList.add('visible');
+        gameArea.style.display = 'block';
 
-    if (gameState !== GAME_STATES.STARTED) {
-        // Game hasn't started yet - disable everything and show waiting message
-        gameArea.classList.add('disabled');
-        loadingOverlay.classList.add('visible');
-        currentPlayerMessage.textContent = "Waiting for game to start...";
-        if (finishTurnBtn) finishTurnBtn.classList.remove('visible');
-        
-        // Disable all action buttons
-        if (grabActionCardsBtn) grabActionCardsBtn.disabled = true;
-        if (roundCardBtn) roundCardBtn.disabled = true;
-        if (miniMissionBtn) miniMissionBtn.disabled = true;
-        
-        // Disable all cards
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.classList.add('disabled');
-        });
-        
-        return;
-    }
+        // Show finish turn button only during player's turn
+        if (finishTurnBtn) {
+            if (currentTurnPlayer === currentPlayerId) {
+                finishTurnBtn.style.display = 'block';
+                finishTurnBtn.classList.add('visible');
+                console.log("Showing finish turn button");
+            } else {
+                finishTurnBtn.style.display = 'none';
+                finishTurnBtn.classList.remove('visible');
+                console.log("Hiding finish turn button");
+            }
+        }
 
-    if (currentTurnPlayer === currentPlayerId) {
-        // It's our turn - enable everything
-        console.log("It's your turn - enabling game area");
-        gameArea.classList.remove('disabled');
-        loadingOverlay.classList.remove('visible');
-        finishTurnBtn.classList.add('visible');
-        
-        // Enable all action buttons
-        if (grabActionCardsBtn) grabActionCardsBtn.disabled = false;
-        if (roundCardBtn) roundCardBtn.disabled = false;
-        if (miniMissionBtn) miniMissionBtn.disabled = false;
-        
-        // Enable all cards
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.classList.remove('disabled');
-        });
+        // Enable/disable action buttons based on turn
+        const isPlayerTurn = currentTurnPlayer === currentPlayerId;
+        if (grabActionCardsBtn) grabActionCardsBtn.disabled = !isPlayerTurn;
+        if (roundCardBtn) roundCardBtn.disabled = !isPlayerTurn;
+        if (miniMissionBtn) miniMissionBtn.disabled = !isPlayerTurn;
+
     } else {
-        // It's someone else's turn - disable everything and show whose turn it is
-        console.log(`It's ${currentTurnPlayer}'s turn - disabling game area`);
-        gameArea.classList.add('disabled');
-        loadingOverlay.classList.add('visible');
-        currentPlayerMessage.textContent = `${currentTurnPlayer} ${getRandomPlayerMessage()}`;
-        finishTurnBtn.classList.remove('visible');
-        
-        // Disable all action buttons
-        if (grabActionCardsBtn) grabActionCardsBtn.disabled = true;
-        if (roundCardBtn) roundCardBtn.disabled = true;
-        if (miniMissionBtn) miniMissionBtn.disabled = true;
-        
-        // Disable all cards
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.classList.add('disabled');
-        });
+        gameArea.classList.remove('visible');
+        gameArea.style.display = 'none';
+        if (finishTurnBtn) {
+            finishTurnBtn.style.display = 'none';
+            finishTurnBtn.classList.remove('visible');
+        }
     }
 }
 
