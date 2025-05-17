@@ -96,59 +96,33 @@ export class Board {
             if (!app) {
                 console.log("Creating PIXI application...");
                 
-                // Force PIXI to use canvas renderer
-                PIXI.utils.skipHello();
-                const contextType = window.WebGL2RenderingContext ? 'webgl2' : 'webgl';
-                
-                app = new PIXI.Application({
-                    width: BOARD_WIDTH,
-                    height: BOARD_HEIGHT,
-                    backgroundColor: 0x1a1a1a,
-                    resolution: window.devicePixelRatio || 1,
-                    antialias: true,
-                    autoDensity: true,
-                    powerPreference: 'high-performance',
-                    forceCanvas: false,
-                    clearBeforeRender: true,
-                    preserveDrawingBuffer: true,
-                    context: null,
-                    contextType: contextType
-                });
+                // Try to create application with WebGL first
+                try {
+                    app = new PIXI.Application({
+                        width: BOARD_WIDTH,
+                        height: BOARD_HEIGHT,
+                        backgroundColor: 0x1a1a1a,
+                        resolution: window.devicePixelRatio || 1,
+                        antialias: true,
+                        autoDensity: true,
+                        powerPreference: 'high-performance'
+                    });
+                } catch (error) {
+                    console.log("WebGL initialization failed, trying canvas renderer...");
+                    // Fallback to canvas renderer
+                    app = new PIXI.Application({
+                        width: BOARD_WIDTH,
+                        height: BOARD_HEIGHT,
+                        backgroundColor: 0x1a1a1a,
+                        forceCanvas: true,
+                        resolution: window.devicePixelRatio || 1
+                    });
+                }
 
-                // Wait for the application to be fully initialized
-                await new Promise((resolve, reject) => {
-                    if (app && app.renderer) {
-                        resolve();
-                    } else {
-                        // If renderer isn't immediately available, wait for the next frame
-                        requestAnimationFrame(() => {
-                            if (app && app.renderer) {
-                                resolve();
-                            } else {
-                                // Try canvas renderer as fallback
-                                app = new PIXI.Application({
-                                    width: BOARD_WIDTH,
-                                    height: BOARD_HEIGHT,
-                                    backgroundColor: 0x1a1a1a,
-                                    forceCanvas: true,
-                                    resolution: window.devicePixelRatio || 1
-                                });
-                                
-                                if (app && app.renderer) {
-                                    console.log('Fallback to canvas renderer successful');
-                                    resolve();
-                                } else {
-                                    reject(new Error('Failed to initialize PIXI renderer'));
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-
-            // Verify that we have a valid renderer
-            if (!app || !app.renderer) {
-                throw new Error('PIXI renderer initialization failed');
+                // Verify renderer was created
+                if (!app || !app.renderer) {
+                    throw new Error('Failed to initialize PIXI renderer');
+                }
             }
 
             // Set up stage interaction
