@@ -123,6 +123,32 @@ async function initializeRenderer(options) {
     }
 }
 
+// Add context recovery handling
+function setupContextRecovery(app) {
+    if (!app || !app.renderer) return;
+
+    app.renderer.on('context', () => {
+        console.log("WebGL context changed");
+    });
+
+    app.renderer.on('contextlost', () => {
+        console.log("WebGL context lost - will attempt recovery");
+        setTimeout(() => {
+            if (app && app.renderer) {
+                app.renderer.reset();
+            }
+        }, 1000);
+    });
+
+    app.renderer.on('contextrestored', () => {
+        console.log("WebGL context restored");
+        if (app && app.stage) {
+            app.stage.removeChildren();
+            initializeBoard();
+        }
+    });
+}
+
 class Board {
     constructor() {
         if (boardInstance) {
@@ -152,11 +178,15 @@ class Board {
                 antialias: true,
                 resolution: window.devicePixelRatio || 1,
                 autoDensity: true,
-                powerPreference: "high-performance"
+                powerPreference: "high-performance",
+                clearBeforeRender: true
             };
 
             // Initialize renderer with fallback
             this.app = await initializeRenderer(options);
+            
+            // Setup context recovery
+            setupContextRecovery(this.app);
             
             // Get the container and clear it
             this.boardContainer = document.getElementById('board-container');

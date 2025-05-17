@@ -1003,55 +1003,44 @@ async function drawFromDeck(deckType, count, retryCount = 3) {
             const roomRef = doc(db, "rooms", currentRoomId);
             console.log(`Attempting to draw ${count} cards from ${deckType} deck (retry ${4 - retryCount}/3)`);
             
-            const result = await runTransaction(db, async (transaction) => {
-                const roomDoc = await transaction.get(roomRef);
-                
-                if (!roomDoc.exists()) {
-                    throw new Error("Room not found");
-                }
-                
-                const roomData = roomDoc.data();
-                if (!roomData.decks || !roomData.decks[deckType]) {
-                    console.error(`❌ Deck ${deckType} not found in room data:`, roomData);
-                    return { cards: [], remainingDeck: [] };
-                }
+            // Get current state first
+            const roomDoc = await getDoc(roomRef);
+            if (!roomDoc.exists()) {
+                throw new Error("Room not found");
+            }
+            
+            const roomData = roomDoc.data();
+            if (!roomData.decks || !roomData.decks[deckType]) {
+                console.error(`❌ Deck ${deckType} not found in room data:`, roomData);
+                return [];
+            }
 
-                const currentDeck = roomData.decks[deckType];
-                
-                if (!currentDeck || !currentDeck.deck) {
-                    console.error(`❌ Invalid deck structure for ${deckType}`);
-                    return { cards: [], remainingDeck: [] };
-                }
-                
-                let deckToUse = [...currentDeck.deck];
-                
-                if (deckToUse.length === 0 && currentDeck.discardPile && currentDeck.discardPile.length > 0) {
-                    deckToUse = shuffle([...currentDeck.discardPile]);
-                    
-                    // Update deck and clear discard pile in one transaction
-                    transaction.update(roomRef, {
-                        [`decks.${deckType}.deck`]: deckToUse,
-                        [`decks.${deckType}.discardPile`]: []
-                    });
-                }
-
-                if (deckToUse.length === 0) {
-                    return { cards: [], remainingDeck: [] };
-                }
-
-                const cardsToDrawCount = Math.min(count, deckToUse.length);
-                const drawnCards = deckToUse.slice(0, cardsToDrawCount);
-                const remainingDeck = deckToUse.slice(cardsToDrawCount);
-
-                // Update only the deck array
-                transaction.update(roomRef, {
-                    [`decks.${deckType}.deck`]: remainingDeck
+            const currentDeck = roomData.decks[deckType];
+            let deckToUse = [...(currentDeck.deck || [])];
+            
+            // If deck is empty, try to reshuffle discard pile
+            if (deckToUse.length === 0 && currentDeck.discardPile && currentDeck.discardPile.length > 0) {
+                deckToUse = shuffle([...currentDeck.discardPile]);
+                await updateDoc(roomRef, {
+                    [`decks.${deckType}.deck`]: deckToUse,
+                    [`decks.${deckType}.discardPile`]: []
                 });
+            }
 
-                return { cards: drawnCards, remainingDeck };
+            if (deckToUse.length === 0) {
+                return [];
+            }
+
+            const cardsToDrawCount = Math.min(count, deckToUse.length);
+            const drawnCards = deckToUse.slice(0, cardsToDrawCount);
+            const remainingDeck = deckToUse.slice(cardsToDrawCount);
+
+            // Update the deck with remaining cards
+            await updateDoc(roomRef, {
+                [`decks.${deckType}.deck`]: remainingDeck
             });
 
-            return result.cards;
+            return drawnCards;
         } catch (error) {
             console.error(`❌ Error drawing cards from ${deckType} (attempt ${4 - retryCount}/3):`, error);
             retryCount--;
@@ -1060,7 +1049,7 @@ async function drawFromDeck(deckType, count, retryCount = 3) {
                 return [];
             }
             // Increased wait time between retries
-            await delay(500);
+            await delay(1000);
         }
     }
     return [];
