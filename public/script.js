@@ -1627,10 +1627,13 @@ function updateGameAreaState() {
         return;
     }
 
+    console.log("Current game state:", gameState, "Game area visibility:", gameArea.classList.contains('visible'), "Display:", gameArea.style.display);
+
     // Always show the game area when game has started
     if (gameState === GAME_STATES.STARTED) {
         gameArea.classList.add('visible');
         gameArea.style.display = 'block';
+        console.log("Game area should now be visible");
 
         // Show finish turn button only during player's turn
         if (finishTurnBtn) {
@@ -1654,6 +1657,7 @@ function updateGameAreaState() {
     } else {
         gameArea.classList.remove('visible');
         gameArea.style.display = 'none';
+        console.log("Game area should be hidden");
         if (finishTurnBtn) {
             finishTurnBtn.style.display = 'none';
             finishTurnBtn.classList.remove('visible');
@@ -1743,12 +1747,17 @@ joinRoomBtn.addEventListener("click", async () => {
 // Game State Management Functions
 async function startGame(roomId) {
     try {
+        console.log("Starting game with room ID:", roomId);
         const roomRef = doc(db, "rooms", roomId);
         const roomSnap = await getDoc(roomRef);
         
-        if (!roomSnap.exists()) return;
+        if (!roomSnap.exists()) {
+            console.error("Room not found when starting game");
+            return;
+        }
         
         const roomData = roomSnap.data();
+        console.log("Room data:", roomData);
         
         // Ensure we have players before starting
         if (!roomData.players || roomData.players.length === 0) {
@@ -1758,6 +1767,8 @@ async function startGame(roomId) {
         
         playerOrder = [...roomData.players];
         currentTurnPlayer = playerOrder[0]; // Set first player's turn
+        gameState = GAME_STATES.STARTED; // Update local game state
+        console.log("Game state updated to:", gameState);
 
         // Initialize player goals in Firestore
         const playerGoals = {};
@@ -1787,6 +1798,7 @@ async function startGame(roomId) {
         if (gameArea) {
             gameArea.classList.add('visible');
             gameArea.style.display = 'block';
+            console.log("Game area visibility updated");
         }
         
         // Start timer for first player
