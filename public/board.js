@@ -149,8 +149,10 @@ class Board {
         this.isDragging = false;
         this.draggedPiece = null;
         this.dragOffset = { x: 0, y: 0 };
-        this.piecePositions = new Map(); // Track piece positions
-        this.lastKnownPositions = new Map(); // Backup of last known valid positions
+        this.piecePositions = new Map();
+        this.lastKnownPositions = new Map();
+        this.scale = 1;
+        this.position = { x: 0, y: 0 };
         
         boardInstance = this;
     }
@@ -159,21 +161,17 @@ class Board {
         console.log("Initializing board with HTML/CSS approach...");
         
         try {
-            // Get the container
             this.boardContainer = document.getElementById('board-container');
             if (!this.boardContainer) {
                 throw new Error('Board container not found');
             }
             
-            // Clear existing content
             this.boardContainer.innerHTML = '';
             
-            // Create grid container
             this.gridContainer = document.createElement('div');
             this.gridContainer.className = 'grid-container';
             this.boardContainer.appendChild(this.gridContainer);
             
-            // Create pieces container
             this.piecesContainer = document.createElement('div');
             this.piecesContainer.className = 'pieces-container';
             this.boardContainer.appendChild(this.piecesContainer);
@@ -189,33 +187,99 @@ class Board {
                 }
             }
             
+            // Initialize pan and zoom
+            this.initializePanAndZoom();
+            
             // Initialize control buttons
             this.initializeControlButtons();
             
             // Add drag and drop handlers
             this.setupDragAndDrop();
             
-            // Add mutation observer to reinitialize drag and drop when game area becomes visible
-            const gameArea = document.querySelector('.game-area');
-            if (gameArea) {
-                const observer = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                            if (gameArea.style.display === 'block') {
-                                console.log("Game area visible, reinitializing drag and drop");
-                                this.setupDragAndDrop();
-                            }
-                        }
-                    });
-                });
-                observer.observe(gameArea, { attributes: true });
-            }
+            // Add mutation observer for board initialization
+            this.setupMutationObserver();
             
             console.log("Board initialized successfully!");
             return true;
         } catch (error) {
             console.error("Error initializing board:", error);
             return false;
+        }
+    }
+
+    initializePanAndZoom() {
+        let isPanning = false;
+        let startX, startY;
+        let startPanX, startPanY;
+
+        this.boardContainer.addEventListener('mousedown', (e) => {
+            if (e.target === this.boardContainer || e.target === this.gridContainer) {
+                isPanning = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startPanX = this.position.x;
+                startPanY = this.position.y;
+                this.boardContainer.style.cursor = 'grabbing';
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            this.position.x = startPanX + dx;
+            this.position.y = startPanY + dy;
+            
+            this.updateTransform();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isPanning = false;
+            this.boardContainer.style.cursor = 'grab';
+        });
+
+        this.boardContainer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.max(0.5, Math.min(2, this.scale * delta));
+            
+            // Calculate mouse position relative to board
+            const rect = this.boardContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Adjust position to zoom towards mouse cursor
+            this.position.x = x - (x - this.position.x) * (newScale / this.scale);
+            this.position.y = y - (y - this.position.y) * (newScale / this.scale);
+            
+            this.scale = newScale;
+            this.updateTransform();
+        });
+    }
+
+    updateTransform() {
+        const transform = `translate(${this.position.x}px, ${this.position.y}px) scale(${this.scale})`;
+        this.gridContainer.style.transform = transform;
+        this.piecesContainer.style.transform = transform;
+    }
+
+    setupMutationObserver() {
+        const gameArea = document.querySelector('.game-area');
+        if (gameArea) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        if (gameArea.style.display === 'block') {
+                            console.log("Game area visible, reinitializing drag and drop");
+                            this.setupDragAndDrop();
+                        }
+                    }
+                });
+            });
+            observer.observe(gameArea, { attributes: true });
         }
     }
 

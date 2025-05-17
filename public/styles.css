@@ -97,6 +97,8 @@ h2 {
     flex-direction: column;
     align-items: center;
     margin: 20px 0;
+    position: relative;
+    overflow: hidden;
 }
 
 #board-container {
@@ -108,14 +110,15 @@ h2 {
     overflow: hidden;
     margin: 20px auto;
     cursor: grab;
+    transform-origin: top left;
 }
 
 .grid-container {
     position: absolute;
     top: 0;
     left: 0;
-    width: 1000px; /* Explicit width: 20 cells * 50px */
-    height: 1000px; /* Explicit height: 20 cells * 50px */
+    width: 1000px;
+    height: 1000px;
     display: grid;
     grid-template-columns: repeat(20, 50px);
     grid-template-rows: repeat(20, 50px);
@@ -125,34 +128,20 @@ h2 {
     will-change: transform;
 }
 
-.grid-cell {
-    width: 50px;
-    height: 50px;
-    border: 1px solid #333;
-    background-color: #1a1a1a;
-    position: relative;
-    transform: translate3d(0, 0, 0);
-    will-change: transform, background-color;
-}
-
-.grid-cell.drop-target {
-    background-color: rgba(66, 165, 245, 0.3);
-    border: 2px dashed #42A5F5;
-}
-
 .pieces-container {
     position: absolute;
     top: 0;
     left: 0;
-    width: 1000px; /* Match grid container */
-    height: 1000px; /* Match grid container */
+    width: 1000px;
+    height: 1000px;
     pointer-events: none;
     transform-origin: top left;
     will-change: transform;
+    z-index: 10;
 }
 
 .piece {
-    position: absolute;
+    position: relative;
     width: 50px;
     height: 50px;
     border-radius: 8px;
@@ -168,13 +157,15 @@ h2 {
     transform: translate3d(0, 0, 0);
     will-change: transform;
     transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    margin: 10px;
 }
 
 .piece.dragging {
-    transform: translate3d(0, 0, 0) scale(1.1);
+    position: absolute;
+    transform: scale(1.1);
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 1000;
-    transition: none;
+    pointer-events: none;
 }
 
 .piece:hover {
@@ -1107,19 +1098,19 @@ body.loading .game-area {
     border-radius: 10px;
     margin-top: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 20;
 }
 
-.game-pieces-section h3 {
-    color: white;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-.pieces-container {
+.game-pieces-section .pieces-container {
+    position: relative;
+    width: 100%;
+    height: auto;
     display: flex;
-    justify-content: center;
+    flex-wrap: wrap;
     gap: 20px;
-    padding: 10px;
+    justify-content: center;
+    pointer-events: auto;
+    transform: none;
 }
 
 .piece:hover {

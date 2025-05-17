@@ -1728,51 +1728,52 @@ function updateGameAreaState() {
     const currentPlayerMessage = document.querySelector('.current-player-message');
     const finishTurnBtn = document.querySelector('.finish-turn-btn');
     const timerContainer = document.querySelector('.timer-container');
-    const grabActionCardsBtn = document.getElementById("grab-action-cards-btn");
-    const roundCardBtn = document.getElementById("round-card-btn");
-    const miniMissionBtn = document.getElementById("mini-mission-btn");
     
     if (!gameArea) {
         console.error("Game area not found");
         return;
     }
 
-    console.log("Current game state:", gameState, "Game area visibility:", gameArea.classList.contains('visible'), "Display:", gameArea.style.display);
+    console.log("Updating game area state:", {
+        gameState: gameState,
+        currentTurnPlayer: currentTurnPlayer,
+        currentPlayerId: currentPlayerId
+    });
 
+    // Always ensure game area is visible when game has started
     if (gameState === GAME_STATES.STARTED) {
         gameArea.style.display = 'block';
-        setTimeout(() => {
-            gameArea.classList.add('visible');
-            // Reinitialize board after game area is visible
-            initializeBoard().then(() => {
-                console.log("Game area should now be visible");
-            });
-        }, 100);
-
+        gameArea.classList.add('visible');
+        
         // Show/hide timer and finish turn button based on current player
         if (currentTurnPlayer === currentPlayerId) {
-            console.log("Showing timer and finish turn button");
-            if (timerContainer) timerContainer.style.display = 'block';
+            if (timerContainer) {
+                timerContainer.style.display = 'block';
+                timerContainer.classList.add('visible');
+            }
             if (finishTurnBtn) {
                 finishTurnBtn.style.display = 'block';
                 finishTurnBtn.classList.add('visible');
             }
         } else {
-            console.log("Hiding timer and finish turn button");
-            if (timerContainer) timerContainer.style.display = 'none';
+            if (timerContainer) {
+                timerContainer.style.display = 'none';
+                timerContainer.classList.remove('visible');
+            }
             if (finishTurnBtn) {
                 finishTurnBtn.style.display = 'none';
                 finishTurnBtn.classList.remove('visible');
             }
         }
     } else {
+        // Only hide if game hasn't started
         gameArea.classList.remove('visible');
         setTimeout(() => {
-            gameArea.style.display = 'none';
+            if (gameState !== GAME_STATES.STARTED) {
+                gameArea.style.display = 'none';
+            }
         }, 300);
     }
-
-    console.log("Game area visibility updated");
 }
 
 // Add CSS styles for disabled cards
@@ -1875,15 +1876,30 @@ async function startGame(roomId) {
             return;
         }
         
-        playerOrder = [...roomData.players];
-        currentTurnPlayer = playerOrder[0]; // Set first player's turn
-        gameState = GAME_STATES.STARTED; // Update local game state
-        console.log("Game state updated to:", gameState);
-
-        // Initialize player goals in Firestore
-        const playerGoals = {};
+        // Set game state first
+        gameState = GAME_STATES.STARTED;
         
+        // Initialize player order and first turn
+        playerOrder = [...roomData.players];
+        currentTurnPlayer = playerOrder[0];
+        
+        console.log("Game initialized with:", {
+            gameState: gameState,
+            playerOrder: playerOrder,
+            currentTurnPlayer: currentTurnPlayer
+        });
+
+        // Show game area immediately
+        const gameArea = document.querySelector('.game-area');
+        if (gameArea) {
+            gameArea.style.display = 'block';
+            requestAnimationFrame(() => {
+                gameArea.classList.add('visible');
+            });
+        }
+
         // Draw Party Goals for each player
+        const playerGoals = {};
         for (const player of playerOrder) {
             console.log(`Drawing Party Goals for player: ${player}`);
             const partyGoalsCards = await drawFromDeck('partyGoals', PARTY_GOAL_COUNT);
@@ -1893,23 +1909,15 @@ async function startGame(roomId) {
             };
         }
 
-        // Update room with all players' goals and game state
+        // Update room with game state
         await updateDoc(roomRef, {
             gameState: GAME_STATES.STARTED,
-            currentTurn: playerOrder[0], // Explicitly set first player
+            currentTurn: currentTurnPlayer,
             turnStartTime: Date.now(),
             playerOrder: playerOrder,
             playerGoals: playerGoals,
             lastUpdated: Date.now()
         });
-        
-        // Show game area
-        const gameArea = document.querySelector('.game-area');
-        if (gameArea) {
-            gameArea.classList.add('visible');
-            gameArea.style.display = 'block';
-            console.log("Game area visibility updated");
-        }
         
         // Start timer for first player
         if (currentTurnPlayer === currentPlayerId) {
@@ -1919,11 +1927,11 @@ async function startGame(roomId) {
         // Hide start game button
         const startGameBtn = document.querySelector('.start-game-btn');
         if (startGameBtn) {
-            startGameBtn.classList.remove('visible');
             startGameBtn.style.display = 'none';
+            startGameBtn.classList.remove('visible');
         }
         
-        // Initialize game state for all players
+        // Update UI state
         updateGameAreaState();
         
         console.log("✅ Game started successfully with", playerOrder.length, "players");
