@@ -1,5 +1,9 @@
 // Wait for PIXI to be available
 let PIXI;
+let app = null;
+let contextLostCount = 0;
+const MAX_CONTEXT_LOST_RETRIES = 3;
+
 async function waitForPixi() {
     console.log("Waiting for PIXI.js to load...");
     let retries = 0;
@@ -94,9 +98,6 @@ const GUEST_TYPES = {
     }
 };
 
-// Initialize PixiJS Application
-let app = null;
-
 // Board state management
 export class Board {
     constructor() {
@@ -112,10 +113,16 @@ export class Board {
             if (!app) {
                 console.log("Creating PIXI application...");
                 
-                // Create a canvas element
+                // Create a canvas element with explicit attributes
                 const canvas = document.createElement('canvas');
                 canvas.width = BOARD_WIDTH;
                 canvas.height = BOARD_HEIGHT;
+                canvas.style.width = `${BOARD_WIDTH}px`;
+                canvas.style.height = `${BOARD_HEIGHT}px`;
+                
+                // Force hardware acceleration
+                canvas.style.transform = 'translateZ(0)';
+                canvas.style.backfaceVisibility = 'hidden';
                 
                 // Basic PIXI application configuration
                 const options = {
@@ -123,37 +130,51 @@ export class Board {
                     width: BOARD_WIDTH,
                     height: BOARD_HEIGHT,
                     backgroundColor: 0x1a1a1a,
-                    resolution: 1,
+                    resolution: window.devicePixelRatio || 1,
+                    autoDensity: true,
                     antialias: true,
-                    preserveDrawingBuffer: true,
-                    powerPreference: 'default'
+                    powerPreference: 'high-performance',
+                    forceCanvas: false
                 };
 
                 // Try WebGL2 first
                 try {
-                    options.context = canvas.getContext('webgl2', {
+                    const gl = canvas.getContext('webgl2', {
                         alpha: false,
                         stencil: true,
                         antialias: true,
                         premultipliedAlpha: false,
-                        preserveDrawingBuffer: true
+                        preserveDrawingBuffer: true,
+                        powerPreference: 'high-performance',
+                        failIfMajorPerformanceCaveat: false
                     });
-                    console.log("Using WebGL2");
-                } catch (e) {
-                    console.log("WebGL2 not available, trying WebGL1");
-                    try {
-                        options.context = canvas.getContext('webgl', {
+                    
+                    if (gl) {
+                        console.log("Using WebGL2");
+                        options.context = gl;
+                    } else {
+                        console.log("WebGL2 not available, trying WebGL1");
+                        const gl1 = canvas.getContext('webgl', {
                             alpha: false,
                             stencil: true,
                             antialias: true,
                             premultipliedAlpha: false,
-                            preserveDrawingBuffer: true
+                            preserveDrawingBuffer: true,
+                            powerPreference: 'high-performance',
+                            failIfMajorPerformanceCaveat: false
                         });
-                        console.log("Using WebGL1");
-                    } catch (e) {
-                        console.log("WebGL not available, using canvas renderer");
-                        options.forceCanvas = true;
+                        
+                        if (gl1) {
+                            console.log("Using WebGL1");
+                            options.context = gl1;
+                        } else {
+                            console.log("WebGL not available, using canvas renderer");
+                            options.forceCanvas = true;
+                        }
                     }
+                } catch (e) {
+                    console.log("Error creating WebGL context, using canvas renderer:", e);
+                    options.forceCanvas = true;
                 }
 
                 app = new PIXI.Application(options);
@@ -162,19 +183,31 @@ export class Board {
                 canvas.addEventListener('webglcontextlost', (event) => {
                     event.preventDefault();
                     console.log("WebGL context lost, attempting to restore...");
+                    contextLostCount++;
+                    
+                    if (contextLostCount > MAX_CONTEXT_LOST_RETRIES) {
+                        console.log("Too many context losses, forcing canvas renderer");
+                        options.forceCanvas = true;
+                        this.initialize();
+                        return;
+                    }
                     
                     // Stop the render loop
-                    app.stop();
+                    if (app) {
+                        app.stop();
+                    }
                     
                     // Try to restore in 1 second
                     setTimeout(() => {
                         try {
                             // Attempt to restore the context
-                            if (options.context) {
-                                options.context.restore();
+                            if (options.context && options.context.isContextLost()) {
+                                options.context.restoreContext();
                             }
                             // Restart the render loop
-                            app.start();
+                            if (app) {
+                                app.start();
+                            }
                             console.log("Context restored successfully");
                         } catch (e) {
                             console.error("Failed to restore context:", e);
@@ -187,8 +220,13 @@ export class Board {
 
                 canvas.addEventListener('webglcontextrestored', () => {
                     console.log("WebGL context restored");
-                    app.start();
+                    if (app) {
+                        app.start();
+                    }
                 });
+
+                // Set up continuous context monitoring
+                this.startContextMonitoring(canvas);
 
                 console.log("PIXI Application created:", app);
                 console.log("Renderer type:", app.renderer.type);
@@ -214,6 +252,10 @@ export class Board {
             this.container.style.overflow = 'hidden';
             this.container.style.backgroundColor = '#1a1a1a';
             this.container.style.display = 'block';
+            
+            // Force hardware acceleration on container
+            this.container.style.transform = 'translateZ(0)';
+            this.container.style.backfaceVisibility = 'hidden';
             
             console.log("Adding canvas to container...");
             this.container.appendChild(app.view);
@@ -252,18 +294,13 @@ export class Board {
             // Initialize control buttons after board is fully set up
             this.initializeControlButtons();
             
-            // Start the render loop
-            app.ticker.add(() => {
-                if (app && app.renderer) {
-                    app.renderer.render(app.stage);
-                }
-            });
+            // Start the render loop with error handling
+            this.startRenderLoop();
             
             console.log("Board initialization complete!");
         } catch (error) {
             console.error('Error initializing board:', error);
-            // Try to recover by forcing canvas renderer
-            if (!app) {
+            if (!app || contextLostCount <= MAX_CONTEXT_LOST_RETRIES) {
                 console.log("Attempting recovery with canvas renderer...");
                 try {
                     app = new PIXI.Application({
@@ -271,7 +308,8 @@ export class Board {
                         height: BOARD_HEIGHT,
                         backgroundColor: 0x1a1a1a,
                         forceCanvas: true,
-                        resolution: 1
+                        resolution: window.devicePixelRatio || 1,
+                        autoDensity: true
                     });
                     if (app && app.renderer) {
                         console.log("Recovery successful with canvas renderer");
@@ -283,6 +321,43 @@ export class Board {
                 }
             }
         }
+    }
+
+    startContextMonitoring(canvas) {
+        // Check context every second
+        setInterval(() => {
+            if (app && app.renderer && !app.renderer.gl && !app.renderer.options.forceCanvas) {
+                console.log("Context check: WebGL context lost, attempting to restore...");
+                const event = new Event('webglcontextlost');
+                canvas.dispatchEvent(event);
+            }
+        }, 1000);
+    }
+
+    startRenderLoop() {
+        if (!app) return;
+        
+        // Remove any existing ticker
+        app.ticker.remove(this.render, this);
+        
+        // Add new render function
+        this.render = () => {
+            try {
+                if (app && app.renderer && !app.renderer.gl && !app.renderer.options.forceCanvas) {
+                    // Context is lost, try to restore
+                    console.log("Render loop: WebGL context lost");
+                    return;
+                }
+                app.renderer.render(app.stage);
+            } catch (e) {
+                console.error("Render error:", e);
+                // Stop render loop on error
+                app.ticker.stop();
+            }
+        };
+        
+        app.ticker.add(this.render, this);
+        app.ticker.start();
     }
 
     setupGrid() {
