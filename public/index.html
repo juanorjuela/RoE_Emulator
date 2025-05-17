@@ -14,12 +14,34 @@
 
     <!-- Ensure PIXI.js is loaded before our scripts -->
     <script>
-        window.onload = function() {
-            if (!window.PIXI) {
+        // Function to load PIXI.js with retries
+        async function loadPixi() {
+            let retries = 5;
+            while (retries > 0) {
+                try {
+                    if (window.PIXI) {
+                        console.log('✅ PIXI.js loaded successfully');
+                        return true;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    retries--;
+                } catch (error) {
+                    console.error('Error loading PIXI.js:', error);
+                    retries--;
+                }
+            }
+            console.error('Failed to load PIXI.js after multiple attempts');
+            return false;
+        }
+
+        // Initialize PIXI.js loading
+        window.addEventListener('load', async () => {
+            const pixiLoaded = await loadPixi();
+            if (!pixiLoaded) {
                 console.error('PIXI.js failed to load! Attempting to reload...');
                 location.reload();
             }
-        }
+        });
     </script>
 </head>
 <body>

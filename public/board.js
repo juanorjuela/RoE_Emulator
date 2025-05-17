@@ -29,16 +29,13 @@ async function waitForPixi() {
         throw new Error('PIXI.Application not found - incomplete PIXI.js load');
     }
     
-    return new Promise(resolve => {
-        // Wait a bit longer to ensure PIXI is fully initialized
-        setTimeout(resolve, 500);
-    });
+    return PIXI;
 }
 
 // Board initialization and rendering
-const boardContainer = null;
-const gridContainer = null;
-const piecesContainer = null;
+let boardContainer = null;
+let gridContainer = null;
+let piecesContainer = null;
 
 // Board configuration
 const GRID_SIZE = 70;
@@ -108,7 +105,7 @@ const GUEST_TYPES = {
 // Create a singleton instance
 let boardInstance = null;
 
-export class Board {
+class Board {
     constructor() {
         if (boardInstance) {
             return boardInstance;
@@ -120,13 +117,15 @@ export class Board {
         this.piecesContainer = null;
         
         boardInstance = this;
-        this.initialize();
     }
 
     async initialize() {
         console.log("Initializing board with simplified approach...");
         
         try {
+            // Wait for PIXI to be available
+            await waitForPixi();
+            
             // 1. First try: Basic Canvas renderer
             const options = {
                 width: BOARD_WIDTH,
@@ -528,7 +527,7 @@ export class Board {
 }
 
 // Export singleton instance and helper functions
-export const initializeBoard = () => {
+export const initializeBoard = async () => {
     if (!boardInstance) {
         boardInstance = new Board();
     }
@@ -538,10 +537,11 @@ export const initializeBoard = () => {
 export const getBoard = () => boardInstance;
 
 // Initialize board when document is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initializeBoard().then(() => {
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await initializeBoard();
         console.log("Board setup complete!");
-    }).catch(error => {
+    } catch (error) {
         console.error("Board initialization failed:", error);
-    });
+    }
 }); 
