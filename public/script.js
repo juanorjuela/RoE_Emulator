@@ -1535,7 +1535,6 @@ async function endTurn() {
         }
 
         // Fetch the latest room data to get playerMapping if not readily available
-        // This is a safeguard; ideally, playerMapping is kept up-to-date locally.
         let currentRoomData = {};
         if (currentRoomId) {
             const roomDoc = await getDoc(doc(db, "rooms", currentRoomId));
@@ -1545,7 +1544,7 @@ async function endTurn() {
         }
         const playerMapping = currentRoomData.playerMapping || {};
 
-        const turnPlayerUid = playerMapping[currentTurnPlayer]; // currentTurnPlayer is a name
+        const turnPlayerUid = playerMapping[currentTurnPlayer];
 
         if (!currentTurnPlayer || !turnPlayerUid || turnPlayerUid !== localPlayerUid) {
             console.warn('Not your turn to end.', {
@@ -1559,21 +1558,18 @@ async function endTurn() {
         
         showLoading('Ending turn...');
         
+        // Save final board state
         const board = getBoard();
         if (board) {
             const boardState = board.getBoardState();
-            if (currentRoomId) { // Ensure currentRoomId is valid
-                await updateDoc(doc(db, 'rooms', currentRoomId), {
-                    boardState: boardState,
-                    lastUpdated: Date.now() // Add a timestamp for the update
-                });
-            }
+            await updateBoardState(boardState);
         }
         
         if (turnTimer) {
             clearInterval(turnTimer);
             turnTimer = null;
         }
+        
         // remainingTime will be reset by startTimer for the next player
         
         // Determine the next player
@@ -1585,10 +1581,8 @@ async function endTurn() {
         await handleTurnChange(nextPlayerName); // Pass the name of the next player
         
     } catch (error) {
-        console.error('Error ending turn:', error);
-    } finally {
-        // Hide loading only if it was shown by this specific endTurn call
-        // hideLoading(); // This might hide loading prematurely if handleTurnChange also shows loading
+        console.error("Error ending turn:", error);
+        hideLoading();
     }
 }
 
@@ -1741,19 +1735,24 @@ function listenToGameState(roomId) {
     return onSnapshot(doc(db, 'rooms', roomId), async (snapshot) => {
         const data = snapshot.data();
         if (!data) return;
-        window.currentRoomDataForButton = data; // Store current room data for button updates
+        window.currentRoomDataForButton = data;
         
         const previousGameState = gameState;
         const previousTurnPlayer = currentTurnPlayer;
 
         gameState = data.gameState;
-        currentTurnPlayer = data.currentTurn; // This is a player name
+        currentTurnPlayer = data.currentTurn;
 
-        // Restore board state if it changed (e.g., from another player's move)
+        // Restore board state if it changed
         const board = getBoard();
         if (board && data.boardState) {
-            // Potentially add a check here to avoid re-rendering if boardState is identical to local
-            board.restoreBoardState(data.boardState);
+            // Only restore if the board state is different from current
+            const currentState = board.getBoardState();
+            const newState = data.boardState;
+            
+            if (JSON.stringify(currentState) !== JSON.stringify(newState)) {
+                board.restoreBoardState(newState);
+            }
         }
         
         // Determine if it's this client's turn
@@ -1806,6 +1805,22 @@ function initializeGameControls() {
         finishTurnBtn.addEventListener('click', () => {
             if (currentTurnPlayer === currentPlayerId) {
                 endTurn();
+            }
+        });
+    }
+
+    // Set up board state change callback
+    const board = getBoard();
+    if (board) {
+        board.setBoardStateChangeCallback(async (boardState) => {
+            // Only update if it's the current player's turn
+            const localPlayerUid = auth.currentUser ? auth.currentUser.uid : null;
+            const playerMapping = window.currentRoomDataForButton?.playerMapping || {};
+            const turnPlayerUid = playerMapping[currentTurnPlayer];
+            const isMyTurn = localPlayerUid && turnPlayerUid === localPlayerUid;
+
+            if (isMyTurn) {
+                await updateBoardState(boardState);
             }
         });
     }
@@ -2223,3 +2238,18 @@ async function updateTurnInRoom(nextPlayer) {
 
 // At the top of script.js, or in a shared state module if you have one:
 window.currentRoomDataForButton = {}; // To store room data for button updates
+
+// Function to update board state in Firestore
+async function updateBoardState(boardState) {
+    if (!currentRoomId) return;
+    
+    try {
+        const roomRef = doc(db, "rooms", currentRoomId);
+        await updateDoc(roomRef, {
+            boardState: boardState,
+            lastUpdated: Date.now()
+        });
+    } catch (error) {
+        console.error("Error updating board state:", error);
+    }
+}

@@ -153,6 +153,7 @@ class Board {
         this.lastKnownPositions = new Map();
         this.scale = 1;
         this.position = { x: 0, y: 0 };
+        this.onBoardStateChange = null; // Callback for board state changes
         
         boardInstance = this;
     }
@@ -394,6 +395,11 @@ class Board {
                     x: snappedX,
                     y: snappedY
                 });
+
+                // Notify of board state change
+                if (this.onBoardStateChange) {
+                    this.onBoardStateChange(this.getBoardState());
+                }
             } else {
                 // Revert to last known position
                 const lastPos = this.lastKnownPositions.get(this.draggedPiece.id);
@@ -460,6 +466,8 @@ class Board {
 
     // Restore board state
     restoreBoardState(state) {
+        if (!state || !state.pieces) return;
+
         // Clear existing pieces
         this.piecesContainer.innerHTML = '';
         this.pieces.clear();
@@ -477,6 +485,11 @@ class Board {
                 y: pieceData.y
             });
         });
+    }
+
+    // Set callback for board state changes
+    setBoardStateChangeCallback(callback) {
+        this.onBoardStateChange = callback;
     }
 
     snapToGrid(x, y) {
