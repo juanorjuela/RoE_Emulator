@@ -76,6 +76,11 @@ h2 {
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, opacity;
 }
 
 .game-area.visible {
@@ -110,6 +115,9 @@ h2 {
     -webkit-backface-visibility: hidden;
     perspective: 1000px;
     -webkit-perspective: 1000px;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 #board-container canvas {
@@ -123,6 +131,11 @@ h2 {
     image-rendering: crisp-edges;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .board-controls {
