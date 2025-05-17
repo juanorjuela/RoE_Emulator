@@ -96,40 +96,86 @@ export class Board {
             if (!app) {
                 console.log("Creating PIXI application...");
                 
-                // Try to create application with WebGL first
+                // Create a canvas element
+                const canvas = document.createElement('canvas');
+                canvas.width = BOARD_WIDTH;
+                canvas.height = BOARD_HEIGHT;
+                
+                // Basic PIXI application configuration
+                const options = {
+                    view: canvas,
+                    width: BOARD_WIDTH,
+                    height: BOARD_HEIGHT,
+                    backgroundColor: 0x1a1a1a,
+                    resolution: 1,
+                    antialias: true,
+                    preserveDrawingBuffer: true,
+                    powerPreference: 'default'
+                };
+
+                // Try WebGL2 first
                 try {
-                    // Check if WebGL is available
-                    const canvas = document.createElement('canvas');
-                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                    const hasWebGL = !!gl;
-                    console.log("WebGL available:", hasWebGL);
-
-                    const options = {
-                        width: BOARD_WIDTH,
-                        height: BOARD_HEIGHT,
-                        backgroundColor: 0x1a1a1a,
-                        resolution: 1,
-                        antialias: true
-                    };
-
-                    if (!hasWebGL) {
-                        console.log("WebGL not available, forcing canvas renderer");
+                    options.context = canvas.getContext('webgl2', {
+                        alpha: false,
+                        stencil: true,
+                        antialias: true,
+                        premultipliedAlpha: false,
+                        preserveDrawingBuffer: true
+                    });
+                    console.log("Using WebGL2");
+                } catch (e) {
+                    console.log("WebGL2 not available, trying WebGL1");
+                    try {
+                        options.context = canvas.getContext('webgl', {
+                            alpha: false,
+                            stencil: true,
+                            antialias: true,
+                            premultipliedAlpha: false,
+                            preserveDrawingBuffer: true
+                        });
+                        console.log("Using WebGL1");
+                    } catch (e) {
+                        console.log("WebGL not available, using canvas renderer");
                         options.forceCanvas = true;
                     }
-
-                    app = new PIXI.Application(options);
-                    console.log("PIXI Application created:", app);
-                    console.log("Renderer type:", app.renderer.type);
-                } catch (error) {
-                    console.error("Error creating PIXI application:", error);
-                    throw error;
                 }
 
-                // Verify renderer was created
-                if (!app || !app.renderer) {
-                    console.error("No renderer available after initialization");
-                    throw new Error('Failed to initialize PIXI renderer');
-                }
+                app = new PIXI.Application(options);
+                
+                // Handle context loss
+                canvas.addEventListener('webglcontextlost', (event) => {
+                    event.preventDefault();
+                    console.log("WebGL context lost, attempting to restore...");
+                    
+                    // Stop the render loop
+                    app.stop();
+                    
+                    // Try to restore in 1 second
+                    setTimeout(() => {
+                        try {
+                            // Attempt to restore the context
+                            if (options.context) {
+                                options.context.restore();
+                            }
+                            // Restart the render loop
+                            app.start();
+                            console.log("Context restored successfully");
+                        } catch (e) {
+                            console.error("Failed to restore context:", e);
+                            // Fall back to canvas renderer
+                            options.forceCanvas = true;
+                            this.initialize();
+                        }
+                    }, 1000);
+                });
+
+                canvas.addEventListener('webglcontextrestored', () => {
+                    console.log("WebGL context restored");
+                    app.start();
+                });
+
+                console.log("PIXI Application created:", app);
+                console.log("Renderer type:", app.renderer.type);
             }
 
             // Find and prepare the container
@@ -201,7 +247,7 @@ export class Board {
         } catch (error) {
             console.error('Error initializing board:', error);
             // Try to recover by forcing canvas renderer
-            if (!app && error.message.includes('WebGL')) {
+            if (!app) {
                 console.log("Attempting recovery with canvas renderer...");
                 try {
                     app = new PIXI.Application({
@@ -220,8 +266,6 @@ export class Board {
                     console.error("Recovery failed:", recoveryError);
                 }
             }
-            // Don't throw the error, just log it
-            // This allows the rest of the game to initialize even if the board fails
         }
     }
 
