@@ -508,15 +508,28 @@ class Board {
 
     // Save board state
     getBoardState() {
-        const state = {
-            pieces: Array.from(this.piecePositions.entries()).map(([id, pos]) => ({
-                id,
-                type: this.pieces.get(id).className.split(' ')[1],
-                x: pos.x,
-                y: pos.y
-            }))
-        };
-        return state;
+        try {
+            const state = {
+                pieces: Array.from(this.piecePositions.entries())
+                    .filter(([id]) => this.pieces.has(id)) // Filter out pieces that don't exist
+                    .map(([id, pos]) => {
+                        const piece = this.pieces.get(id);
+                        if (!piece) return null;
+
+                        return {
+                            id,
+                            type: piece.className.split(' ')[1],
+                            x: pos.x,
+                            y: pos.y
+                        };
+                    })
+                    .filter(item => item !== null)
+            };
+            return state;
+        } catch (error) {
+            console.error("Error getting board state:", error);
+            return { pieces: [] }; // Return empty state on error
+        }
     }
 
     // Restore board state

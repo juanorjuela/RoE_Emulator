@@ -1594,11 +1594,18 @@ async function endTurn() {
         
         showLoading('Ending turn...');
         
-        // Save final board state
-        const board = getBoard();
-        if (board) {
-            const boardState = board.getBoardState();
-            await updateBoardState(boardState);
+        // Save final board state - Add proper null checks
+        try {
+            const board = getBoard();
+            if (board) {
+                const boardState = board.getBoardState();
+                if (boardState) {
+                    await updateBoardState(boardState);
+                }
+            }
+        } catch (error) {
+            console.error("Error saving board state:", error);
+            // Continue with turn end even if board state save fails
         }
         
         if (turnTimer) {
@@ -2344,61 +2351,6 @@ function displayPartyGoals(goals) {
 
         container.appendChild(cardDiv);
     }
-}
-
-// Helper function to display a chosen party goal
-function displayChosenPartyGoal(card, container) {
-    const cardDiv = document.createElement("div");
-    cardDiv.className = "round-card chosen-goal";
-    const cardText = card.text || card;
-    const coinCount = extractCoinCount(cardText);
-
-    cardDiv.innerHTML = `
-        <span><h3>CHOSEN PARTY GOAL</h3> <br> <br> ${cardText} <br> <br></span>
-        <div class="card-buttons">
-            <button class="resolve-btn">✔ RESOLVE</button>
-        </div>
-    `;
-
-    // Add event listener for the "RESOLVE" button
-    const resolveBtn = cardDiv.querySelector(".resolve-btn");
-    resolveBtn.addEventListener("click", async () => {
-        try {
-            const roomRef = doc(db, "rooms", currentRoomId);
-            await runTransaction(db, async (transaction) => {
-                const roomDoc = await transaction.get(roomRef);
-                const roomData = roomDoc.data();
-                const playerGoals = roomData.playerGoals || {};
-                const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
-                
-                // Move goal from active to completed
-                myGoals.goals = [];
-                myGoals.completed = myGoals.completed || [];
-                myGoals.completed.push(cardText);
-                playerGoals[currentPlayerId] = myGoals;
-                
-                transaction.update(roomRef, { playerGoals });
-            });
-
-            totalCoinsEarned += coinCount;
-            cardDiv.innerHTML = `
-                <div class="resolved-card">
-                    <h3>GOAL ACHIEVED!</h3>
-                    <div class="coin-reward">
-                        <span class="coin-icon">💰</span>
-                        <span class="coin-amount">+${coinCount}</span>
-                    </div>
-                </div>
-            `;
-            updateCoinsDisplay();
-            logList.innerHTML += `<li>Earned ${coinCount} coins from Party Goal!</li>`;
-            await discardToPile('partyGoals', [cardText]);
-        } catch (error) {
-            console.error("Error resolving party goal:", error);
-        }
-    });
-
-    container.appendChild(cardDiv);
 }
 
 // Add start game button functionality
