@@ -35,9 +35,14 @@ async function waitForPixi() {
     });
 }
 
+// Board initialization and rendering
+let boardContainer = null;
+let gridContainer = null;
+let piecesContainer = null;
+
 // Board configuration
-const GRID_SIZE = 70; // 70x70 grid
-const CELL_SIZE = 10; // Size of each cell in pixels
+const GRID_SIZE = 70;
+const CELL_SIZE = 10;
 const BOARD_WIDTH = GRID_SIZE * CELL_SIZE;
 const BOARD_HEIGHT = GRID_SIZE * CELL_SIZE;
 
@@ -143,8 +148,8 @@ export class Board {
             }, 100);
 
             // Create main containers
-            const gridContainer = new PIXI.Container();
-            const piecesContainer = new PIXI.Container();
+            gridContainer = new PIXI.Container();
+            piecesContainer = new PIXI.Container();
             
             app.stage.addChild(gridContainer);
             app.stage.addChild(piecesContainer);
@@ -512,6 +517,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeBoard().then(success => {
         if (success) {
             console.log("Board setup complete!");
+            // Make board instance globally available
+            window.gameBoard = {
+                app,
+                boardContainer,
+                gridContainer,
+                piecesContainer,
+                initializeBoard
+            };
         } else {
             console.error("Board initialization failed!");
         }
@@ -519,4 +532,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Export necessary functions and variables
-export { app, boardContainer, initializeBoard }; 
+export { app, boardContainer, gridContainer, piecesContainer, initializeBoard }; 
