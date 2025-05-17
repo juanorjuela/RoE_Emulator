@@ -8,14 +8,19 @@
     <title>Rave Tycoon Game Cards Management</title>
     <link rel="stylesheet" href="styles.css">
     
-    <!-- Load external libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js" 
-            crossorigin="anonymous" 
-            referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" 
-            integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" 
-            crossorigin="anonymous" 
-            referrerpolicy="no-referrer"></script>
+    <!-- Load external libraries with specific versions -->
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <!-- Ensure PIXI.js is loaded before our scripts -->
+    <script>
+        window.onload = function() {
+            if (!window.PIXI) {
+                console.error('PIXI.js failed to load! Attempting to reload...');
+                location.reload();
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">

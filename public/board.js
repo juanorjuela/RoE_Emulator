@@ -108,124 +108,110 @@ export class Board {
 
     async initialize() {
         try {
-            console.log("Initializing board...");
-            await waitForPixi();
+            console.log("Initializing board with simplified approach...");
             
-            // Create the application only if it doesn't exist
-            if (!app) {
-                console.log("Creating PIXI application...");
-                
-                // Create a canvas element with explicit attributes
-                const canvas = document.createElement('canvas');
-                canvas.width = BOARD_WIDTH;
-                canvas.height = BOARD_HEIGHT;
-                canvas.style.width = `${BOARD_WIDTH}px`;
-                canvas.style.height = `${BOARD_HEIGHT}px`;
-                
-                // Force hardware acceleration and prevent context loss
-                canvas.style.transform = 'translateZ(0)';
-                canvas.style.backfaceVisibility = 'hidden';
-                canvas.style.willChange = 'transform';
+            // 1. First try: Basic Canvas renderer
+            const options = {
+                width: BOARD_WIDTH,
+                height: BOARD_HEIGHT,
+                backgroundColor: 0x1a1a1a,
+                forceCanvas: true,
+                antialias: true,
+                resolution: 1
+            };
 
-                // Add context loss detection before initialization
-                canvas.addEventListener('webglcontextlost', (event) => {
-                    event.preventDefault();
-                    console.log("WebGL context lost during initialization");
-                    hasInitialContextLoss = true;
-                }, false);
-
-                // Try canvas renderer first for stability
-                try {
-                    console.log("Creating application with canvas renderer...");
-                    app = new PIXI.Application({
-                        width: BOARD_WIDTH,
-                        height: BOARD_HEIGHT,
-                        backgroundColor: 0x1a1a1a,
-                        resolution: window.devicePixelRatio || 1,
-                        autoDensity: true,
-                        view: canvas,
-                        forceCanvas: true
-                    });
-                } catch (error) {
-                    console.error("Failed to create canvas renderer:", error);
-                    throw error;
-                }
-
-                console.log("PIXI Application created:", app);
-                console.log("Renderer type:", app.renderer.type);
-
-                // Add context loss handling
-                canvas.addEventListener('webglcontextlost', (event) => {
-                    event.preventDefault();
-                    console.log("WebGL context lost");
-                    if (!hasInitialContextLoss) {
-                        contextLostCount++;
-                        this.handleContextLoss();
-                    }
-                }, false);
-
-                canvas.addEventListener('webglcontextrestored', () => {
-                    console.log("WebGL context restored");
-                    this.handleContextRestore();
-                }, false);
-            }
-
-            // Find and prepare the container
-            console.log("Finding board container...");
-            this.container = document.getElementById('board-container');
-            if (!this.container) {
-                console.error("Board container element not found");
+            app = new PIXI.Application(options);
+            
+            // Get the container and clear it
+            boardContainer = document.getElementById('board-container');
+            if (!boardContainer) {
                 throw new Error('Board container not found');
             }
-
-            // Clear the container
-            while (this.container.firstChild) {
-                this.container.removeChild(this.container.firstChild);
+            
+            while (boardContainer.firstChild) {
+                boardContainer.removeChild(boardContainer.firstChild);
             }
 
-            // Set container styles for better performance
-            this.container.style.width = `${BOARD_WIDTH}px`;
-            this.container.style.height = `${BOARD_HEIGHT}px`;
-            this.container.style.position = 'relative';
-            this.container.style.overflow = 'hidden';
-            this.container.style.backgroundColor = '#1a1a1a';
-            this.container.style.display = 'block';
-            
-            // Add the canvas with improved performance settings
-            console.log("Adding canvas to container...");
+            // Add the canvas with a fade-in effect
             app.view.style.opacity = '0';
-            this.container.appendChild(app.view);
+            boardContainer.appendChild(app.view);
             
             // Fade in the canvas
             setTimeout(() => {
-                app.view.style.transition = 'opacity 0.3s ease-in';
+                app.view.style.transition = 'opacity 0.5s ease-in';
                 app.view.style.opacity = '1';
             }, 100);
+
+            // Create main containers
+            const gridContainer = new PIXI.Container();
+            const piecesContainer = new PIXI.Container();
             
-            // Initialize containers
-            console.log("Creating PIXI containers...");
-            this.gridContainer = new PIXI.Container();
-            this.piecesContainer = new PIXI.Container();
-            
-            // Set container properties
-            this.gridContainer.sortableChildren = true;
-            this.piecesContainer.sortableChildren = true;
-            this.piecesContainer.interactive = true;
-            
-            app.stage.addChild(this.gridContainer);
-            app.stage.addChild(this.piecesContainer);
-            
-            // Setup components
-            console.log("Setting up grid...");
-            this.setupGrid();
-            console.log("Setting up interaction...");
-            this.setupInteraction();
-            console.log("Setting up zoom and pan...");
-            this.setupZoomAndPan();
-            console.log("Setting up Firebase sync...");
-            await this.setupFirebaseSync();
-            console.log("Setting up piece drag and drop...");
-            await this.setupPieceDragAndDrop();
+            app.stage.addChild(gridContainer);
+            app.stage.addChild(piecesContainer);
+
+            // Draw the grid
+            const grid = new PIXI.Graphics();
+            grid.lineStyle(1, 0x444444, 1);
+
+            // Draw vertical lines
+            for (let x = 0; x <= BOARD_WIDTH; x += CELL_SIZE) {
+                grid.moveTo(x, 0);
+                grid.lineTo(x, BOARD_HEIGHT);
+            }
+
+            // Draw horizontal lines
+            for (let y = 0; y <= BOARD_HEIGHT; y += CELL_SIZE) {
+                grid.moveTo(0, y);
+                grid.lineTo(BOARD_WIDTH, y);
+            }
+
+            gridContainer.addChild(grid);
+
+            // Add basic interaction
+            app.stage.interactive = true;
+            app.stage.hitArea = app.screen;
+
+            // Simple pan functionality
+            let isDragging = false;
+            let lastPosition = null;
+
+            app.stage.on('pointerdown', (event) => {
+                isDragging = true;
+                lastPosition = event.data.global.clone();
+            });
+
+            app.stage.on('pointermove', (event) => {
+                if (isDragging && lastPosition) {
+                    const newPosition = event.data.global;
+                    const dx = newPosition.x - lastPosition.x;
+                    const dy = newPosition.y - lastPosition.y;
+
+                    gridContainer.x += dx;
+                    gridContainer.y += dy;
+                    piecesContainer.x += dx;
+                    piecesContainer.y += dy;
+
+                    lastPosition = newPosition.clone();
+                }
+            });
+
+            app.stage.on('pointerup', () => {
+                isDragging = false;
+                lastPosition = null;
+            });
+
+            // Simple zoom with mouse wheel
+            boardContainer.addEventListener('wheel', (event) => {
+                event.preventDefault();
+                const scale = event.deltaY > 0 ? 0.95 : 1.05;
+                
+                gridContainer.scale.x *= scale;
+                gridContainer.scale.y *= scale;
+                piecesContainer.scale.x *= scale;
+                piecesContainer.scale.y *= scale;
+            });
+
+            console.log("Board initialized successfully!");
             
             // Initialize pieces map
             this.pieces = new Map();
@@ -241,140 +227,19 @@ export class Board {
             
             console.log("Board initialization complete!");
         } catch (error) {
-            console.error('Error initializing board:', error);
-            this.handleInitializationError(error);
-        }
-    }
-
-    handleInitializationError(error) {
-        console.log("Attempting to recover from initialization error");
-        try {
-            // Force canvas renderer as a last resort
-            this.forceCanvasRenderer();
-        } catch (recoveryError) {
-            console.error("Recovery failed:", recoveryError);
+            console.error("Error initializing board:", error);
+            
             // Show error message to user
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = 'Failed to initialize game board. Please refresh the page.';
-            this.container.appendChild(errorDiv);
-        }
-    }
-
-    forceCanvasRenderer() {
-        console.log("Forcing canvas renderer");
-        if (app) {
-            app.destroy(true);
-        }
-        
-        app = new PIXI.Application({
-            width: BOARD_WIDTH,
-            height: BOARD_HEIGHT,
-            backgroundColor: 0x1a1a1a,
-            forceCanvas: true,
-            resolution: window.devicePixelRatio || 1,
-            autoDensity: true
-        });
-        
-        if (this.container) {
-            this.container.appendChild(app.view);
-            this.initialize(); // Reinitialize with canvas renderer
-        }
-    }
-
-    handleContextLoss() {
-        if (isRecoveringContext) return;
-        isRecoveringContext = true;
-        
-        console.log("Handling context loss");
-        if (app && app.ticker) {
-            app.ticker.stop();
-        }
-
-        // Save current state
-        const currentState = {
-            pieces: Array.from(this.pieces.entries()),
-            gridVisible: this.gridContainer ? this.gridContainer.visible : true,
-            zoom: this.gridContainer ? this.gridContainer.scale.x : 1,
-            position: this.gridContainer ? { x: this.gridContainer.x, y: this.gridContainer.y } : { x: 0, y: 0 }
-        };
-
-        // Attempt recovery after a short delay
-        setTimeout(async () => {
-            try {
-                if (contextLostCount <= MAX_CONTEXT_LOST_RETRIES) {
-                    // Try to restore the context
-                    if (app) {
-                        app.destroy(true);
-                        app = null;
-                    }
-                    
-                    // Reinitialize with current state
-                    await this.initialize();
-                    this.restoreState(currentState);
-                } else {
-                    // Fall back to canvas renderer
-                    console.log("Too many context losses, forcing canvas renderer");
-                    this.forceCanvasRenderer();
-                }
-            } catch (error) {
-                console.error("Context recovery failed:", error);
-            } finally {
-                isRecoveringContext = false;
+            if (boardContainer) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.style.color = 'red';
+                errorDiv.style.padding = '20px';
+                errorDiv.style.textAlign = 'center';
+                errorDiv.textContent = 'Unable to initialize game board. Please try refreshing the page.';
+                boardContainer.appendChild(errorDiv);
             }
-        }, 1000);
-    }
-
-    handleContextRestore() {
-        console.log("Handling context restore");
-        if (app && app.ticker) {
-            // Clear existing content
-            this.gridContainer.removeChildren();
-            this.piecesContainer.removeChildren();
-            
-            // Redraw everything
-            this.setupGrid();
-            this.pieces.forEach((piece, id) => {
-                const newPiece = this.createPiece(piece.type);
-                newPiece.id = id;
-                newPiece.position.set(piece.x, piece.y);
-                this.pieces.set(id, newPiece);
-            });
-            
-            // Restart the render loop
-            this.startRenderLoop();
         }
-    }
-
-    restoreState(state) {
-        if (!state || !this.gridContainer || !this.piecesContainer) return;
-
-        // Restore grid visibility
-        if (this.gridContainer) {
-            this.gridContainer.visible = state.gridVisible;
-        }
-
-        // Restore zoom level
-        if (state.zoom) {
-            this.gridContainer.scale.set(state.zoom);
-            this.piecesContainer.scale.set(state.zoom);
-        }
-
-        // Restore position
-        if (state.position) {
-            this.gridContainer.position.set(state.position.x, state.position.y);
-            this.piecesContainer.position.set(state.position.x, state.position.y);
-        }
-
-        // Restore pieces
-        state.pieces.forEach(([id, piece]) => {
-            if (!this.pieces.has(id)) {
-                const newPiece = this.createPiece(piece.type);
-                newPiece.id = id;
-                newPiece.position.set(piece.x, piece.y);
-                this.pieces.set(id, newPiece);
-            }
-        });
     }
 
     startRenderLoop() {
@@ -414,42 +279,6 @@ export class Board {
         }
     }
 
-    setupGrid() {
-        // Add background first
-        const background = new PIXI.Graphics();
-        background.beginFill(0x1a1a1a);
-        background.drawRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
-        background.endFill();
-        
-        // Create grid
-        const grid = new PIXI.Graphics();
-        grid.lineStyle(1, 0x444444, 1);
-
-        // Draw vertical lines
-        for (let x = 0; x <= BOARD_WIDTH; x += CELL_SIZE) {
-            grid.moveTo(x, 0);
-            grid.lineTo(x, BOARD_HEIGHT);
-        }
-
-        // Draw horizontal lines
-        for (let y = 0; y <= BOARD_HEIGHT; y += CELL_SIZE) {
-            grid.moveTo(0, y);
-            grid.lineTo(BOARD_WIDTH, y);
-        }
-
-        // Clear and set up grid container
-        this.gridContainer.removeChildren();
-        this.gridContainer.addChild(background);
-        this.gridContainer.addChild(grid);
-        this.gridContainer.visible = true;
-        this.gridContainer.alpha = 1;
-        
-        // Ensure the grid container is at the bottom layer
-        app.stage.addChildAt(this.gridContainer, 0);
-
-        console.log("Grid setup complete - grid should be visible");
-    }
-
     initializeControlButtons() {
         const resetViewBtn = document.getElementById('reset-view-btn');
         const toggleGridBtn = document.getElementById('toggle-grid-btn');
@@ -481,98 +310,6 @@ export class Board {
 
         // Log button initialization
         console.log("Control buttons initialized");
-    }
-
-    setupInteraction() {
-        // Enable drag and drop functionality
-        if (app && app.renderer) {
-            app.stage.interactive = true;
-            app.stage.hitArea = app.screen;
-        }
-    }
-
-    setupZoomAndPan() {
-        if (!app || !app.renderer) return;
-
-        let isDragging = false;
-        let lastPosition = null;
-
-        app.stage.on('pointerdown', (event) => {
-            isDragging = true;
-            lastPosition = event.data.global.clone();
-        });
-
-        app.stage.on('pointermove', (event) => {
-            if (isDragging && lastPosition) {
-                const newPosition = event.data.global;
-                const dx = newPosition.x - lastPosition.x;
-                const dy = newPosition.y - lastPosition.y;
-
-                this.gridContainer.x += dx;
-                this.gridContainer.y += dy;
-                this.piecesContainer.x += dx;
-                this.piecesContainer.y += dy;
-
-                lastPosition = newPosition.clone();
-            }
-        });
-
-        app.stage.on('pointerup', () => {
-            isDragging = false;
-            lastPosition = null;
-        });
-
-        // Add zoom with mouse wheel
-        this.container.addEventListener('wheel', (event) => {
-            event.preventDefault();
-            const scale = event.deltaY > 0 ? 0.95 : 1.05;
-            
-            this.gridContainer.scale.x *= scale;
-            this.gridContainer.scale.y *= scale;
-            this.piecesContainer.scale.x *= scale;
-            this.piecesContainer.scale.y *= scale;
-        });
-    }
-
-    setupPieceDragAndDrop() {
-        // Set up event listeners for the piece templates
-        const pieces = document.querySelectorAll('.piece');
-        pieces.forEach(piece => {
-            piece.style.cursor = 'pointer';
-            piece.style.userSelect = 'none';
-            piece.style.webkitUserSelect = 'none';
-            
-            const handleStart = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handlePieceTemplateClick(e, piece);
-            };
-            
-            piece.addEventListener('mousedown', handleStart);
-            piece.addEventListener('touchstart', handleStart, { passive: false });
-        });
-    }
-
-    handlePieceTemplateClick(e, pieceElement) {
-        const type = pieceElement.dataset.type;
-        if (!type) return;
-
-        const piece = this.createPiece(type);
-        if (!piece) return;
-
-        // Get the board's position relative to the viewport
-        const boardRect = this.container.getBoundingClientRect();
-        
-        // Calculate the initial position in board coordinates
-        const x = (e.clientX || e.touches[0].clientX) - boardRect.left;
-        const y = (e.clientY || e.touches[0].clientY) - boardRect.top;
-        
-        // Set the piece position
-        piece.x = x;
-        piece.y = y;
-        
-        // Start dragging the new piece
-        this.startDragging(piece, e);
     }
 
     createPiece(type) {
@@ -772,5 +509,14 @@ export class Board {
 
 // Initialize board when document is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.gameBoard = new Board();
-}); 
+    initializeBoard().then(success => {
+        if (success) {
+            console.log("Board setup complete!");
+        } else {
+            console.error("Board initialization failed!");
+        }
+    });
+});
+
+// Export necessary functions and variables
+export { app, boardContainer, initializeBoard }; 
