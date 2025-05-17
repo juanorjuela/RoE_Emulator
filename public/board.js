@@ -280,14 +280,58 @@ class Board {
             this.piecesContainer.style.transform = `scale(${newScale})`;
         });
 
-        // Drag and drop for the board container
+        // Setup drag and drop for guest pieces
+        const guestPieces = document.querySelectorAll('.piece');
+        guestPieces.forEach(piece => {
+            piece.setAttribute('draggable', true);
+            
+            piece.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', piece.dataset.type);
+                piece.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            
+            piece.addEventListener('dragend', () => {
+                piece.classList.remove('dragging');
+            });
+        });
+
+        // Handle dropping on the board
         this.boardContainer.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
+            
+            // Calculate grid position for preview
+            const rect = this.boardContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const gridX = Math.floor(x / CELL_SIZE);
+            const gridY = Math.floor(y / CELL_SIZE);
+            
+            // Highlight the target cell
+            const cells = this.gridContainer.querySelectorAll('.grid-cell');
+            cells.forEach(cell => cell.classList.remove('drop-target'));
+            if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+                const targetCell = this.gridContainer.children[gridY * GRID_SIZE + gridX];
+                if (targetCell) {
+                    targetCell.classList.add('drop-target');
+                }
+            }
+        });
+
+        this.boardContainer.addEventListener('dragleave', () => {
+            // Remove all drop target highlights
+            const cells = this.gridContainer.querySelectorAll('.grid-cell');
+            cells.forEach(cell => cell.classList.remove('drop-target'));
         });
 
         this.boardContainer.addEventListener('drop', (e) => {
             e.preventDefault();
+            
+            // Remove all drop target highlights
+            const cells = this.gridContainer.querySelectorAll('.grid-cell');
+            cells.forEach(cell => cell.classList.remove('drop-target'));
+            
             const pieceType = e.dataTransfer.getData('text/plain');
             const rect = this.boardContainer.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -304,19 +348,6 @@ class Board {
                 piece.style.top = `${gridY * CELL_SIZE}px`;
                 this.piecesContainer.appendChild(piece);
             }
-        });
-
-        // Setup drag and drop for guest pieces
-        const guestPieces = document.querySelectorAll('.piece');
-        guestPieces.forEach(piece => {
-            piece.setAttribute('draggable', true);
-            piece.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', piece.dataset.type);
-                piece.classList.add('dragging');
-            });
-            piece.addEventListener('dragend', () => {
-                piece.classList.remove('dragging');
-            });
         });
     }
 

@@ -124,6 +124,14 @@ export class RaveTycoonBot {
 
     async playTurn() {
         try {
+            // Show loading overlay
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            const currentPlayerMessage = document.querySelector('.current-player-message');
+            if (loadingOverlay && currentPlayerMessage) {
+                currentPlayerMessage.textContent = `${this.botName} is playing...`;
+                loadingOverlay.classList.add('visible');
+            }
+
             // Add initial delay before starting turn
             await delay(1000);
             
@@ -164,9 +172,19 @@ export class RaveTycoonBot {
                 currentTurn: nextPlayer,
                 turnStartTime: Date.now()
             });
+
+            // Hide loading overlay
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('visible');
+            }
             
         } catch (error) {
             console.error(`Error during ${this.botName}'s turn:`, error);
+            // Hide loading overlay on error
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('visible');
+            }
         }
     }
 
