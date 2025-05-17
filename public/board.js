@@ -2,11 +2,27 @@
 let PIXI;
 async function waitForPixi() {
     console.log("Waiting for PIXI.js to load...");
-    while (!window.PIXI) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+    let retries = 0;
+    const maxRetries = 10;
+    
+    while (!window.PIXI && retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        retries++;
+        console.log(`Attempt ${retries}/${maxRetries} to load PIXI.js...`);
     }
+    
+    if (!window.PIXI) {
+        throw new Error('Failed to load PIXI.js after multiple attempts');
+    }
+    
     PIXI = window.PIXI;
     console.log("PIXI.js loaded successfully");
+    
+    // Verify PIXI.js functionality
+    if (!PIXI.Application) {
+        throw new Error('PIXI.Application not found - incomplete PIXI.js load');
+    }
+    
     return new Promise(resolve => {
         // Wait a bit longer to ensure PIXI is fully initialized
         setTimeout(resolve, 500);
