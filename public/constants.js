@@ -4,7 +4,7 @@ export const GAME_STATES = {
     STARTED: 'started'
 };
 
-export const TURN_TIME = 120; // 2 minutes in seconds
+export const TURN_TIME = 180; // 3 minutes in seconds
 
 // Fun player messages
 export const PLAYER_MESSAGES = [
