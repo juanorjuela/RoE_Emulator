@@ -1197,6 +1197,9 @@ createRoomBtn.addEventListener("click", async () => {
                     createdAt: Date.now(),
                     hostId: auth.currentUser.uid,
                     players: [name],
+                    playerMapping: {
+                        [name]: auth.currentUser.uid
+                    },
                     lastUpdated: Date.now()
                 });
 
@@ -1253,12 +1256,19 @@ async function joinRoom(roomCode, playerName) {
         // Get current players and add new player
         const updatedPlayers = [...(roomData.players || []), playerName];
         
-        // Update room with new player
-        await setDoc(roomRef, {
+        // Create player mapping
+        const playerMapping = {
+            ...(roomData.playerMapping || {}),
+            [playerName]: auth.currentUser.uid
+        };
+        
+        // Update room with new player and mapping
+        await updateDoc(roomRef, {
             players: updatedPlayers,
             playerOrder: updatedPlayers,
+            playerMapping: playerMapping,
             lastUpdated: Date.now()
-        }, { merge: true });
+        });
 
         currentRoomId = roomCode;
         currentPlayerId = playerName;
@@ -1881,12 +1891,14 @@ async function startGame(roomId) {
         
         // Initialize player order and first turn
         playerOrder = [...roomData.players];
-        currentTurnPlayer = playerOrder[0];
+        const firstPlayer = playerOrder[0];  // Set first player explicitly
+        currentTurnPlayer = firstPlayer;     // Set current turn player
         
         console.log("Game initialized with:", {
             gameState: gameState,
             playerOrder: playerOrder,
-            currentTurnPlayer: currentTurnPlayer
+            currentTurnPlayer: currentTurnPlayer,
+            firstPlayer: firstPlayer
         });
 
         // Show game area immediately
@@ -1912,7 +1924,7 @@ async function startGame(roomId) {
         // Update room with game state
         await updateDoc(roomRef, {
             gameState: GAME_STATES.STARTED,
-            currentTurn: currentTurnPlayer,
+            currentTurn: firstPlayer,  // Use firstPlayer instead of currentTurnPlayer
             turnStartTime: Date.now(),
             playerOrder: playerOrder,
             playerGoals: playerGoals,
@@ -1920,7 +1932,7 @@ async function startGame(roomId) {
         });
         
         // Start timer for first player
-        if (currentTurnPlayer === currentPlayerId) {
+        if (firstPlayer === currentPlayerId) {
             startTimer();
         }
         
