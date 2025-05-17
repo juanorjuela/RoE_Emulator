@@ -5,14 +5,21 @@ import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/1
 // Import the bot class
 import { RaveTycoonBot } from './bot.js';
 
-// Import game constants
-import { GAME_STATES, TURN_TIME, PLAYER_MESSAGES } from './constants.js';
+// Define GAME_STATES locally
+const GAME_STATES = {
+    WAITING: 'waiting',
+    STARTED: 'started',
+    FINISHED: 'finished'
+};
+
+// Import game constants (GAME_STATES has been removed from here)
+import { TURN_TIME, PLAYER_MESSAGES } from './constants.js';
 
 // Import board components
 import { Board, initializeBoard, getBoard } from './board.js';
 
 // Game State Variables
-let gameState = GAME_STATES.WAITING;
+let gameState = GAME_STATES.WAITING; // Now uses the local GAME_STATES
 let currentTurnPlayer = null;
 let turnTimer = null;
 let remainingTime = TURN_TIME;
