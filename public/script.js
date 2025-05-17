@@ -2381,6 +2381,7 @@ function showRoomInfo(roomCode) {
 // Expose necessary functions for bots
 window.drawFromDeck = drawFromDeck;
 window.discardToPile = discardToPile;
+window.getBoard = getBoard;
 
 // Add updateTurnInRoom function
 async function updateTurnInRoom(nextPlayer) {

@@ -41,6 +41,10 @@ export class RaveTycoonBot {
 
     async join() {
         try {
+            // Generate a bot UID - this will help with proper player mapping
+            const botUid = `bot-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            this.botUid = botUid;
+            
             const roomRef = doc(db, "rooms", this.roomId);
             const roomDoc = await getDoc(roomRef);
             
@@ -50,12 +54,15 @@ export class RaveTycoonBot {
 
             const roomData = roomDoc.data();
             const players = roomData.players || [];
+            const playerMapping = roomData.playerMapping || {};
 
             if (!players.includes(this.botName)) {
+                // Add bot to players list AND player mapping
                 await updateDoc(roomRef, {
-                    players: [...players, this.botName]
+                    players: [...players, this.botName],
+                    [`playerMapping.${this.botName}`]: botUid
                 });
-                console.log(`${this.botName} joined room ${this.roomId}`);
+                console.log(`${this.botName} joined room ${this.roomId} with UID ${botUid}`);
             }
 
             // Start listening for game state changes
@@ -168,10 +175,29 @@ export class RaveTycoonBot {
             const currentIndex = playerOrder.indexOf(this.botName);
             const nextPlayer = playerOrder[(currentIndex + 1) % playerOrder.length];
             
-            await updateDoc(roomRef, {
+            // Update the room with next player and board state (if exists)
+            const updateData = {
                 currentTurn: nextPlayer,
-                turnStartTime: Date.now()
-            });
+                turnStartTime: Date.now(),
+                lastUpdated: Date.now()
+            };
+
+            // Get board state if available
+            try {
+                if (window.getBoard) {
+                    const board = window.getBoard();
+                    if (board) {
+                        const boardState = board.getBoardState();
+                        if (boardState) {
+                            updateData.boardState = boardState;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error getting board state in bot turn:", error);
+            }
+            
+            await updateDoc(roomRef, updateData);
 
             // Hide loading overlay
             if (loadingOverlay) {
