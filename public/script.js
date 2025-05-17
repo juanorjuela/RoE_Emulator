@@ -651,31 +651,37 @@ document.getElementById("party-goals-btn").addEventListener("click", async () =>
         chooseBtn.addEventListener("click", async () => {
             try {
                 const roomRef = doc(db, "rooms", currentRoomId);
-                await runTransaction(db, async (transaction) => {
-                    const roomDoc = await transaction.get(roomRef);
-                    const roomData = roomDoc.data();
-                    const playerGoals = roomData.playerGoals || {};
-                    const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
-                    
-                    // Mark all other goals for discard
-                    const goalsToDiscard = myGoals.goals.filter(g => g !== card);
-                    
-                    // Remove all goals except the chosen one
-                    myGoals.goals = [card];
-                    myGoals.chosenGoal = card;
-                    playerGoals[currentPlayerId] = myGoals;
-                    
-                    transaction.update(roomRef, { playerGoals });
-                    
-                    // Discard unwanted goals
-                    for (const goalToDiscard of goalsToDiscard) {
-                        await discardToPile('partyGoals', [goalToDiscard]);
-                    }
+                const roomDoc = await getDoc(roomRef);
+                if (!roomDoc.exists()) {
+                    console.error("Room not found when choosing goal");
+                    return;
+                }
+                
+                const roomData = roomDoc.data();
+                const playerGoals = roomData.playerGoals || {};
+                const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
+                
+                // Mark this goal as chosen
+                const updatedGoals = myGoals.goals.map(g => 
+                    g === card ? { text: g, chosen: true } : g
+                );
+                
+                // Get goals to discard (all except chosen)
+                const goalsToDiscard = myGoals.goals.filter(g => g !== card);
+                
+                // Update in Firestore
+                await updateDoc(roomRef, {
+                    [`playerGoals.${currentPlayerId}.goals`]: [{ text: card, chosen: true }]
                 });
+                
+                // Discard unwanted goals
+                for (const goalToDiscard of goalsToDiscard) {
+                    await discardToPile('partyGoals', [goalToDiscard]);
+                }
 
                 // Update UI to show the chosen goal
                 container.innerHTML = '';
-                displayChosenPartyGoal(card, container);
+                displayChosenPartyGoal({ text: card, chosen: true }, container);
                 
                 logList.innerHTML += `<li>Chose Party Goal: ${card.substring(0, 30)}...</li>`;
             } catch (error) {
@@ -691,10 +697,11 @@ document.getElementById("party-goals-btn").addEventListener("click", async () =>
 function displayChosenPartyGoal(card, container) {
     const cardDiv = document.createElement("div");
     cardDiv.className = "round-card chosen-goal";
-    const coinCount = extractCoinCount(card);
+    const cardText = card.text || card;
+    const coinCount = extractCoinCount(cardText);
 
     cardDiv.innerHTML = `
-        <span><h3>CHOSEN PARTY GOAL</h3> <br> <br> ${card} <br> <br></span>
+        <span><h3>CHOSEN PARTY GOAL</h3> <br> <br> ${cardText} <br> <br></span>
         <div class="card-buttons">
             <button class="resolve-btn">✔ RESOLVE</button>
         </div>
@@ -713,8 +720,8 @@ function displayChosenPartyGoal(card, container) {
                 
                 // Move goal from active to completed
                 myGoals.goals = [];
-                myGoals.chosenGoal = null;
-                myGoals.completed.push(card);
+                myGoals.completed = myGoals.completed || [];
+                myGoals.completed.push(cardText);
                 playerGoals[currentPlayerId] = myGoals;
                 
                 transaction.update(roomRef, { playerGoals });
@@ -732,7 +739,7 @@ function displayChosenPartyGoal(card, container) {
             `;
             updateCoinsDisplay();
             logList.innerHTML += `<li>Earned ${coinCount} coins from Party Goal!</li>`;
-            await discardToPile('partyGoals', [card]);
+            await discardToPile('partyGoals', [cardText]);
         } catch (error) {
             console.error("Error resolving party goal:", error);
         }
@@ -1333,7 +1340,6 @@ async function joinRoom(roomCode, playerName) {
         // Update room with new player and mapping
         await updateDoc(roomRef, {
             players: updatedPlayers,
-            playerOrder: updatedPlayers,
             playerMapping: playerMapping,
             lastUpdated: Date.now()
         });
@@ -1539,7 +1545,9 @@ function startTimer() {
         }
         
         if (remainingTime <= 0) {
-            endTurn();
+            clearInterval(turnTimer);
+            turnTimer = null;
+            endTurn(); // Ensure this gets called when timer reaches zero
         }
     }, 1000);
 }
@@ -1598,7 +1606,12 @@ async function endTurn() {
             turnTimer = null;
         }
         
-        // Determine the next player
+        // Determine the next player - ensure playerOrder is up to date
+        const roomPlayerOrder = currentRoomData.playerOrder || currentRoomData.players || [];
+        if (roomPlayerOrder.length > 0) {
+            playerOrder = roomPlayerOrder;
+        }
+        
         const currentPlayerIndex = playerOrder.indexOf(currentTurnPlayer);
         const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length;
         const nextPlayerName = playerOrder[nextPlayerIndex];
@@ -1614,6 +1627,9 @@ async function endTurn() {
             });
         }
         
+        // Update local game state
+        currentTurnPlayer = nextPlayerName;
+        
         hideLoading();
         
     } catch (error) {
@@ -1625,21 +1641,41 @@ async function endTurn() {
 // Function to show/hide finish turn button based on current player
 function updateFinishTurnButton() {
     const finishTurnBtn = document.querySelector('.finish-turn-btn');
+    const timerContainer = document.querySelector('.timer-container');
     if (!finishTurnBtn) return;
 
     const localPlayerUid = auth.currentUser ? auth.currentUser.uid : null;
-    const playerMapping = window.currentRoomDataForButton?.playerMapping || {}; // Need a way to get current room data or playerMapping
+    const playerMapping = window.currentRoomDataForButton?.playerMapping || {};
     const turnPlayerUid = playerMapping[currentTurnPlayer];
     const isMyTurn = localPlayerUid && turnPlayerUid === localPlayerUid;
+
+    console.log("Updating finish turn button:", { 
+        isMyTurn, 
+        gameState, 
+        currentTurnPlayer,
+        localPlayerUid,
+        turnPlayerUid
+    });
 
     if (isMyTurn && gameState === GAME_STATES.STARTED) {
         finishTurnBtn.style.display = 'block';
         finishTurnBtn.classList.add('visible');
         finishTurnBtn.disabled = false;
+        
+        if (timerContainer) {
+            timerContainer.style.display = 'block';
+            timerContainer.classList.add('visible');
+        }
     } else {
         finishTurnBtn.style.display = 'none';
         finishTurnBtn.classList.remove('visible');
         finishTurnBtn.disabled = true;
+        
+        if (timerContainer) {
+            timerContainer.style.display = 'none';
+            timerContainer.classList.remove('visible');
+            timerContainer.classList.remove('warning');
+        }
     }
 }
 
@@ -1845,11 +1881,18 @@ function listenToGameState(roomId) {
             }
         }
         
-        // Handle party goals if game just started
-        if (gameState === GAME_STATES.STARTED && previousGameState === GAME_STATES.WAITING) {
-            if (data.playerGoals && data.playerGoals[currentPlayerId]) {
-                const myGoals = data.playerGoals[currentPlayerId].goals || [];
-                displayPartyGoals(myGoals);
+        // Handle party goals if game just started or party goals updated
+        if (data.playerGoals && data.playerGoals[currentPlayerId]) {
+            const myGoals = data.playerGoals[currentPlayerId].goals || [];
+            if (myGoals.length > 0) {
+                // Check if we need to display these goals
+                const currentGoalsContainer = document.getElementById("party-goal-container");
+                if (currentGoalsContainer.children.length === 0 || 
+                    (myGoals.some(goal => typeof goal === 'object' && goal.chosen === true) && 
+                     !currentGoalsContainer.querySelector('.chosen-goal'))) {
+                    console.log("Displaying updated party goals:", myGoals);
+                    displayPartyGoals(myGoals);
+                }
             }
         }
         
@@ -2192,7 +2235,7 @@ async function startGame(roomId) {
             console.log(`Drawing Party Goals for player: ${player}`);
             const partyGoalsCards = await drawFromDeck('partyGoals', PARTY_GOAL_COUNT);
             playerGoals[player] = {
-                goals: partyGoalsCards,
+                goals: partyGoalsCards.map(card => ({ text: card, chosen: false })),
                 completed: []
             };
         }
@@ -2236,9 +2279,9 @@ function displayPartyGoals(goals) {
     container.innerHTML = ''; // Clear existing goals
     
     // If we have a single chosen goal
-    const chosenGoals = goals.filter(goal => goal.chosen);
-    if (chosenGoals.length > 0) {
-        const chosenGoal = chosenGoals[0];
+    const chosenGoal = goals.find(goal => goal.chosen === true);
+    if (chosenGoal) {
+        console.log("Found chosen goal:", chosenGoal);
         displayChosenPartyGoal(chosenGoal, container);
         return;
     }
@@ -2261,31 +2304,37 @@ function displayPartyGoals(goals) {
         chooseBtn.addEventListener("click", async () => {
             try {
                 const roomRef = doc(db, "rooms", currentRoomId);
-                await runTransaction(db, async (transaction) => {
-                    const roomDoc = await transaction.get(roomRef);
-                    const roomData = roomDoc.data();
-                    const playerGoals = roomData.playerGoals || {};
-                    const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
-                    
-                    // Mark all other goals for discard
-                    const goalsToDiscard = myGoals.goals.filter(g => g !== card);
-                    
-                    // Remove all goals except the chosen one
-                    myGoals.goals = [card];
-                    myGoals.chosenGoal = card;
-                    playerGoals[currentPlayerId] = myGoals;
-                    
-                    transaction.update(roomRef, { playerGoals });
-                    
-                    // Discard unwanted goals
-                    for (const goalToDiscard of goalsToDiscard) {
-                        await discardToPile('partyGoals', [goalToDiscard]);
-                    }
+                const roomDoc = await getDoc(roomRef);
+                if (!roomDoc.exists()) {
+                    console.error("Room not found when choosing goal");
+                    return;
+                }
+                
+                const roomData = roomDoc.data();
+                const playerGoals = roomData.playerGoals || {};
+                const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
+                
+                // Mark this goal as chosen
+                const updatedGoals = myGoals.goals.map(g => 
+                    g === card ? { text: g, chosen: true } : g
+                );
+                
+                // Get goals to discard (all except chosen)
+                const goalsToDiscard = myGoals.goals.filter(g => g !== card);
+                
+                // Update in Firestore
+                await updateDoc(roomRef, {
+                    [`playerGoals.${currentPlayerId}.goals`]: [{ text: card, chosen: true }]
                 });
+                
+                // Discard unwanted goals
+                for (const goalToDiscard of goalsToDiscard) {
+                    await discardToPile('partyGoals', [goalToDiscard]);
+                }
 
                 // Update UI to show the chosen goal
                 container.innerHTML = '';
-                displayChosenPartyGoal(card, container);
+                displayChosenPartyGoal({ text: card, chosen: true }, container);
                 
                 logList.innerHTML += `<li>Chose Party Goal: ${card.substring(0, 30)}...</li>`;
             } catch (error) {
@@ -2295,6 +2344,61 @@ function displayPartyGoals(goals) {
 
         container.appendChild(cardDiv);
     }
+}
+
+// Helper function to display a chosen party goal
+function displayChosenPartyGoal(card, container) {
+    const cardDiv = document.createElement("div");
+    cardDiv.className = "round-card chosen-goal";
+    const cardText = card.text || card;
+    const coinCount = extractCoinCount(cardText);
+
+    cardDiv.innerHTML = `
+        <span><h3>CHOSEN PARTY GOAL</h3> <br> <br> ${cardText} <br> <br></span>
+        <div class="card-buttons">
+            <button class="resolve-btn">✔ RESOLVE</button>
+        </div>
+    `;
+
+    // Add event listener for the "RESOLVE" button
+    const resolveBtn = cardDiv.querySelector(".resolve-btn");
+    resolveBtn.addEventListener("click", async () => {
+        try {
+            const roomRef = doc(db, "rooms", currentRoomId);
+            await runTransaction(db, async (transaction) => {
+                const roomDoc = await transaction.get(roomRef);
+                const roomData = roomDoc.data();
+                const playerGoals = roomData.playerGoals || {};
+                const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
+                
+                // Move goal from active to completed
+                myGoals.goals = [];
+                myGoals.completed = myGoals.completed || [];
+                myGoals.completed.push(cardText);
+                playerGoals[currentPlayerId] = myGoals;
+                
+                transaction.update(roomRef, { playerGoals });
+            });
+
+            totalCoinsEarned += coinCount;
+            cardDiv.innerHTML = `
+                <div class="resolved-card">
+                    <h3>GOAL ACHIEVED!</h3>
+                    <div class="coin-reward">
+                        <span class="coin-icon">💰</span>
+                        <span class="coin-amount">+${coinCount}</span>
+                    </div>
+                </div>
+            `;
+            updateCoinsDisplay();
+            logList.innerHTML += `<li>Earned ${coinCount} coins from Party Goal!</li>`;
+            await discardToPile('partyGoals', [cardText]);
+        } catch (error) {
+            console.error("Error resolving party goal:", error);
+        }
+    });
+
+    container.appendChild(cardDiv);
 }
 
 // Add start game button functionality
