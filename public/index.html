@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#8B4513">
+    <!-- Add meta tags for rendering context -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
     <title>Rave Tycoon Game Cards Management</title>
     <link rel="stylesheet" href="styles.css">
     
     <!-- Load external libraries with specific versions -->
-    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
     <!-- Ensure PIXI.js is loaded before our scripts -->
@@ -20,6 +25,13 @@
             while (retries > 0) {
                 try {
                     if (window.PIXI) {
+                        // Verify PIXI functionality
+                        if (!PIXI.Application) {
+                            throw new Error('PIXI.Application not found');
+                        }
+                        if (!PIXI.utils.isWebGLSupported()) {
+                            console.warn('WebGL not supported, will use Canvas renderer');
+                        }
                         console.log('✅ PIXI.js loaded successfully');
                         return true;
                     }

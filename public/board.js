@@ -105,6 +105,24 @@ const GUEST_TYPES = {
 // Create a singleton instance
 let boardInstance = null;
 
+async function initializeRenderer(options) {
+    try {
+        // First try WebGL
+        options.forceCanvas = false;
+        return new PIXI.Application(options);
+    } catch (webglError) {
+        console.log("WebGL initialization failed, falling back to Canvas:", webglError);
+        try {
+            // Try Canvas as fallback
+            options.forceCanvas = true;
+            return new PIXI.Application(options);
+        } catch (canvasError) {
+            console.error("Canvas initialization also failed:", canvasError);
+            throw new Error("Could not initialize any renderer");
+        }
+    }
+}
+
 class Board {
     constructor() {
         if (boardInstance) {
@@ -126,17 +144,19 @@ class Board {
             // Wait for PIXI to be available
             await waitForPixi();
             
-            // 1. First try: Basic Canvas renderer
+            // Basic renderer options
             const options = {
                 width: BOARD_WIDTH,
                 height: BOARD_HEIGHT,
                 backgroundColor: 0x1a1a1a,
-                forceCanvas: true,
                 antialias: true,
-                resolution: 1
+                resolution: window.devicePixelRatio || 1,
+                autoDensity: true,
+                powerPreference: "high-performance"
             };
 
-            this.app = new PIXI.Application(options);
+            // Initialize renderer with fallback
+            this.app = await initializeRenderer(options);
             
             // Get the container and clear it
             this.boardContainer = document.getElementById('board-container');
