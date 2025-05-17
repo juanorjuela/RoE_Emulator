@@ -750,7 +750,16 @@ function displayChosenPartyGoal(card, container) {
 
 // Function to extract coin count from card text
 const extractCoinCount = (cardText) => {
-    const match = cardText.match(/\((\d+)\s*coins?\)/i);
+    // Handle both string and object inputs
+    const textToSearch = typeof cardText === 'object' && cardText.text ? cardText.text : 
+                         typeof cardText === 'string' ? cardText : '';
+    
+    if (!textToSearch) {
+        console.warn("Invalid card text format:", cardText);
+        return 1; // Default coin count
+    }
+    
+    const match = textToSearch.match(/\((\d+)\s*coins?\)/i);
     return match ? parseInt(match[1], 10) : 1;
 };
 
@@ -2240,11 +2249,33 @@ async function startGame(roomId) {
         const playerGoals = {};
         for (const player of playerOrder) {
             console.log(`Drawing Party Goals for player: ${player}`);
-            const partyGoalsCards = await drawFromDeck('partyGoals', PARTY_GOAL_COUNT);
-            playerGoals[player] = {
-                goals: partyGoalsCards.map(card => ({ text: card, chosen: false })),
-                completed: []
-            };
+            try {
+                const partyGoalsCards = await drawFromDeck('partyGoals', PARTY_GOAL_COUNT);
+                
+                // Ensure we have valid strings for party goals
+                const validatedCards = partyGoalsCards.map(card => {
+                    // If already an object with text, return as is
+                    if (typeof card === 'object' && card !== null && card.text) {
+                        return card;
+                    }
+                    // If a string, convert to proper object format
+                    if (typeof card === 'string') {
+                        return { text: card, chosen: false };
+                    }
+                    // Fallback for any other case
+                    console.warn("Invalid party goal format:", card);
+                    return { text: "Party Goal", chosen: false };
+                });
+                
+                playerGoals[player] = {
+                    goals: validatedCards,
+                    completed: []
+                };
+            } catch (error) {
+                console.error(`Error drawing party goals for ${player}:`, error);
+                // Add empty goals as fallback
+                playerGoals[player] = { goals: [], completed: [] };
+            }
         }
 
         // Update room with game state
@@ -2285,8 +2316,17 @@ function displayPartyGoals(goals) {
     const container = document.getElementById("party-goal-container");
     container.innerHTML = ''; // Clear existing goals
     
+    // Ensure goals is an array
+    if (!Array.isArray(goals)) {
+        console.warn("Goals is not an array:", goals);
+        return;
+    }
+    
     // If we have a single chosen goal
-    const chosenGoal = goals.find(goal => goal.chosen === true);
+    const chosenGoal = goals.find(goal => 
+        (typeof goal === 'object' && goal !== null && goal.chosen === true)
+    );
+    
     if (chosenGoal) {
         console.log("Found chosen goal:", chosenGoal);
         displayChosenPartyGoal(chosenGoal, container);
@@ -2298,9 +2338,10 @@ function displayPartyGoals(goals) {
         const cardDiv = document.createElement("div");
         cardDiv.className = "round-card";
         const coinCount = extractCoinCount(card);
+        const cardText = typeof card === 'object' && card.text ? card.text : card;
 
         cardDiv.innerHTML = `
-            <span><h3>PARTY GOAL</h3> <br> <br> ${card} <br> <br></span>
+            <span><h3>PARTY GOAL</h3> <br> <br> ${cardText} <br> <br></span>
             <div class="card-buttons">
                 <button class="choose-btn">🎯 CHOOSE</button>
             </div>
@@ -2321,29 +2362,30 @@ function displayPartyGoals(goals) {
                 const playerGoals = roomData.playerGoals || {};
                 const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
                 
-                // Mark this goal as chosen
-                const updatedGoals = myGoals.goals.map(g => 
-                    g === card ? { text: g, chosen: true } : g
-                );
-                
                 // Get goals to discard (all except chosen)
-                const goalsToDiscard = myGoals.goals.filter(g => g !== card);
+                const cardValue = typeof card === 'object' && card.text ? card.text : card;
+                const goalsToDiscard = myGoals.goals.filter(g => {
+                    const gValue = typeof g === 'object' && g.text ? g.text : g;
+                    return gValue !== cardValue;
+                });
                 
                 // Update in Firestore
                 await updateDoc(roomRef, {
-                    [`playerGoals.${currentPlayerId}.goals`]: [{ text: card, chosen: true }]
+                    [`playerGoals.${currentPlayerId}.goals`]: [{ text: cardValue, chosen: true }]
                 });
                 
                 // Discard unwanted goals
                 for (const goalToDiscard of goalsToDiscard) {
-                    await discardToPile('partyGoals', [goalToDiscard]);
+                    const goalValue = typeof goalToDiscard === 'object' && goalToDiscard.text ? 
+                                     goalToDiscard.text : goalToDiscard;
+                    await discardToPile('partyGoals', [goalValue]);
                 }
 
                 // Update UI to show the chosen goal
                 container.innerHTML = '';
-                displayChosenPartyGoal({ text: card, chosen: true }, container);
+                displayChosenPartyGoal({ text: cardValue, chosen: true }, container);
                 
-                logList.innerHTML += `<li>Chose Party Goal: ${card.substring(0, 30)}...</li>`;
+                logList.innerHTML += `<li>Chose Party Goal: ${cardValue.substring(0, 30)}...</li>`;
             } catch (error) {
                 console.error("Error choosing party goal:", error);
             }
