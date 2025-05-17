@@ -84,68 +84,125 @@ h2 {
 }
 
 .board-section {
+    position: relative;
     width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background: #2c2c2c;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    display: block !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
 }
 
 #board-container {
+    position: relative;
     width: 700px;
     height: 700px;
-    margin: 0 auto;
-    border: 2px solid #333;
-    border-radius: 5px;
-    overflow: hidden;
-    position: relative;
     background-color: #1a1a1a;
-    display: block !important;
+    border: 2px solid #333;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #board-container canvas {
-    display: block !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    display: block;
 }
 
 .board-controls {
     display: flex;
-    justify-content: center;
     gap: 10px;
     margin-top: 10px;
-    z-index: 1000;
 }
 
-.board-controls button {
-    padding: 8px 16px;
-    background-color: #444;
+.piece {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.piece-category {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.piece-label {
+    font-size: 12px;
+    text-align: center;
+    margin-top: 5px;
+    color: #fff;
+}
+
+.finish-turn-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    width: auto;
-    max-width: none;
-    margin: 0;
-    height: auto;
-    display: inline-block;
+    font-size: 16px;
+    z-index: 1000;
+    display: none;
 }
 
-.board-controls button:hover {
-    background-color: #555;
-    transform: translateY(-2px);
+.finish-turn-btn.visible {
+    display: block;
 }
 
-.board-controls button:active {
-    transform: translateY(1px);
+.finish-turn-btn:hover {
+    background-color: #45a049;
+}
+
+.finish-turn-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.timer-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
     background-color: #333;
+    color: white;
+    border-radius: 5px;
+    font-size: 24px;
+    z-index: 1000;
+    display: none;
+}
+
+.timer-container.visible {
+    display: block;
+}
+
+.timer-container.warning {
+    background-color: #f44336;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 
 /* Section Styles */
@@ -731,34 +788,6 @@ button:disabled:hover {
     font-weight: bold;
 }
 
-.timer-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 15px 25px;
-    border-radius: 10px;
-    font-size: 24px;
-    z-index: 1000;
-    display: none;
-}
-
-.timer-container.active {
-    display: block;
-}
-
-.timer-container.warning {
-    animation: pulse 1s infinite;
-    background-color: rgba(255, 0, 0, 0.8);
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
 .start-game-btn {
     padding: 10px 20px;
     font-size: 18px;
@@ -790,33 +819,6 @@ button:disabled:hover {
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
-}
-
-/* Finish Turn Button */
-.finish-turn-btn {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    padding: 12px 24px;
-    background: linear-gradient(45deg, #4CAF50, #45a049);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    display: none;
-    z-index: 1000;
-}
-
-.finish-turn-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.finish-turn-btn.visible {
-    display: block;
 }
 
 /* Disabled Game Area */
@@ -994,13 +996,6 @@ button:disabled:hover {
     justify-content: center;
     gap: 20px;
     padding: 10px;
-}
-
-.piece-category {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
 }
 
 .piece {

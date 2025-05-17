@@ -104,27 +104,12 @@ export class Board {
                     autoDensity: true,
                     powerPreference: 'high-performance'
                 });
+
+                // Set up stage interaction
+                app.stage.interactive = true;
+                app.stage.hitArea = app.screen;
+                app.stage.sortableChildren = true;
             }
-
-            // Wait for the renderer to be ready
-            await new Promise(resolve => {
-                if (app.renderer) {
-                    resolve();
-                } else {
-                    const checkRenderer = () => {
-                        if (app.renderer) {
-                            resolve();
-                        } else {
-                            setTimeout(checkRenderer, 100);
-                        }
-                    };
-                    checkRenderer();
-                }
-            });
-
-            // Now that we have a renderer, set up stage interaction
-            app.stage.interactive = true;
-            app.stage.hitArea = app.screen;
 
             console.log("Finding board container...");
             this.container = document.getElementById('board-container');
@@ -152,6 +137,11 @@ export class Board {
             console.log("Creating PIXI containers...");
             this.gridContainer = new PIXI.Container();
             this.piecesContainer = new PIXI.Container();
+            
+            // Set container properties
+            this.gridContainer.sortableChildren = true;
+            this.piecesContainer.sortableChildren = true;
+            this.piecesContainer.interactive = true;
             
             app.stage.addChild(this.gridContainer);
             app.stage.addChild(this.piecesContainer);
@@ -309,139 +299,110 @@ export class Board {
         const pieces = document.querySelectorAll('.piece');
         pieces.forEach(piece => {
             piece.style.cursor = 'pointer';
-            piece.addEventListener('mousedown', (e) => this.handlePieceTemplateClick(e, piece));
-            piece.addEventListener('touchstart', (e) => {
+            piece.style.userSelect = 'none';
+            piece.style.webkitUserSelect = 'none';
+            
+            const handleStart = (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 this.handlePieceTemplateClick(e, piece);
-            });
+            };
+            
+            piece.addEventListener('mousedown', handleStart);
+            piece.addEventListener('touchstart', handleStart, { passive: false });
         });
     }
 
     handlePieceTemplateClick(e, pieceElement) {
-        e.preventDefault();
         const type = pieceElement.dataset.type;
+        if (!type) return;
+
+        const piece = this.createPiece(type);
+        if (!piece) return;
+
+        // Get the board's position relative to the viewport
         const boardRect = this.container.getBoundingClientRect();
         
-        // Create new piece on the board
-        const piece = this.createPiece(type);
+        // Calculate the initial position in board coordinates
+        const x = (e.clientX || e.touches[0].clientX) - boardRect.left;
+        const y = (e.clientY || e.touches[0].clientY) - boardRect.top;
         
-        // Calculate initial position relative to the board
-        const x = ((e.clientX || e.touches[0].clientX) - boardRect.left) / this.gridContainer.scale.x;
-        const y = ((e.clientY || e.touches[0].clientY) - boardRect.top) / this.gridContainer.scale.y;
-        
-        piece.position.set(x, y);
-        this.piecesContainer.addChild(piece);
+        // Set the piece position
+        piece.x = x;
+        piece.y = y;
         
         // Start dragging the new piece
         this.startDragging(piece, e);
     }
 
     createPiece(type) {
+        if (!GUEST_TYPES[type]) return null;
+
         const piece = new PIXI.Container();
-        const config = GUEST_TYPES[type];
-        
-        // Create the circular background
-        const background = new PIXI.Graphics();
-        background.lineStyle(config.borderWidth, config.color);
-        background.beginFill(0xFFFFFF);
-        background.drawCircle(0, 0, 30);
-        background.endFill();
-        
-        // Create icon
-        const iconSvg = config.icon;
-        const blob = new Blob([iconSvg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const icon = PIXI.Sprite.from(url);
-        
-        // Position icon in the center
-        icon.anchor.set(0.5);
-        icon.width = 40;
-        icon.height = 40;
-        
-        piece.addChild(background);
-        piece.addChild(icon);
-        
-        // Make piece interactive
         piece.interactive = true;
         piece.buttonMode = true;
-        piece.cursor = 'pointer';
-        
-        // Add piece data
         piece.type = type;
-        piece.boardX = null;
-        piece.boardY = null;
         
-        // Set up drag events
-        piece
-            .on('pointerdown', (e) => this.startDragging(piece, e))
-            .on('pointerup', () => this.stopDragging())
-            .on('pointerupoutside', () => this.stopDragging())
-            .on('pointermove', (e) => this.onDragMove(e))
-            .on('rightclick', () => this.removePiece(piece))
-            .on('touchstart', (e) => {
-                if (e.data.originalEvent.touches.length === 2) {
-                    this.removePiece(piece);
-                }
-            });
+        // Create the piece graphics
+        const graphics = new PIXI.Graphics();
+        graphics.lineStyle(GUEST_TYPES[type].borderWidth, GUEST_TYPES[type].color);
+        graphics.beginFill(GUEST_TYPES[type].color, 0.2);
+        graphics.drawCircle(0, 0, CELL_SIZE / 2);
+        graphics.endFill();
         
+        piece.addChild(graphics);
+        
+        // Add event listeners for dragging
+        piece.on('mousedown', (e) => this.startDragging(piece, e))
+            .on('touchstart', (e) => this.startDragging(piece, e));
+        
+        this.piecesContainer.addChild(piece);
         return piece;
     }
 
     startDragging(piece, event) {
-        if (!piece || !event) return;
-        
-        this.dragTarget = piece;
+        event.stopPropagation();
         piece.dragging = true;
-        
-        // Calculate drag offset
-        const position = event.data ? event.data.getLocalPosition(piece.parent) : piece.position;
-        piece.dragOffset = {
-            x: piece.x - position.x,
-            y: piece.y - position.y
-        };
-        
-        // Bring piece to front
-        if (piece.parent) {
-            const index = piece.parent.children.indexOf(piece);
-            if (index !== piece.parent.children.length - 1) {
-                piece.parent.addChild(piece);
-            }
+        piece.dragData = event.data;
+        piece.zIndex = 1000;
+
+        const dragMove = (e) => this.onDragMove(e, piece);
+        const dragEnd = () => this.stopDragging(piece);
+
+        piece.on('mousemove', dragMove)
+            .on('touchmove', dragMove)
+            .on('mouseup', dragEnd)
+            .on('mouseupoutside', dragEnd)
+            .on('touchend', dragEnd)
+            .on('touchendoutside', dragEnd);
+    }
+
+    onDragMove(event, piece) {
+        if (piece.dragging) {
+            const newPosition = piece.dragData.getLocalPosition(this.piecesContainer);
+            piece.x = newPosition.x;
+            piece.y = newPosition.y;
         }
     }
 
-    onDragMove(event) {
-        if (!this.dragTarget || !this.dragTarget.dragging) return;
-        
-        const position = event.data.getLocalPosition(this.dragTarget.parent);
-        this.dragTarget.position.set(
-            position.x + (this.dragTarget.dragOffset ? this.dragTarget.dragOffset.x : 0),
-            position.y + (this.dragTarget.dragOffset ? this.dragTarget.dragOffset.y : 0)
-        );
-    }
-
-    stopDragging() {
-        if (!this.dragTarget) return;
-        
-        const piece = this.dragTarget;
+    stopDragging(piece) {
         piece.dragging = false;
-        this.dragTarget = null;
-        
-        // Snap to grid
-        const snappedPosition = this.snapToGrid(piece.position);
-        gsap.to(piece.position, {
-            x: snappedPosition.x,
-            y: snappedPosition.y,
-            duration: 0.2,
-            ease: "power2.out",
-            onComplete: () => {
-                // Store the grid position
-                piece.boardX = Math.floor(snappedPosition.x / CELL_SIZE);
-                piece.boardY = Math.floor(snappedPosition.y / CELL_SIZE);
-                
-                // Sync with Firebase
-                this.syncPiecePosition(piece);
-            }
-        });
+        piece.dragData = null;
+        piece.zIndex = 1;
+
+        // Remove all move and end listeners
+        piece.removeAllListeners('mousemove')
+            .removeAllListeners('touchmove')
+            .removeAllListeners('mouseup')
+            .removeAllListeners('mouseupoutside')
+            .removeAllListeners('touchend')
+            .removeAllListeners('touchendoutside');
+
+        // Snap to grid and sync position
+        const snappedPos = this.snapToGrid({ x: piece.x, y: piece.y });
+        piece.x = snappedPos.x;
+        piece.y = snappedPos.y;
+        this.syncPiecePosition(piece);
     }
 
     async syncPiecePosition(piece) {

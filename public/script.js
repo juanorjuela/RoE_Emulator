@@ -123,6 +123,9 @@ async function initializeGame() {
                 </div>
             `;
         }
+
+        // Initialize game controls
+        initializeGameControls();
     } catch (error) {
         console.error("❌ Error initializing game:", error);
         // Add error message to the page
@@ -1498,7 +1501,7 @@ function updateTimerDisplay() {
 }
 
 // Function to end turn
-function endTurn() {
+async function endTurn() {
     console.log("Attempting to end turn...");
     if (!currentRoomId || currentTurnPlayer !== currentPlayerId) {
         console.log("Cannot end turn - not current player's turn");
@@ -1518,100 +1521,99 @@ function endTurn() {
         finishTurnBtn.classList.remove('visible');
     }
 
-    // Get the next player and update turn
+    // Get the next player
     const roomRef = doc(db, "rooms", currentRoomId);
-    getDoc(roomRef).then((roomDoc) => {
-        const data = roomDoc.data();
-        const players = data.players || [];
-        // Find current player index by name, not by ID
-        const currentIndex = players.indexOf(currentTurnPlayer);
-        if (currentIndex === -1) {
-            console.error("Current player not found in player list");
-            return;
-        }
-        const nextIndex = (currentIndex + 1) % players.length;
-        const nextPlayer = players[nextIndex];
+    const roomDoc = await getDoc(roomRef);
+    const roomData = roomDoc.data();
+    
+    if (!roomData) {
+        console.error("Room data not found");
+        return;
+    }
 
-        console.log("Ending turn, next player:", nextPlayer);
-        
-        // Update turn in room
-        updateTurnInRoom(nextPlayer).then(() => {
-            console.log("Turn ended successfully");
-        }).catch((error) => {
-            console.error("Error updating turn:", error);
-        });
-    }).catch((error) => {
-        console.error("Error getting room data:", error);
-    });
+    const currentPlayerIndex = playerOrder.indexOf(currentTurnPlayer);
+    const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length;
+    const nextPlayer = playerOrder[nextPlayerIndex];
+
+    // Update the turn in the room
+    await updateTurnInRoom(nextPlayer);
+    
+    // Reset remaining time for next turn
+    remainingTime = TURN_TIME;
+    
+    console.log(`Turn ended. Next player: ${nextPlayer}`);
 }
 
-async function updateTurnInRoom(nextPlayer) {
-    if (!currentRoomId) return;
-    
-    try {
-        const roomRef = doc(db, "rooms", currentRoomId);
-        await updateDoc(roomRef, {
-            currentTurn: nextPlayer,
-            turnStartTime: Date.now(),
-            lastUpdated: Date.now()
-        });
-    } catch (error) {
-        console.error("Error updating turn:", error);
+// Function to show/hide finish turn button based on current player
+function updateFinishTurnButton() {
+    const finishTurnBtn = document.querySelector('.finish-turn-btn');
+    if (!finishTurnBtn) return;
+
+    if (currentTurnPlayer === currentPlayerId) {
+        finishTurnBtn.style.display = 'block';
+        finishTurnBtn.classList.add('visible');
+        finishTurnBtn.disabled = false;
+    } else {
+        finishTurnBtn.style.display = 'none';
+        finishTurnBtn.classList.remove('visible');
+        finishTurnBtn.disabled = true;
     }
 }
 
-// Listen to game state changes
+// Add this to the game state listener
 function listenToGameState(roomId) {
     const roomRef = doc(db, "rooms", roomId);
+    
     return onSnapshot(roomRef, (snapshot) => {
         if (!snapshot.exists()) return;
         
         const data = snapshot.data();
-        gameState = data.gameState;
+        if (!data) return;
         
-        // Hide Party Goals button when game starts
-        if (gameState === GAME_STATES.STARTED) {
-            const partyGoalsBtn = document.getElementById("party-goals-btn");
-            if (partyGoalsBtn) {
-                partyGoalsBtn.style.display = 'none';
-            }
+        // Update current turn player
+        currentTurnPlayer = data.currentTurn;
+        
+        // Update player order if it exists
+        if (data.playerOrder) {
+            playerOrder = data.playerOrder;
         }
         
-        // Update Party Goals if they exist
-        if (data.playerGoals && data.playerGoals[currentPlayerId]) {
-            displayPartyGoals(data.playerGoals[currentPlayerId].goals);
+        // Update UI elements
+        updateFinishTurnButton();
+        updateGameAreaState();
+        
+        // Start timer if it's the current player's turn
+        if (currentTurnPlayer === currentPlayerId) {
+            startTimer();
         }
         
-        // Update turn and timer if game is started
-        if (gameState === GAME_STATES.STARTED) {
-            // Sync player order with server
-            if (data.playerOrder) {
-                playerOrder = [...data.playerOrder];
-            }
-            
-            const newTurnPlayer = data.currentTurn;
-            
-            // If it's a new turn or initial state
-            if (newTurnPlayer !== currentTurnPlayer || !currentTurnPlayer) {
-                currentTurnPlayer = newTurnPlayer;
-                
-                // Update game area state first
-                updateGameAreaState();
-                
-                // Start timer if it's our turn
-                if (currentTurnPlayer === currentPlayerId) {
-                    startTimer();
-                } else {
-                    // Stop our timer if it's not our turn
-                    clearInterval(turnTimer);
-                    document.querySelector('.timer-container').classList.remove('active', 'warning');
-                }
-            }
-            
-            // Update player list to show current turn
-            updatePlayerList(data.players, currentTurnPlayer);
+        // Update room info display
+        const roomInfo = document.getElementById('room-info');
+        if (roomInfo) {
+            roomInfo.innerHTML = `
+                <div class="room-info">
+                    <p>Room Code: ${roomId}</p>
+                    <p>Current Turn: ${data.players[currentTurnPlayer]?.name || 'Unknown'}</p>
+                    <p>Players: ${Object.values(data.players).map(p => p.name).join(', ')}</p>
+                </div>
+            `;
         }
+        
+        // Update player list
+        updatePlayerList(data.players, currentTurnPlayer);
     });
+}
+
+// Add this to the game initialization
+function initializeGameControls() {
+    const finishTurnBtn = document.querySelector('.finish-turn-btn');
+    if (finishTurnBtn) {
+        finishTurnBtn.addEventListener('click', () => {
+            if (currentTurnPlayer === currentPlayerId) {
+                endTurn();
+            }
+        });
+    }
 }
 
 // Update player list with current turn indicator
