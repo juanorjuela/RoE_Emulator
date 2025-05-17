@@ -192,6 +192,22 @@ class Board {
             // Add drag and drop handlers
             this.setupDragAndDrop();
             
+            // Add mutation observer to reinitialize drag and drop when game area becomes visible
+            const gameArea = document.querySelector('.game-area');
+            if (gameArea) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            if (gameArea.style.display === 'block') {
+                                console.log("Game area visible, reinitializing drag and drop");
+                                this.setupDragAndDrop();
+                            }
+                        }
+                    });
+                });
+                observer.observe(gameArea, { attributes: true });
+            }
+            
             console.log("Board initialized successfully!");
             return true;
         } catch (error) {

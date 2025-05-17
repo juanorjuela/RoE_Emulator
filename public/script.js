@@ -1630,54 +1630,40 @@ function updateGameAreaState() {
 
     console.log("Current game state:", gameState, "Game area visibility:", gameArea.classList.contains('visible'), "Display:", gameArea.style.display);
 
-    // Always show the game area when game has started
     if (gameState === GAME_STATES.STARTED) {
-        gameArea.classList.add('visible');
         gameArea.style.display = 'block';
-        console.log("Game area should now be visible");
+        setTimeout(() => {
+            gameArea.classList.add('visible');
+            // Reinitialize board after game area is visible
+            initializeBoard().then(() => {
+                console.log("Game area should now be visible");
+            });
+        }, 100);
 
-        // Show/hide timer and finish turn button based on turn
+        // Show/hide timer and finish turn button based on current player
         if (currentTurnPlayer === currentPlayerId) {
-            if (timerContainer) {
-                timerContainer.style.display = 'block';
-                timerContainer.classList.add('visible');
-            }
+            console.log("Showing timer and finish turn button");
+            if (timerContainer) timerContainer.style.display = 'block';
             if (finishTurnBtn) {
                 finishTurnBtn.style.display = 'block';
                 finishTurnBtn.classList.add('visible');
             }
-            console.log("Showing timer and finish turn button");
         } else {
-            if (timerContainer) {
-                timerContainer.style.display = 'none';
-                timerContainer.classList.remove('visible');
-            }
+            console.log("Hiding timer and finish turn button");
+            if (timerContainer) timerContainer.style.display = 'none';
             if (finishTurnBtn) {
                 finishTurnBtn.style.display = 'none';
                 finishTurnBtn.classList.remove('visible');
             }
-            console.log("Hiding timer and finish turn button");
         }
-
-        // Enable/disable action buttons based on turn
-        const isPlayerTurn = currentTurnPlayer === currentPlayerId;
-        if (grabActionCardsBtn) grabActionCardsBtn.disabled = !isPlayerTurn;
-        if (roundCardBtn) roundCardBtn.disabled = !isPlayerTurn;
-        if (miniMissionBtn) miniMissionBtn.disabled = !isPlayerTurn;
-
     } else {
         gameArea.classList.remove('visible');
-        gameArea.style.display = 'none';
-        console.log("Game area should be hidden");
-        if (finishTurnBtn) {
-            finishTurnBtn.style.display = 'none';
-            finishTurnBtn.classList.remove('visible');
-        }
-        if (timerContainer) {
-            timerContainer.style.display = 'none';
-            timerContainer.classList.remove('visible');
-        }
+        setTimeout(() => {
+            gameArea.style.display = 'none';
+        }, 300);
     }
+
+    console.log("Game area visibility updated");
 }
 
 // Add CSS styles for disabled cards
