@@ -4,6 +4,7 @@ let app = null;
 let contextLostCount = 0;
 const MAX_CONTEXT_LOST_RETRIES = 3;
 let isRecoveringContext = false;
+let hasInitialContextLoss = false;
 
 async function waitForPixi() {
     console.log("Waiting for PIXI.js to load...");
@@ -125,69 +126,40 @@ export class Board {
                 canvas.style.transform = 'translateZ(0)';
                 canvas.style.backfaceVisibility = 'hidden';
                 canvas.style.willChange = 'transform';
-                
-                // Try WebGL2 first, then WebGL1, then fallback to canvas
-                const contextOptions = {
-                    powerPreference: 'high-performance',
-                    failIfMajorPerformanceCaveat: false,
-                    antialias: true
-                };
 
-                let renderer;
+                // Add context loss detection before initialization
+                canvas.addEventListener('webglcontextlost', (event) => {
+                    event.preventDefault();
+                    console.log("WebGL context lost during initialization");
+                    hasInitialContextLoss = true;
+                }, false);
+
+                // Try canvas renderer first for stability
                 try {
-                    // Try WebGL2
-                    renderer = new PIXI.Renderer({
+                    console.log("Creating application with canvas renderer...");
+                    app = new PIXI.Application({
                         width: BOARD_WIDTH,
                         height: BOARD_HEIGHT,
+                        backgroundColor: 0x1a1a1a,
+                        resolution: window.devicePixelRatio || 1,
+                        autoDensity: true,
                         view: canvas,
-                        ...contextOptions,
-                        type: PIXI.RENDERER_TYPE.WEBGL2
+                        forceCanvas: true
                     });
-                    console.log("Using WebGL2 renderer");
-                } catch (e) {
-                    console.log("WebGL2 not available, trying WebGL1");
-                    try {
-                        // Try WebGL1
-                        renderer = new PIXI.Renderer({
-                            width: BOARD_WIDTH,
-                            height: BOARD_HEIGHT,
-                            view: canvas,
-                            ...contextOptions,
-                            type: PIXI.RENDERER_TYPE.WEBGL
-                        });
-                        console.log("Using WebGL1 renderer");
-                    } catch (e) {
-                        console.log("WebGL not available, falling back to canvas renderer");
-                        renderer = new PIXI.Renderer({
-                            width: BOARD_WIDTH,
-                            height: BOARD_HEIGHT,
-                            view: canvas,
-                            forceCanvas: true
-                        });
-                    }
+                } catch (error) {
+                    console.error("Failed to create canvas renderer:", error);
+                    throw error;
                 }
 
-                // Create PIXI application with the chosen renderer
-                app = new PIXI.Application({
-                    width: BOARD_WIDTH,
-                    height: BOARD_HEIGHT,
-                    backgroundColor: 0x1a1a1a,
-                    resolution: window.devicePixelRatio || 1,
-                    autoDensity: true,
-                    view: canvas,
-                    renderer: renderer
-                });
+                console.log("PIXI Application created:", app);
+                console.log("Renderer type:", app.renderer.type);
 
                 // Add context loss handling
                 canvas.addEventListener('webglcontextlost', (event) => {
                     event.preventDefault();
                     console.log("WebGL context lost");
-                    contextLostCount++;
-                    
-                    if (contextLostCount > MAX_CONTEXT_LOST_RETRIES) {
-                        console.log("Too many context losses, forcing canvas renderer");
-                        this.forceCanvasRenderer();
-                    } else {
+                    if (!hasInitialContextLoss) {
+                        contextLostCount++;
                         this.handleContextLoss();
                     }
                 }, false);
@@ -196,9 +168,6 @@ export class Board {
                     console.log("WebGL context restored");
                     this.handleContextRestore();
                 }, false);
-
-                console.log("PIXI Application created:", app);
-                console.log("Renderer type:", app.renderer.type);
             }
 
             // Find and prepare the container
@@ -221,21 +190,25 @@ export class Board {
             this.container.style.overflow = 'hidden';
             this.container.style.backgroundColor = '#1a1a1a';
             this.container.style.display = 'block';
-            this.container.style.transform = 'translateZ(0)';
-            this.container.style.backfaceVisibility = 'hidden';
-            this.container.style.willChange = 'transform';
             
+            // Add the canvas with improved performance settings
             console.log("Adding canvas to container...");
+            app.view.style.opacity = '0';
             this.container.appendChild(app.view);
             
-            // Initialize containers with improved performance settings
+            // Fade in the canvas
+            setTimeout(() => {
+                app.view.style.transition = 'opacity 0.3s ease-in';
+                app.view.style.opacity = '1';
+            }, 100);
+            
+            // Initialize containers
             console.log("Creating PIXI containers...");
             this.gridContainer = new PIXI.Container();
             this.piecesContainer = new PIXI.Container();
             
             // Set container properties
             this.gridContainer.sortableChildren = true;
-            this.gridContainer.cacheAsBitmap = true; // Cache the static grid
             this.piecesContainer.sortableChildren = true;
             this.piecesContainer.interactive = true;
             
