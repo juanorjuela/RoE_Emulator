@@ -105,34 +105,87 @@ h2 {
     border: 1px solid #333;
     overflow: hidden;
     margin: 20px auto;
+    cursor: grab;
 }
 
-#board-container canvas {
+.grid-container {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100% !important;
-    height: 100% !important;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(70, 10px);
+    grid-template-rows: repeat(70, 10px);
+    gap: 1px;
+    background-color: #222;
+    transform-origin: center;
+    transition: transform 0.3s ease;
 }
 
+.grid-cell {
+    width: 10px;
+    height: 10px;
+    border: 1px solid #333;
+    box-sizing: border-box;
+}
+
+.pieces-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transform-origin: center;
+    transition: transform 0.3s ease;
+}
+
+.piece {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: grab;
+    pointer-events: auto;
+    user-select: none;
+    transition: transform 0.2s ease;
+}
+
+.piece.dragging {
+    transform: scale(1.2);
+    opacity: 0.8;
+    z-index: 1000;
+}
+
+.grid-container.hidden {
+    opacity: 0;
+}
+
+/* Board controls */
 .board-controls {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    justify-content: center;
 }
 
-.piece {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin: 5px;
+.board-controls button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
+    transition: background-color 0.2s;
+}
+
+.board-controls button:hover {
+    background-color: #444;
 }
 
 .piece-category {
