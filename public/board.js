@@ -33,8 +33,8 @@ async function waitForPixi() {
 }
 
 // Board configuration
-const GRID_SIZE = 70;
-const CELL_SIZE = 10;
+const GRID_SIZE = 20;
+const CELL_SIZE = 50;
 const BOARD_WIDTH = GRID_SIZE * CELL_SIZE;
 const BOARD_HEIGHT = GRID_SIZE * CELL_SIZE;
 
@@ -235,8 +235,9 @@ class Board {
         let startX, startY;
         let scrollLeft, scrollTop;
 
+        // Pan functionality
         this.boardContainer.addEventListener('mousedown', (e) => {
-            if (!e.target.classList.contains('piece')) {
+            if (!e.target.classList.contains('board-piece') && !e.target.classList.contains('piece')) {
                 isDragging = true;
                 this.boardContainer.style.cursor = 'grabbing';
                 startX = e.pageX - this.boardContainer.offsetLeft;
@@ -248,7 +249,6 @@ class Board {
 
         this.boardContainer.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            
             e.preventDefault();
             const x = e.pageX - this.boardContainer.offsetLeft;
             const y = e.pageY - this.boardContainer.offsetTop;
@@ -269,7 +269,7 @@ class Board {
             this.boardContainer.style.cursor = 'grab';
         });
 
-        // Add zoom with mouse wheel
+        // Zoom functionality
         this.boardContainer.addEventListener('wheel', (e) => {
             e.preventDefault();
             const scale = e.deltaY > 0 ? 0.9 : 1.1;
@@ -279,36 +279,76 @@ class Board {
             this.gridContainer.style.transform = `scale(${newScale})`;
             this.piecesContainer.style.transform = `scale(${newScale})`;
         });
+
+        // Drag and drop for the board container
+        this.boardContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        this.boardContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const pieceType = e.dataTransfer.getData('text/plain');
+            const rect = this.boardContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Calculate grid position
+            const gridX = Math.floor(x / CELL_SIZE);
+            const gridY = Math.floor(y / CELL_SIZE);
+            
+            // Only place if within grid bounds
+            if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+                const piece = this.createPiece(pieceType);
+                piece.style.left = `${gridX * CELL_SIZE}px`;
+                piece.style.top = `${gridY * CELL_SIZE}px`;
+                this.piecesContainer.appendChild(piece);
+            }
+        });
+
+        // Setup drag and drop for guest pieces
+        const guestPieces = document.querySelectorAll('.piece');
+        guestPieces.forEach(piece => {
+            piece.setAttribute('draggable', true);
+            piece.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', piece.dataset.type);
+                piece.classList.add('dragging');
+            });
+            piece.addEventListener('dragend', () => {
+                piece.classList.remove('dragging');
+            });
+        });
     }
 
     createPiece(type) {
-        if (!GUEST_TYPES[type]) return null;
-
         const piece = document.createElement('div');
-        piece.className = 'piece';
-        piece.dataset.type = type;
-        piece.innerHTML = GUEST_TYPES[type].icon;
-        piece.style.backgroundColor = GUEST_TYPES[type].color;
-        
-        this.setupPieceDragAndDrop(piece);
-        this.piecesContainer.appendChild(piece);
-        
-        return piece;
-    }
+        piece.className = `board-piece ${type}`;
+        piece.style.width = `${CELL_SIZE}px`;
+        piece.style.height = `${CELL_SIZE}px`;
+        piece.style.position = 'absolute';
+        piece.style.display = 'flex';
+        piece.style.alignItems = 'center';
+        piece.style.justifyContent = 'center';
+        piece.style.fontSize = `${CELL_SIZE * 0.6}px`;
+        piece.style.cursor = 'grab';
+        piece.style.userSelect = 'none';
+        piece.style.zIndex = '10';
+        piece.setAttribute('draggable', true);
 
-    setupPieceDragAndDrop(piece) {
-        piece.draggable = true;
-        
+        // Add the guest type's emoji
+        piece.innerHTML = GUEST_TYPES[type].icon;
+
+        // Make the piece draggable within the board
         piece.addEventListener('dragstart', (e) => {
-            this.draggedPiece = piece;
-            e.dataTransfer.setData('text/plain', '');
+            e.dataTransfer.setData('text/plain', type);
             piece.classList.add('dragging');
         });
 
         piece.addEventListener('dragend', () => {
             piece.classList.remove('dragging');
-            this.draggedPiece = null;
         });
+
+        return piece;
     }
 
     snapToGrid(x, y) {

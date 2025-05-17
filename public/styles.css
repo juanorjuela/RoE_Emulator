@@ -115,8 +115,8 @@ h2 {
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: repeat(70, 10px);
-    grid-template-rows: repeat(70, 10px);
+    grid-template-columns: repeat(20, 50px);
+    grid-template-rows: repeat(20, 50px);
     gap: 1px;
     background-color: #222;
     transform-origin: center;
@@ -124,8 +124,8 @@ h2 {
 }
 
 .grid-cell {
-    width: 10px;
-    height: 10px;
+    width: 50px;
+    height: 50px;
     border: 1px solid #333;
     box-sizing: border-box;
 }
@@ -142,24 +142,51 @@ h2 {
 }
 
 .piece {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 24px;
     cursor: grab;
-    pointer-events: auto;
     user-select: none;
     transition: transform 0.2s ease;
+    background: white;
+    border: 2px solid #333;
+    margin: 5px;
+    position: relative;
 }
 
 .piece.dragging {
-    transform: scale(1.2);
+    transform: scale(1.1);
     opacity: 0.8;
     z-index: 1000;
+    cursor: grabbing;
+}
+
+.piece:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.piece-label {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    white-space: nowrap;
+    color: #333;
+}
+
+/* Add draggable styles */
+[draggable="true"] {
+    cursor: grab;
+}
+
+[draggable="true"]:active {
+    cursor: grabbing;
 }
 
 .grid-container.hidden {
@@ -193,13 +220,6 @@ h2 {
     flex-wrap: wrap;
     gap: 10px;
     margin: 10px 0;
-}
-
-.piece-label {
-    font-size: 12px;
-    text-align: center;
-    margin-top: 5px;
-    color: #fff;
 }
 
 .finish-turn-btn {
@@ -1030,12 +1050,13 @@ button:disabled:hover {
 
 /* Game Pieces Section */
 .game-pieces-section {
+    position: relative;
     width: 100%;
-    margin: 20px 0;
-    padding: 15px;
-    background: #2c3e50;
+    padding: 20px;
+    background: #fff;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .game-pieces-section h3 {
@@ -1052,9 +1073,9 @@ button:disabled:hover {
 }
 
 .piece {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
     background: white;
     display: flex;
     align-items: center;
@@ -1075,14 +1096,12 @@ button:disabled:hover {
 
 .piece-label {
     position: absolute;
-    bottom: -25px;
+    bottom: -20px;
     left: 50%;
     transform: translateX(-50%);
-    white-space: nowrap;
     font-size: 12px;
-    color: white;
-    opacity: 0;
-    transition: opacity 0.2s;
+    white-space: nowrap;
+    color: #333;
 }
 
 .piece:hover .piece-label {

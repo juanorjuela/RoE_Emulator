@@ -1618,6 +1618,7 @@ function updateGameAreaState() {
     const loadingOverlay = document.querySelector('.loading-overlay');
     const currentPlayerMessage = document.querySelector('.current-player-message');
     const finishTurnBtn = document.querySelector('.finish-turn-btn');
+    const timerContainer = document.querySelector('.timer-container');
     const grabActionCardsBtn = document.getElementById("grab-action-cards-btn");
     const roundCardBtn = document.getElementById("round-card-btn");
     const miniMissionBtn = document.getElementById("mini-mission-btn");
@@ -1635,17 +1636,27 @@ function updateGameAreaState() {
         gameArea.style.display = 'block';
         console.log("Game area should now be visible");
 
-        // Show finish turn button only during player's turn
-        if (finishTurnBtn) {
-            if (currentTurnPlayer === currentPlayerId) {
+        // Show/hide timer and finish turn button based on turn
+        if (currentTurnPlayer === currentPlayerId) {
+            if (timerContainer) {
+                timerContainer.style.display = 'block';
+                timerContainer.classList.add('visible');
+            }
+            if (finishTurnBtn) {
                 finishTurnBtn.style.display = 'block';
                 finishTurnBtn.classList.add('visible');
-                console.log("Showing finish turn button");
-            } else {
+            }
+            console.log("Showing timer and finish turn button");
+        } else {
+            if (timerContainer) {
+                timerContainer.style.display = 'none';
+                timerContainer.classList.remove('visible');
+            }
+            if (finishTurnBtn) {
                 finishTurnBtn.style.display = 'none';
                 finishTurnBtn.classList.remove('visible');
-                console.log("Hiding finish turn button");
             }
+            console.log("Hiding timer and finish turn button");
         }
 
         // Enable/disable action buttons based on turn
@@ -1661,6 +1672,10 @@ function updateGameAreaState() {
         if (finishTurnBtn) {
             finishTurnBtn.style.display = 'none';
             finishTurnBtn.classList.remove('visible');
+        }
+        if (timerContainer) {
+            timerContainer.style.display = 'none';
+            timerContainer.classList.remove('visible');
         }
     }
 }
@@ -1936,3 +1951,21 @@ function showRoomInfo(roomCode) {
 // Expose necessary functions for bots
 window.drawFromDeck = drawFromDeck;
 window.discardToPile = discardToPile;
+
+// Add updateTurnInRoom function
+async function updateTurnInRoom(nextPlayer) {
+    if (!currentRoomId) return;
+    
+    try {
+        const roomRef = doc(db, "rooms", currentRoomId);
+        await updateDoc(roomRef, {
+            currentTurn: nextPlayer,
+            turnStartTime: Date.now(),
+            lastUpdated: Date.now()
+        });
+        
+        console.log(`Turn updated to ${nextPlayer}`);
+    } catch (error) {
+        console.error("Error updating turn:", error);
+    }
+}
