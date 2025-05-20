@@ -115,6 +115,7 @@ let auth;
 
 // Add at the top with other state variables
 let currentMusic = null;
+let musicHistory = [];
 
 // Turn start popup state
 let turnStartPopupResolved = false;
@@ -126,8 +127,7 @@ turnStartPopup.style.display = 'none';
 turnStartPopup.innerHTML = `
     <div class="popup-content">
         <div class="popup-text">
-            The music is pumping, one guest rushes to a dancefloor! <br> <br> 
-            (Add 1 guest to any available dancefloor space, if there is one)
+            The music is pumping, one guest rushes to the dancefloor!
         </div>
         <button class="resolve-btn">✔ Resolve</button>
     </div>
@@ -195,7 +195,65 @@ turnStartPopup.querySelector('.resolve-btn').addEventListener('click', () => {
 const musicCounter = document.createElement('div');
 musicCounter.className = 'current-music-counter';
 musicCounter.style.display = 'none';
+
+// Create music history dropdown
+const musicHistoryDropdown = document.createElement('div');
+musicHistoryDropdown.className = 'music-history-dropdown';
+musicHistoryDropdown.style.display = 'none';
+
+// Add hover listeners to show/hide history
+musicCounter.addEventListener('mouseenter', () => {
+    if (musicHistory.length > 0) {
+        musicHistoryDropdown.style.display = 'block';
+    }
+});
+
+musicCounter.addEventListener('mouseleave', () => {
+    musicHistoryDropdown.style.display = 'none';
+});
+
+// Add styles for music history
+const musicStyles = document.createElement('style');
+musicStyles.textContent = `
+    .current-music-counter {
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .music-history-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.9);
+        border-radius: 0 0 10px 10px;
+        padding: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1001;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .music-history-entry {
+        padding: 5px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 14px;
+    }
+    
+    .music-history-entry:last-child {
+        border-bottom: none;
+    }
+    
+    .music-history-time {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+        margin-left: 5px;
+    }
+`;
+
+document.head.appendChild(musicStyles);
 document.body.appendChild(musicCounter);
+document.body.appendChild(musicHistoryDropdown);
 
 // Create counters containers
 const guestCounter = document.createElement('div');
@@ -2334,6 +2392,20 @@ function listenToGameState(roomId) {
             }
         }
         
+        // Update music history if changed
+        if (data.musicHistory && Array.isArray(data.musicHistory)) {
+            musicHistory = data.musicHistory;
+            musicHistoryDropdown.innerHTML = musicHistory
+                .map(entry => `
+                    <div class="music-history-entry">
+                        🎵 ${entry.type}
+                        <span class="music-history-time">${entry.time}</span>
+                    </div>
+                `)
+                .reverse()
+                .join('');
+        }
+        
         // Update guest counter if changed
         if (data.guestCount !== undefined && data.targetGuestCount !== undefined) {
             updateGuestCounter(data.guestCount, data.targetGuestCount);
@@ -2389,9 +2461,15 @@ function listenToGameState(roomId) {
                 showLoading('Your turn!');
                 setTimeout(() => {
                     hideLoading();
-                    // Show turn start popup instead of starting timer immediately
-                    turnStartPopupResolved = false;
-                    turnStartPopup.style.display = 'flex';
+                    // Only show popup if music is playing
+                    if (currentMusic) {
+                        turnStartPopupResolved = false;
+                        turnStartPopup.style.display = 'flex';
+                    } else {
+                        // If no music playing, auto-resolve and start timer
+                        turnStartPopupResolved = true;
+                        startTimer();
+                    }
                 }, 1500);
             } else if (isBot) {
                 showLoading(`Bot ${data.currentTurn} is playing...`, { isBotTurn: true });
@@ -2936,11 +3014,28 @@ function updateCurrentMusic(musicType) {
     musicCounter.textContent = `🎵 Now Playing: ${musicType}`;
     musicCounter.style.display = 'block';
     
+    // Add to history with timestamp
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    musicHistory.push({ type: musicType, time: timeString });
+    
+    // Update history dropdown content
+    musicHistoryDropdown.innerHTML = musicHistory
+        .map(entry => `
+            <div class="music-history-entry">
+                🎵 ${entry.type}
+                <span class="music-history-time">${entry.time}</span>
+            </div>
+        `)
+        .reverse() // Show most recent first
+        .join('');
+    
     // Update in Firestore so all players can see it
     if (currentRoomId) {
         const roomRef = doc(db, "rooms", currentRoomId);
         updateDoc(roomRef, {
             currentMusic: musicType,
+            musicHistory: musicHistory,
             lastUpdated: Date.now()
         });
     }
