@@ -525,13 +525,13 @@ button:disabled:hover {
 }
 
 .coins-display {
-    top: 200px;
+    top: 370px;
     background-color: #FFD700;
     color: #000;
 }
 
 .fckups-display {
-    top: 80px;
+    top: 300px;
     background-color: var(--fckup-color);
     color: white;
 }

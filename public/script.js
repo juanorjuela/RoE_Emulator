@@ -193,7 +193,7 @@ counterStyles.textContent = `
     }
 
     .complaint-counter {
-        top: 160px;
+        top: 230px;
     }
 
     .counter-display {
