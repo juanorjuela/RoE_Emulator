@@ -18,6 +18,87 @@ import { TURN_TIME, PLAYER_MESSAGES } from './constants.js';
 // Import board components
 import { Board, initializeBoard, getBoard } from './board.js';
 
+// Logging System
+const LogSystem = {
+    turnStartTime: null,
+    
+    formatTime: (ms) => {
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    },
+    
+    addLogEntry: (entry, type = 'info') => {
+        const logList = document.getElementById("log-list");
+        if (!logList) return;
+        
+        const li = document.createElement('li');
+        li.className = `log-entry log-${type}`;
+        
+        // Add timestamp
+        const timestamp = new Date().toLocaleTimeString();
+        li.innerHTML = `<span class="log-time">[${timestamp}]</span> ${entry}`;
+        
+        // Add to the top of the list
+        logList.insertBefore(li, logList.firstChild);
+        
+        // Keep only the last 50 entries
+        while (logList.children.length > 50) {
+            logList.removeChild(logList.lastChild);
+        }
+    },
+    
+    logTurnStart: (playerName) => {
+        LogSystem.turnStartTime = Date.now();
+        const isBot = playerName.startsWith('bot-');
+        const icon = isBot ? '🤖' : '👤';
+        LogSystem.addLogEntry(`${icon} ${playerName}'s turn started`, 'turn');
+    },
+    
+    logTurnEnd: (playerName) => {
+        if (LogSystem.turnStartTime) {
+            const duration = Date.now() - LogSystem.turnStartTime;
+            const formattedDuration = LogSystem.formatTime(duration);
+            const isBot = playerName.startsWith('bot-');
+            const icon = isBot ? '🤖' : '👤';
+            LogSystem.addLogEntry(`${icon} ${playerName}'s turn ended (Duration: ${formattedDuration})`, 'turn');
+        }
+    },
+    
+    logCardPlay: (playerName, cardType, cardContent) => {
+        let icon = '🎯';
+        switch(cardType.toLowerCase()) {
+            case 'action': icon = '⚡'; break;
+            case 'fuckup': icon = '💥'; break;
+            case 'minimission': icon = '📋'; break;
+            case 'partygoal': icon = '🎯'; break;
+        }
+        LogSystem.addLogEntry(`${icon} ${playerName} played ${cardType}: ${cardContent}`, 'card');
+    },
+    
+    logDiceRoll: (playerName, dice1, dice2) => {
+        const total = dice1 + dice2;
+        LogSystem.addLogEntry(`🎲 ${playerName} rolled: ${dice1} + ${dice2} = ${total}`, 'dice');
+    },
+    
+    logGoalChosen: (playerName, goalContent) => {
+        LogSystem.addLogEntry(`🎯 ${playerName} chose goal: ${goalContent}`, 'goal');
+    },
+    
+    logGoalCompleted: (playerName, goalContent, coins) => {
+        LogSystem.addLogEntry(`✨ ${playerName} completed goal: ${goalContent} (+${coins} coins)`, 'achievement');
+    },
+    
+    logMissionCompleted: (playerName, missionContent, coins) => {
+        LogSystem.addLogEntry(`✅ ${playerName} completed mission: ${missionContent} (+${coins} coins)`, 'achievement');
+    },
+    
+    logFuckupResolved: (playerName, fuckupContent) => {
+        LogSystem.addLogEntry(`💪 ${playerName} resolved FCKUP: ${fuckupContent}`, 'fuckup');
+    }
+};
+
 // Game State Variables
 let gameState = GAME_STATES.WAITING; // Now uses the local GAME_STATES
 let currentTurnPlayer = null;
@@ -488,7 +569,9 @@ const paintPlayerHand = () => {
                 console.log(`Playing card: ${playedCard}`);
                 await discardToSharedPile([playedCard]);
                 paintPlayerHand();
-                logList.innerHTML += `<li>Played card: ${playedCard}</li>`;
+                
+                // Log the card play using the new system
+                LogSystem.logCardPlay(currentPlayerId, 'action', playedCard);
             } catch (error) {
                 console.error("Error playing card:", error);
                 // Revert the splice if discard fails
@@ -573,25 +656,20 @@ const updateFckupsDisplay = () => {
 
 // Modify Round Card (FCKUP) drawing
 document.getElementById("round-card-btn").addEventListener("click", async () => {
-    // Don't allow drawing if there's an unresolved FCKUP
-    if (hasUnresolvedFckup) {
-        return;
-    }
-
+    if (hasUnresolvedFckup) return;
     if (!currentRoomId) {
         alert("Please join a room first!");
         return;
     }
 
-    // Draw a card from the shared fuckups deck
     const drawnCards = await drawFromDeck('fuckups', 1);
-    
     if (drawnCards.length === 0) {
-        logList.innerHTML += `<li>No more FCKUP cards available!</li>`;
+        LogSystem.addLogEntry("No more FCKUP cards available!", 'info');
         return;
     }
     
     const card = drawnCards[0];
+    LogSystem.logCardPlay(currentPlayerId, 'fuckup', card);
     
     const newCardDiv = document.createElement("div");
     newCardDiv.className = "monopoly-card fckup-card";
@@ -606,29 +684,24 @@ document.getElementById("round-card-btn").addEventListener("click", async () => 
         <button class="resolve-btn">✔ Resolved</button>
     `;
     
-    // Clear previous card and add new one
     roundCardDiv.innerHTML = '';
     roundCardDiv.appendChild(newCardDiv);
 
-    // Set unresolved state and disable buttons
     hasUnresolvedFckup = true;
     document.getElementById("round-card-btn").disabled = true;
     document.getElementById("your-turn-btn").disabled = true;
 
-    // Add resolve button functionality
     const resolveBtn = newCardDiv.querySelector(".resolve-btn");
     resolveBtn.addEventListener("click", async () => {
         totalFckupsResolved++;
         updateFckupsDisplay();
         newCardDiv.innerHTML = `<div class="resolved-state">✔ RESOLVED</div>`;
-        logList.innerHTML += `<li>FCKUP resolved! (Total resolved: ${totalFckupsResolved})</li>`;
+        LogSystem.logFuckupResolved(currentPlayerId, card);
         
-        // Reset unresolved state and enable buttons
         hasUnresolvedFckup = false;
         document.getElementById("round-card-btn").disabled = false;
         document.getElementById("your-turn-btn").disabled = false;
         
-        // Discard the resolved card
         await discardToPile('fuckups', [card]);
     });
 });
@@ -675,7 +748,7 @@ document.getElementById("mini-mission-btn").addEventListener("click", async () =
             </div>
         `;
         updateCoinsDisplay();
-        logList.innerHTML += `<li>Earned ${coinCount} coins from Mini Mission!</li>`;
+        LogSystem.logMissionCompleted(currentPlayerId, card, coinCount);
         
         // Discard the resolved card
         await discardToPile('miniMissions', [card]);
@@ -689,11 +762,10 @@ document.getElementById("party-goals-btn").addEventListener("click", async () =>
         return;
     }
 
-    // Draw cards from the shared party goals deck
     const drawnCards = await drawFromDeck('partyGoals', PARTY_GOAL_COUNT);
     
     if (drawnCards.length === 0) {
-        logList.innerHTML += `<li>No more Party Goals available!</li>`;
+        LogSystem.addLogEntry("No more Party Goals available!", 'info');
         return;
     }
 
@@ -711,7 +783,6 @@ document.getElementById("party-goals-btn").addEventListener("click", async () =>
             </div>
         `;
 
-        // Add event listener for the "CHOOSE" button
         const chooseBtn = cardDiv.querySelector(".choose-btn");
         chooseBtn.addEventListener("click", async () => {
             try {
@@ -739,6 +810,9 @@ document.getElementById("party-goals-btn").addEventListener("click", async () =>
                     [`playerGoals.${currentPlayerId}.goals`]: [{ text: card, chosen: true }]
                 });
                 
+                // Log the goal choice
+                LogSystem.logGoalChosen(currentPlayerId, card);
+                
                 // Discard unwanted goals
                 for (const goalToDiscard of goalsToDiscard) {
                     await discardToPile('partyGoals', [goalToDiscard]);
@@ -747,8 +821,6 @@ document.getElementById("party-goals-btn").addEventListener("click", async () =>
                 // Update UI to show the chosen goal
                 container.innerHTML = '';
                 displayChosenPartyGoal({ text: card, chosen: true }, container);
-                
-                logList.innerHTML += `<li>Chose Party Goal: ${card.substring(0, 30)}...</li>`;
             } catch (error) {
                 console.error("Error choosing party goal:", error);
             }
@@ -758,7 +830,7 @@ document.getElementById("party-goals-btn").addEventListener("click", async () =>
     }
 });
 
-// Helper function to display a chosen party goal
+// Update the displayChosenPartyGoal function
 function displayChosenPartyGoal(card, container) {
     const cardDiv = document.createElement("div");
     cardDiv.className = "round-card chosen-goal";
@@ -772,7 +844,6 @@ function displayChosenPartyGoal(card, container) {
         </div>
     `;
 
-    // Add event listener for the "RESOLVE" button
     const resolveBtn = cardDiv.querySelector(".resolve-btn");
     resolveBtn.addEventListener("click", async () => {
         try {
@@ -803,7 +874,10 @@ function displayChosenPartyGoal(card, container) {
                 </div>
             `;
             updateCoinsDisplay();
-            logList.innerHTML += `<li>Earned ${coinCount} coins from Party Goal!</li>`;
+            
+            // Log the goal completion
+            LogSystem.logGoalCompleted(currentPlayerId, cardText, coinCount);
+            
             await discardToPile('partyGoals', [cardText]);
         } catch (error) {
             console.error("Error resolving party goal:", error);
@@ -912,9 +986,8 @@ function listenToDiceChanges(roomId) {
             updateDiceUI(dice1, data.dice.dice1);
             updateDiceUI(dice2, data.dice.dice2, true);
             
-            // Log the roll
-            const total = data.dice.dice1 + data.dice.dice2;
-            logList.innerHTML += `<li>${data.dice.rolledBy} rolled: ${data.dice.dice1} + ${data.dice.dice2} = ${total}</li>`;
+            // Log the roll using the new system
+            LogSystem.logDiceRoll(data.dice.rolledBy, data.dice.dice1, data.dice.dice2);
         }
     });
 }
@@ -1654,6 +1727,9 @@ async function endTurn() {
             return;
         }
 
+        // Log the end of the current turn
+        LogSystem.logTurnEnd(currentTurnPlayer);
+
         // Fetch the latest room data to get playerMapping if not readily available
         let currentRoomData = {};
         if (currentRoomId) {
@@ -1667,18 +1743,13 @@ async function endTurn() {
         const turnPlayerUid = playerMapping[currentTurnPlayer];
 
         if (!currentTurnPlayer || !turnPlayerUid || turnPlayerUid !== localPlayerUid) {
-            console.warn('Not your turn to end.', {
-                expectedPlayerName: currentTurnPlayer,
-                expectedPlayerUid: turnPlayerUid,
-                actualPlayerUid: localPlayerUid,
-                currentRoomId: currentRoomId
-            });
+            console.warn('Not your turn to end.');
             return;
         }
         
         showLoading('Ending turn...');
         
-        // Save final board state - Add proper null checks
+        // Save final board state
         try {
             const board = getBoard();
             if (board) {
@@ -1689,7 +1760,6 @@ async function endTurn() {
             }
         } catch (error) {
             console.error("Error saving board state:", error);
-            // Continue with turn end even if board state save fails
         }
         
         if (turnTimer) {
@@ -1697,7 +1767,7 @@ async function endTurn() {
             turnTimer = null;
         }
         
-        // Determine the next player - ensure playerOrder is up to date
+        // Determine the next player
         const roomPlayerOrder = currentRoomData.playerOrder || currentRoomData.players || [];
         if (roomPlayerOrder.length > 0) {
             playerOrder = roomPlayerOrder;
@@ -1706,8 +1776,6 @@ async function endTurn() {
         const currentPlayerIndex = playerOrder.indexOf(currentTurnPlayer);
         const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length;
         const nextPlayerName = playerOrder[nextPlayerIndex];
-        
-        console.log(`Ending turn for ${currentTurnPlayer}, next player is ${nextPlayerName}`);
         
         // Update room with next player's turn
         if (currentRoomId) {
@@ -1720,6 +1788,9 @@ async function endTurn() {
         
         // Update local game state
         currentTurnPlayer = nextPlayerName;
+        
+        // Log the start of the next turn
+        LogSystem.logTurnStart(nextPlayerName);
         
         hideLoading();
         
@@ -2562,3 +2633,28 @@ function updateCurrentMusic(musicType) {
         });
     }
 }
+
+// Add log filtering functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const logFilters = document.querySelectorAll('.log-filter');
+    const logList = document.getElementById('log-list');
+
+    logFilters.forEach(filter => {
+        filter.addEventListener('click', () => {
+            // Update active state of filters
+            logFilters.forEach(f => f.classList.remove('active'));
+            filter.classList.add('active');
+
+            const type = filter.dataset.type;
+            const entries = logList.querySelectorAll('.log-entry');
+
+            entries.forEach(entry => {
+                if (type === 'all') {
+                    entry.style.display = '';
+                } else {
+                    entry.style.display = entry.classList.contains(`log-${type}`) ? '' : 'none';
+                }
+            });
+        });
+    });
+});

@@ -170,7 +170,7 @@
                     <div id="dice" class="dice">
                         <span class="number">1</span>
                     </div>
-                    <div id="dice2" class="dice-2">
+                    <div id="dice2" class="dice">
                         <span class="number2">1</span>
                     </div>
                 </div>
@@ -205,7 +205,16 @@
         </main>
 
         <aside class="log-section">
-            <h2>Round Log</h2>
+            <div class="log-header">
+                <h2>🎮 Game Log</h2>
+                <div class="log-filters">
+                    <button class="log-filter active" data-type="all">All</button>
+                    <button class="log-filter" data-type="turn">Turns</button>
+                    <button class="log-filter" data-type="card">Cards</button>
+                    <button class="log-filter" data-type="dice">Dice</button>
+                    <button class="log-filter" data-type="achievement">Achievements</button>
+                </div>
+            </div>
             <ul id="log-list"></ul>
         </aside>
     </div>

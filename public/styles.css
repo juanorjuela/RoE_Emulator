@@ -540,32 +540,103 @@ button:disabled:hover {
 .log-section {
     margin-top: var(--spacing-unit);
     padding: var(--spacing-unit);
-    background-color: white;
+    background-color: rgba(0, 0, 0, 0.8);
     border-radius: 10px;
     box-shadow: 0 4px 8px var(--shadow-color);
 }
 
 #log-list {
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
     padding: var(--spacing-unit);
     -webkit-overflow-scrolling: touch;
     list-style: none;
+    margin: 0;
 }
 
-#log-list li {
+.log-entry {
     margin: 8px 0;
     padding: 10px;
-    background: #f8f8f8;
-    border-left: 4px solid var(--monopoly-brown);
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #666;
     border-radius: 4px;
     transition: all 0.3s ease;
-    font-size: clamp(12px, 2.5vw, 14px);
+    font-size: 14px;
+    color: white;
+    display: flex;
+    align-items: center;
 }
 
-#log-list li:hover {
+.log-entry:hover {
     transform: translateX(5px);
-    background: #f0f0f0;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.log-time {
+    color: #888;
+    margin-right: 10px;
+    font-size: 12px;
+}
+
+/* Log entry types */
+.log-turn {
+    border-left-color: #4CAF50;
+}
+
+.log-card {
+    border-left-color: #2196F3;
+}
+
+.log-dice {
+    border-left-color: #9C27B0;
+}
+
+.log-goal {
+    border-left-color: #FF9800;
+}
+
+.log-achievement {
+    border-left-color: #FFD700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.log-fuckup {
+    border-left-color: #F44336;
+}
+
+/* Animations for new entries */
+@keyframes newLogEntry {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.log-entry {
+    animation: newLogEntry 0.3s ease-out;
+}
+
+/* Scrollbar styling */
+#log-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+#log-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+#log-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+#log-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
 }
 
 /* Duplicate Cards */
@@ -1276,4 +1347,42 @@ body.loading .game-area {
 .game-area > * {
     position: relative;
     z-index: 2;
+}
+
+.log-header {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.log-header h2 {
+    margin: 0 0 15px 0;
+    color: white;
+    font-size: 20px;
+}
+
+.log-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.log-filter {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 12px;
+}
+
+.log-filter:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.log-filter.active {
+    background: rgba(255, 255, 255, 0.3);
+    font-weight: bold;
 }
