@@ -428,26 +428,25 @@ async function initializeGame() {
 
 // Card Decks
 let playerDeck = [
+    ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🍕<br> <br>Order Pizza</h4></span></div>"),
+    ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🍻<br> <br>Order Drinks</h4></span></div>"),
+    ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🔊<br> <br>Add a new dancefloor</h4></span></div>"),
+    ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🚾<br> <br>Add a new Toilet </h4></span></div>"),
 
-    ...Array(3).fill("<div><h4>🍕<br> <br>Order Pizza</h4></div>"),
-    ...Array(3).fill("<div><h4>🍻<br> <br>Order Drinks</h4></div>"),
-    ...Array(3).fill("<div><h4>🔊<br> <br>Add a new dancefloor</h4></div>"),
-    ...Array(3).fill("<div><h4>🚾<br> <br>Add a new Toilet </h4></div>"),
+    ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🏃 Rush: </h4><br> <p>This turn you move with 3 dice<p/></span></div>"),
 
-    ...Array(3).fill("<div><h4>🏃 Rush: </h4><br> <p>This turn you move with 3 dice<p/></div>"),
+    ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🚪<br> Come In: <br>Everyone in the entrance moves inside</h4></span></div>"),
+    ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🧽<br> Clean 🚾: <br>Everyone in the toilet must go elsewhere</h4></span></div>"),
+    ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🥸<br> <br>Invite Random Guest: <br> Add 1 guest from the music genre of your choosing</h4></span></div>"),
 
-    ...Array(3).fill("<div><h4>🚪<br> Come In: <br>Everyone in the entrance moves inside</h4></div>"),
-    ...Array(3).fill("<div><h4>🧽<br> Clean 🚾: <br>Everyone in the toilet must go elsewhere</h4></div>"),
-    ...Array(4).fill("<div><h4>🥸<br> <br>Invite Random Guest: <br> Add 1 guest from the music genre of your choosing</h4></div>"),
+    ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Rock<br><br></h4><p>Add 3 Rockers to the party and remove 1 person who hates rock music</p></span></div>"),
+    ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Pop<br><br></h4><p>Add 3 Poppers to the party and remove 1 person who hates pop music</p></span></div>"),
+    ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Latin<br><br></h4><p>Add 3 Latinos to the party and remove 1 person who hates latin music</p></span></div>"),
+    ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Rap<br><br></h4><p>Add 3 Rappers to the party and remove 1 person who hates rap music</p></span></div>"),
+    ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Techno<br><br></h4><p>Add 3 Ravers to the party and remove 1 person who hates techno music</p></span></div>"),
+    ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Disco<br><br></h4><p>Add 3 Discoheads to the party and remove 1 person who hates disco music</p></span></div>"),
 
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Rock<br></h4><p>Add 3 Rockers to the party and remove 1 person who hates rock music</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Pop<br></h4><p>Add 3 Poppers to the party and remove 1 person who hates pop music</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Latin<br></h4><p>Add 3 Latinos to the party and remove 1 person who hates latin music</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Rap<br></h4><p>Add 3 Rappers to the party and remove 1 person who hates rap music</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Techno<br></h4><p>Add 3 Ravers to the party and remove 1 person who hates techno music</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Disco<br></h4><p>Add 3 Discoheads to the party and remove 1 person who hates disco music</p></div>"),
-
-    ...Array(2).fill("<div><h4>💣 The DROP:</h4><br><p>Your party is so lit that you are able to cancel the effect of one FCKUP</p></div>"),
+    ...Array(2).fill("<div><span><h3>ACTION</h3><br><br><h4>💣 The DROP:</h4><br><p>Your party is so lit that you are able to cancel the effect of one FCKUP</p></span></div>"),
 ];
 
 const fuckupsDeck = [
