@@ -128,6 +128,9 @@ turnStartPopup.innerHTML = `
     <div class="popup-content">
         <div class="popup-text">
             The music is pumping, one guest rushes to the dancefloor!
+            <br> <br>
+            (Add 1 guest to any available dancefloor space, if there is one)
+            <br> <br>
         </div>
         <button class="resolve-btn">✔ Resolve</button>
     </div>
