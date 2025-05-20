@@ -2124,7 +2124,11 @@ function listenToGameState(roomId) {
             }
         }
         
-        updatePlayerList(data.players || [], currentTurnPlayer, playerMapping);
+        // Ensure we have valid data before updating player list
+        if (data.players && Array.isArray(data.players)) {
+            updatePlayerList(data.players, data.currentTurn, data.playerMapping || {});
+        }
+        
         updateGameAreaState();
         updateFinishTurnButton();
     });
@@ -2234,9 +2238,16 @@ function moveYourTurnButton() {
 
 // Update player list with current turn indicator
 function updatePlayerList(players, currentTurn, playerMapping = {}) {
+    if (!players || !Array.isArray(players)) {
+        console.warn("Invalid players array in updatePlayerList");
+        return;
+    }
+
     const playerListHtml = players.map(playerName => {
         const isCurrent = playerName === currentTurn;
-        return `<li class="${isCurrent ? 'current-turn' : ''}">${playerName}${isCurrent ? ' (Current Turn)' : ''}</li>`;
+        const isBot = playerName.startsWith('bot-');
+        const icon = isBot ? '🤖' : '👤';
+        return `<li class="${isCurrent ? 'current-turn' : ''}">${icon} ${playerName}${isCurrent ? ' (Current Turn)' : ''}</li>`;
     }).join('');
     
     const playerList = document.getElementById('player-list-ul');
