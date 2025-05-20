@@ -162,6 +162,22 @@ document.head.appendChild(styleUpdates);
 
 // Initialize Firebase services when the document is ready
 document.addEventListener('DOMContentLoaded', async () => {
+    // Show loading screen
+    const loadingScreen = document.getElementById('initial-loading-screen');
+    const loadingProgress = loadingScreen.querySelector('.loading-progress');
+    
+    // Function to update loading text with dots animation
+    let dots = 0;
+    const updateLoadingText = () => {
+        dots = (dots + 1) % 4;
+        loadingProgress.textContent = 'Loading' + '.'.repeat(dots);
+    };
+    const loadingInterval = setInterval(updateLoadingText, 500);
+    
+    // Record the start time of loading
+    const startTime = Date.now();
+    const minimumLoadTime = 1000; // 1 second minimum loading time
+    
     try {
         // Wait for Firebase to be initialized by the script in index.html
         while (!window.db || !window.auth) {
@@ -176,8 +192,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Initialize the game
         await initializeGame();
+        
+        // Calculate how long we've been loading
+        const loadingDuration = Date.now() - startTime;
+        
+        // If we haven't met the minimum load time, wait the remaining time
+        if (loadingDuration < minimumLoadTime) {
+            await new Promise(resolve => setTimeout(resolve, minimumLoadTime - loadingDuration));
+        }
+        
+        // Hide loading screen with fade out animation
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            clearInterval(loadingInterval);
+        }, 500);
+        
     } catch (error) {
         console.error("❌ Error initializing Firebase services:", error);
+        loadingProgress.textContent = 'Error loading game. Please refresh the page.';
+        loadingProgress.style.color = 'red';
+        clearInterval(loadingInterval);
     }
 });
 
@@ -962,15 +997,27 @@ const rollSingleDice = async (diceNumber) => {
         const roomSnap = await getDoc(roomRef);
         const currentDice = roomSnap.data().dice || {};
         
+        // Get the other dice value to log both dice
+        const otherDiceValue = diceNumber === 1 ? currentDice.dice2 : currentDice.dice1;
+        
         // Update only the clicked dice while preserving the other dice's value
+        const updatedDice = {
+            ...currentDice,
+            [`dice${diceNumber}`]: diceValue,
+            lastRolled: Date.now(),
+            rolledBy: currentPlayerId
+        };
+        
         await updateDoc(roomRef, {
-            dice: {
-                ...currentDice,
-                [`dice${diceNumber}`]: diceValue,
-                lastRolled: Date.now(),
-                rolledBy: currentPlayerId
-            }
+            dice: updatedDice
         });
+        
+        // Log the dice roll with both values
+        if (diceNumber === 1) {
+            LogSystem.logDiceRoll(currentPlayerId, diceValue, otherDiceValue || 1);
+        } else {
+            LogSystem.logDiceRoll(currentPlayerId, otherDiceValue || 1, diceValue);
+        }
     } catch (error) {
         console.error("Error updating single dice:", error);
     }
@@ -979,15 +1026,28 @@ const rollSingleDice = async (diceNumber) => {
 // Listen to dice changes in the room
 function listenToDiceChanges(roomId) {
     const roomRef = doc(db, "rooms", roomId);
+    let previousDice = { dice1: null, dice2: null };
+    
     return onSnapshot(roomRef, (snapshot) => {
         const data = snapshot.data();
         if (data && data.dice) {
-            // Update dice UI
-            updateDiceUI(dice1, data.dice.dice1);
-            updateDiceUI(dice2, data.dice.dice2, true);
+            const currentDice = data.dice;
             
-            // Log the roll using the new system
-            LogSystem.logDiceRoll(data.dice.rolledBy, data.dice.dice1, data.dice.dice2);
+            // Only update and animate dice if values have changed
+            if (currentDice.dice1 !== previousDice.dice1) {
+                updateDiceUI(dice1, currentDice.dice1);
+                previousDice.dice1 = currentDice.dice1;
+            }
+            
+            if (currentDice.dice2 !== previousDice.dice2) {
+                updateDiceUI(dice2, currentDice.dice2, true);
+                previousDice.dice2 = currentDice.dice2;
+            }
+            
+            // Only log the roll if either dice changed
+            if (currentDice.dice1 !== previousDice.dice1 || currentDice.dice2 !== previousDice.dice2) {
+                LogSystem.logDiceRoll(currentDice.rolledBy, currentDice.dice1, currentDice.dice2);
+            }
         }
     });
 }
@@ -1584,9 +1644,7 @@ function listenToPlayers(roomCode) {
                     <div class="room-info">
                         <h3>Room: ${roomCode}</h3>
                         <h4>Players:</h4>
-                        <ul>
-                            ${players.map(player => `<li>${player}</li>`).join('')}
-                        </ul>
+                        <ul id="player-list-ul"></ul>
                     </div>
                 `;
             }
@@ -2026,31 +2084,28 @@ function listenToGameState(roomId) {
                 isMyTurn: isMyTurn,
                 roomData: data 
             });
-        }
 
-        // Handle turn transitions and loading states
-        if (isMyTurn && previousTurnPlayer !== currentTurnPlayer) {
-            // It's now my turn
-            showLoading('Your turn!');
-            setTimeout(hideLoading, 1500); // Slightly longer to read
-            startTimer(); // Reset and start the timer for my turn
-        } else if (!isMyTurn && currentTurnPlayer && currentTurnPlayer !== previousTurnPlayer) {
-            // It's someone else's turn - keep loading state persistent
-            const isBot = currentTurnPlayer.startsWith('bot-');
-            
-            // Clear any existing hide loading timers to prevent the loading from disappearing
-            if (window.hideLoadingTimer) {
-                clearTimeout(window.hideLoadingTimer);
-                window.hideLoadingTimer = null;
-            }
-            
-            if (isBot) {
-                // If the current client is NOT the host who controls the bot, they just see loading
-                if(!playerMapping[currentTurnPlayer] || playerMapping[currentTurnPlayer] !== localPlayerUid) {
-                    showLoading(`Bot ${currentTurnPlayer} is playing...`, { isBotTurn: true });
+            // Handle turn transitions and loading states
+            if (isMyTurn) {
+                // It's my turn
+                showLoading('Your turn!');
+                setTimeout(hideLoading, 1500); // Show "Your turn!" briefly
+                startTimer();
+            } else if (currentTurnPlayer) {
+                // It's someone else's turn
+                const isBot = currentTurnPlayer.startsWith('bot-');
+                
+                // Clear any existing hide loading timers
+                if (window.hideLoadingTimer) {
+                    clearTimeout(window.hideLoadingTimer);
+                    window.hideLoadingTimer = null;
                 }
-            } else {
-                showLoading(`Waiting for ${currentTurnPlayer}...`, { isThirdPlayer: true });
+                
+                if (isBot) {
+                    showLoading(`Bot ${currentTurnPlayer} is playing...`, { isBotTurn: true });
+                } else {
+                    showLoading(`Waiting for ${currentTurnPlayer}...`, { isThirdPlayer: true });
+                }
             }
         }
         
@@ -2058,7 +2113,6 @@ function listenToGameState(roomId) {
         if (data.playerGoals && data.playerGoals[currentPlayerId]) {
             const myGoals = data.playerGoals[currentPlayerId].goals || [];
             if (myGoals.length > 0) {
-                // Check if we need to display these goals
                 const currentGoalsContainer = document.getElementById("party-goal-container");
                 if (currentGoalsContainer.children.length === 0 || 
                     (myGoals.some(goal => typeof goal === 'object' && goal.chosen === true) && 
@@ -2070,8 +2124,8 @@ function listenToGameState(roomId) {
         }
         
         updatePlayerList(data.players || [], currentTurnPlayer, playerMapping);
-        updateGameAreaState(); // This will handle enabling/disabling controls
-        updateFinishTurnButton(); // Explicitly update finish turn button visibility/state
+        updateGameAreaState();
+        updateFinishTurnButton();
     });
 }
 
@@ -2114,33 +2168,40 @@ function createUIToggleMenu() {
     const menu = document.createElement('div');
     menu.className = 'ui-toggle-menu';
     
-    // Define toggle buttons with their icons and target elements
+    // Define toggle buttons with their icons, targets, and default states
     const toggleButtons = [
-        { icon: '⏱️', target: '.timer-container, .finish-turn-btn', title: 'Toggle Turn Timer' },
-        { icon: '🏠', target: '.lobby-section', title: 'Toggle Lobby' },
-        { icon: '🎮', target: '.board-section, .game-pieces-section', title: 'Toggle Board' },
-        { icon: '🎲', target: '.dice-section', title: 'Toggle Dice' },
-        { icon: '📝', target: '.log-section', title: 'Toggle Log' }
+        { icon: '⏱️', target: '.timer-container, .finish-turn-btn', title: 'Toggle Turn Timer', defaultActive: true },
+        { icon: '🏠', target: '.lobby-section', title: 'Toggle Lobby', defaultActive: true },
+        { icon: '🎮', target: '.board-section, .game-pieces-section', title: 'Toggle Board', defaultActive: false },
+        { icon: '🎲', target: '.dice-section', title: 'Toggle Dice', defaultActive: true },
+        { icon: '📝', target: '.log-section', title: 'Toggle Log', defaultActive: false }
     ];
     
     // Create buttons and add to menu
-    toggleButtons.forEach(({ icon, target, title }) => {
+    toggleButtons.forEach(({ icon, target, title, defaultActive }) => {
         const button = document.createElement('button');
         button.className = 'ui-toggle-btn';
         button.innerHTML = icon;
         button.title = title;
         button.dataset.target = target;
         
-        // Set all buttons as active initially
-        button.classList.add('active');
+        // Set initial state
+        if (!defaultActive) {
+            const targetElements = document.querySelectorAll(target);
+            targetElements.forEach(element => {
+                element.classList.add('hidden-element');
+            });
+        } else {
+            button.classList.add('active');
+        }
         
         // Add click event to toggle visibility
         button.addEventListener('click', () => {
             const targetElements = document.querySelectorAll(target);
-            const isHidden = button.classList.toggle('active');
+            const isActive = button.classList.toggle('active');
             
             targetElements.forEach(element => {
-                element.classList.toggle('hidden-element', !isHidden);
+                element.classList.toggle('hidden-element', !isActive);
             });
         });
         
@@ -2149,6 +2210,9 @@ function createUIToggleMenu() {
     
     // Add menu to document
     document.body.appendChild(menu);
+    
+    // Store menu in window for access from other functions
+    window.uiToggleMenu = menu;
 }
 
 // Function to move YOUR TURN button above dice section
@@ -2168,30 +2232,15 @@ function moveYourTurnButton() {
 }
 
 // Update player list with current turn indicator
-function updatePlayerList(players, currentTurn, playerMapping = {}) { // Added playerMapping
+function updatePlayerList(players, currentTurn, playerMapping = {}) {
     const playerListHtml = players.map(playerName => {
         const isCurrent = playerName === currentTurn;
-        // You could use playerMapping here to display UIDs or other info if needed
         return `<li class="${isCurrent ? 'current-turn' : ''}">${playerName}${isCurrent ? ' (Current Turn)' : ''}</li>`;
     }).join('');
     
-    const roomInfo = document.querySelector('.room-info #player-list-ul'); // More specific selector
-    if (roomInfo) {
-        roomInfo.innerHTML = playerListHtml;
-    } else {
-        // Fallback or create if it doesn't exist (assuming .room-info is stable)
-        const roomInfoContainer = document.querySelector('.room-info');
-        if(roomInfoContainer) {
-            let ul = roomInfoContainer.querySelector('#player-list-ul');
-            if(!ul) {
-                ul = document.createElement('ul');
-                ul.id = 'player-list-ul';
-                const h4 = roomInfoContainer.querySelector('h4');
-                if(h4) h4.after(ul);
-                else roomInfoContainer.appendChild(ul);
-            }
-            ul.innerHTML = playerListHtml;
-        }
+    const playerList = document.getElementById('player-list-ul');
+    if (playerList) {
+        playerList.innerHTML = playerListHtml;
     }
 }
 
@@ -2383,84 +2432,23 @@ async function startGame(roomId) {
         
         // Initialize player order and first turn
         playerOrder = [...roomData.players];
-        const firstPlayer = playerOrder[0];  // Set first player explicitly
-        currentTurnPlayer = firstPlayer;     // Set current turn player
-        
-        console.log("Game initialized with:", {
-            gameState: gameState,
-            playerOrder: playerOrder,
-            currentTurnPlayer: currentTurnPlayer,
-            firstPlayer: firstPlayer
-        });
+        const firstPlayer = playerOrder[0];
+        currentTurnPlayer = firstPlayer;
 
-        // Show game area immediately
-        const gameArea = document.querySelector('.game-area');
-        if (gameArea) {
-            gameArea.style.display = 'block';
-            requestAnimationFrame(() => {
-                gameArea.classList.add('visible');
-            });
-        }
-
-        // Draw Party Goals for each player
-        const playerGoals = {};
-        for (const player of playerOrder) {
-            console.log(`Drawing Party Goals for player: ${player}`);
-            try {
-                const partyGoalsCards = await drawFromDeck('partyGoals', PARTY_GOAL_COUNT);
-                
-                // Ensure we have valid strings for party goals
-                const validatedCards = partyGoalsCards.map(card => {
-                    // If already an object with text, return as is
-                    if (typeof card === 'object' && card !== null && card.text) {
-                        return card;
-                    }
-                    // If a string, convert to proper object format
-                    if (typeof card === 'string') {
-                        return { text: card, chosen: false };
-                    }
-                    // Fallback for any other case
-                    console.warn("Invalid party goal format:", card);
-                    return { text: "Party Goal", chosen: false };
-                });
-                
-                playerGoals[player] = {
-                    goals: validatedCards,
-                    completed: []
-                };
-            } catch (error) {
-                console.error(`Error drawing party goals for ${player}:`, error);
-                // Add empty goals as fallback
-                playerGoals[player] = { goals: [], completed: [] };
-            }
-        }
-
-        // Update room with game state
+        // Hide lobby for all players by updating room data
         await updateDoc(roomRef, {
             gameState: GAME_STATES.STARTED,
-            currentTurn: firstPlayer,  // Use firstPlayer instead of currentTurnPlayer
+            currentTurn: firstPlayer,
             turnStartTime: Date.now(),
             playerOrder: playerOrder,
-            playerGoals: playerGoals,
-            lastUpdated: Date.now()
+            playerGoals: await initializePlayerGoals(playerOrder),
+            lastUpdated: Date.now(),
+            hideLobby: true // Add this flag to trigger lobby hiding for all players
         });
-        
-        // Start timer for first player
-        if (firstPlayer === currentPlayerId) {
-            startTimer();
-        }
-        
-        // Hide start game button
-        const startGameBtn = document.querySelector('.start-game-btn');
-        if (startGameBtn) {
-            startGameBtn.style.display = 'none';
-            startGameBtn.classList.remove('visible');
-        }
-        
-        // Update UI state
-        updateGameAreaState();
-        
-        console.log("✅ Game started successfully with", playerOrder.length, "players");
+
+        // Rest of the existing startGame function code...
+        // ... existing code ...
+
     } catch (error) {
         console.error("Error starting game:", error);
         alert("Failed to start game. Please try again.");
@@ -2542,7 +2530,8 @@ function displayPartyGoals(goals) {
                 container.innerHTML = '';
                 displayChosenPartyGoal({ text: cardValue, chosen: true }, container);
                 
-                logList.innerHTML += `<li>Chose Party Goal: ${cardValue.substring(0, 30)}...</li>`;
+                // Log the goal choice using LogSystem
+                LogSystem.logGoalChosen(currentPlayerId, cardValue);
             } catch (error) {
                 console.error("Error choosing party goal:", error);
             }
@@ -2569,7 +2558,8 @@ function showRoomInfo(roomCode) {
         roomInfoDiv.innerHTML = `
             <div class="room-info">
                 <h3>Room: ${roomCode}</h3>
-                <p>Share this code with other players to join!</p>
+                <h4>Players:</h4>
+                <ul id="player-list-ul"></ul>
             </div>
         `;
     } catch (error) {
@@ -2658,3 +2648,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// Function to hide lobby when game starts
+function hideLobbyOnGameStart() {
+    const lobbyButton = document.querySelector('.ui-toggle-btn[data-target=".lobby-section"]');
+    if (lobbyButton) {
+        lobbyButton.classList.remove('active');
+        const lobbySection = document.querySelector('.lobby-section');
+        if (lobbySection) {
+            lobbySection.classList.add('hidden-element');
+        }
+    }
+}

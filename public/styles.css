@@ -556,43 +556,50 @@ button:disabled:hover {
 
 .log-entry {
     margin: 8px 0;
-    padding: 10px;
+    padding: 12px 15px;
     background: rgba(255, 255, 255, 0.1);
     border-left: 4px solid #666;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: all 0.3s ease;
     font-size: 14px;
     color: white;
     display: flex;
     align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .log-entry:hover {
     transform: translateX(5px);
     background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .log-time {
-    color: #888;
-    margin-right: 10px;
+    color: #aaa;
+    margin-right: 12px;
     font-size: 12px;
+    font-family: monospace;
 }
 
-/* Log entry types */
+/* Log entry types with improved visibility */
 .log-turn {
     border-left-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
 }
 
 .log-card {
     border-left-color: #2196F3;
+    background: rgba(33, 150, 243, 0.1);
 }
 
 .log-dice {
     border-left-color: #9C27B0;
+    background: rgba(156, 39, 176, 0.1);
 }
 
 .log-goal {
     border-left-color: #FF9800;
+    background: rgba(255, 152, 0, 0.1);
 }
 
 .log-achievement {
@@ -602,22 +609,23 @@ button:disabled:hover {
 
 .log-fuckup {
     border-left-color: #F44336;
+    background: rgba(244, 67, 54, 0.1);
 }
 
 /* Animations for new entries */
 @keyframes newLogEntry {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateX(-20px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0);
     }
 }
 
 .log-entry {
-    animation: newLogEntry 0.3s ease-out;
+    animation: newLogEntry 0.3s ease-out forwards;
 }
 
 /* Scrollbar styling */
@@ -920,46 +928,51 @@ button:disabled:hover {
 /* UI Toggle Menu */
 .ui-toggle-menu {
     position: fixed;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 20px;
+    left: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: rgba(51, 51, 51, 0.7);
-    border-radius: 10px;
-    padding: 10px;
     z-index: 1000;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 10px;
 }
 
 .ui-toggle-btn {
     width: 40px;
     height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #333;
-    color: white;
-    font-size: 20px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    padding: 0;
+    opacity: 0.6;
 }
 
 .ui-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
     transform: scale(1.1);
-    background-color: #444;
 }
 
 .ui-toggle-btn.active {
-    background-color: #4CAF50;
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 /* Hide elements when toggled */
 .hidden-element {
     display: none !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
 /* Mobile adjustments for UI toggle menu */
@@ -1071,24 +1084,41 @@ button:disabled:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    z-index: 9999;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 9999;
 }
 
 .loading-overlay.visible {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .loading-overlay .dice-loading {
     transform: translateZ(0);
     will-change: transform;
+    margin-bottom: 20px;
+}
+
+.current-player-message {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    padding: 20px 40px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin-top: 20px;
+    animation: fadeInUp 0.5s ease;
+    max-width: 80%;
 }
 
 /* Ensure loading overlay is always on top */
@@ -1098,21 +1128,18 @@ body.loading {
 
 body.loading .game-area {
     pointer-events: none;
+    filter: blur(2px);
 }
 
 /* Prevent interaction during bot turns */
 .game-area.bot-turn {
     pointer-events: none;
-}
-
-.game-area.bot-turn .piece {
-    pointer-events: none;
-    opacity: 0.7;
+    filter: blur(2px);
 }
 
 /* Improve loading visibility for third player */
 .loading-overlay.third-player {
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.9);
 }
 
 .dice-loading {
@@ -1135,20 +1162,6 @@ body.loading .game-area {
     transform: translate(-50%, -50%);
     font-size: 50px;
     color: #333;
-}
-
-.current-player-message {
-    font-size: 28px;
-    font-weight: bold;
-    color: #333;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    margin-top: 20px;
-    background: white;
-    padding: 20px 40px;
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    animation: fadeInUp 0.5s ease;
 }
 
 @keyframes fadeInUp {
@@ -1385,4 +1398,178 @@ body.loading .game-area {
 .log-filter.active {
     background: rgba(255, 255, 255, 0.3);
     font-weight: bold;
+}
+
+/* Initial Loading Screen */
+#initial-loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.loading-title {
+    font-size: 4rem;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-family: 'Arial Black', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.loading-subtitle {
+    font-size: 1.5rem;
+    color: #666;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-style: italic;
+}
+
+.loading-progress {
+    font-size: 1rem;
+    color: #999;
+}
+
+/* Disco Ball Animation */
+.disco-ball {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin-bottom: 2rem;
+}
+
+.ball {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        rgba(200, 200, 200, 0.8) 50%, 
+        rgba(150, 150, 150, 0.8) 100%);
+    border-radius: 50%;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(0, 0, 0, 0.2);
+    animation: rotate 3s linear infinite;
+    position: relative;
+}
+
+.ball::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent 0%,
+        transparent 2%,
+        rgba(0, 0, 0, 0.1) 2%,
+        rgba(0, 0, 0, 0.1) 4%
+    );
+    border-radius: 50%;
+    animation: sparkle 1s linear infinite;
+}
+
+.ball-reflection {
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    bottom: -30px;
+    left: 0;
+    background: radial-gradient(ellipse at center,
+        rgba(255, 255, 255, 0.3) 0%,
+        transparent 60%);
+    animation: reflection 3s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes sparkle {
+    from { opacity: 0.8; }
+    to { opacity: 1; }
+}
+
+@keyframes reflection {
+    0% { transform: scaleX(1); }
+    50% { transform: scaleX(0.85); }
+    100% { transform: scaleX(1); }
+}
+
+/* Updated Lobby Styling */
+.lobby-section {
+    background-color: #f5f5f5;
+    border-radius: 15px;
+    padding: 30px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e0e0e0;
+    text-align: center;
+}
+
+.lobby-section > * {
+    margin: 10px 0;
+}
+
+.lobby-section input {
+    width: 80%;
+    max-width: 300px;
+    padding: 12px 15px;
+    margin: 10px auto;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    display: block;
+}
+
+.lobby-section input:focus {
+    border-color: #666;
+    outline: none;
+}
+
+.lobby-section button {
+    width: 80%;
+    max-width: 300px;
+    margin: 10px auto;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #333;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.lobby-section button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.lobby-section h2 {
+    color: #333;
+    margin: 20px 0;
+    font-size: 24px;
+}
+
+#room-info {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
