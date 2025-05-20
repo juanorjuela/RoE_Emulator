@@ -116,6 +116,81 @@ let auth;
 // Add at the top with other state variables
 let currentMusic = null;
 
+// Turn start popup state
+let turnStartPopupResolved = false;
+
+// Create turn start popup
+const turnStartPopup = document.createElement('div');
+turnStartPopup.className = 'turn-start-popup';
+turnStartPopup.style.display = 'none';
+turnStartPopup.innerHTML = `
+    <div class="popup-content">
+        <div class="popup-text">
+            The music is pumping, one guest rushes to a dancefloor! <br> <br> 
+            (Add 1 guest to any available dancefloor space, if there is one)
+        </div>
+        <button class="resolve-btn">✔ Resolve</button>
+    </div>
+`;
+
+// Add popup styles
+const popupStyles = document.createElement('style');
+popupStyles.textContent = `
+    .turn-start-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+    }
+    
+    .popup-content {
+        background: rgba(0, 0, 0, 0.9);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 500px;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .popup-text {
+        font-size: 18px;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+    
+    .turn-start-popup .resolve-btn {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s ease;
+    }
+    
+    .turn-start-popup .resolve-btn:hover {
+        background: #45a049;
+    }
+`;
+
+document.head.appendChild(popupStyles);
+document.body.appendChild(turnStartPopup);
+
+// Add event listener to resolve button
+turnStartPopup.querySelector('.resolve-btn').addEventListener('click', () => {
+    turnStartPopupResolved = true;
+    turnStartPopup.style.display = 'none';
+    startTimer(); // Start the timer after resolving the popup
+});
+
 // Create and add the music counter to the DOM
 const musicCounter = document.createElement('div');
 musicCounter.className = 'current-music-counter';
@@ -453,14 +528,14 @@ const fuckupsDeck = [
     ...Array(6).fill("🎶 Change Music: <br> <br> Go to the dancefloor room and play any music card from your hand. <br> <br>If the music doesn't change now, 2 guests will leave the party."),
     ...Array(3).fill("🔇 Neighbor Complaint 🔇 <br><br> If you collect 3 neighbor complaints, the police shows up and 6 guests must leave the party."),
 
-    ...Array(1).fill("🐈‍⬛ Unlucky: <br><br>Draw 2 more FCKUP cards."),
+    ...Array(1).fill("🐈‍⬛ Panic Attack!: <br><br>Cant move this turn."),
 
     //...Array(1).fill("💤 Lazy Bastard: Discard 3 action cards from your hand. You can only play with 3 cards for the next round."),
     //...Array(1).fill("🥴 Too Much to Drink: You can only play 1 action per round for the next 1 round."),
 
-    ...Array(1).fill("🥊 Bar Fight: <br><br>The noise triggers a neighbor complaint."),
+    ...Array(1).fill("🥊 Bar Fight: <br><br>One guest from a DRINK STATION leaves the party."),
 
-    ...Array(1).fill("😵 Diarrhea: <br><br>You need to rush immediately to the 🚾! All guests currently in the 🚾 leave the party."),
+    ...Array(1).fill("😵 Diarrhea: <br><br>You need to rush immediately to the 🚾! All guests currently in the TOILET leave the party."),
 
     ...Array(1).fill("🤮 Hold My Hair: <br><br>2 guests rush to the 🚾."),
     ...Array(1).fill("🪠 EWWW: If you don't clean the 🚾, all guests needing the 🚾 will leave until you clean it."),
@@ -503,14 +578,14 @@ const minimissionsDeck = [
 ];
 
 const PartyGoalsDeck = [
-    ...Array(1).fill("🇲🇽 5 de Mayo: <br>Most guests and most songs played should be LATIN <br> <br>(20 coins)"), 
-    ...Array(1).fill("🔊 Underground Rave:<br> Most guests and most songs played should be TECHNO <br> <br>(20 coins)"), 
-    ...Array(1).fill("🕺 Disco Fever: <br>Most guests and most songs played should be DISCO <br> <br> (20 coins)"), 
-    ...Array(1).fill("🎤 Karaoke Vibes: <br>Most guests and most songs played should be POP <br> <br>   (20 coins)"), 
-    ...Array(1).fill("🤘 Mosh Pit: <br>    Most guests and most songs played should be ROCK <br> <br>  (20 coins)"),
-    ...Array(1).fill("⚔️ Rap Battle: <br>Most guests and most songs played should be HIP HOP <br> <br> (20 coins)"), 
+    ...Array(1).fill("🇲🇽 5 de Mayo: <br>Most guests and most songs played should be LATIN <br> <br>(25 coins)"), 
+    ...Array(1).fill("🔊 Underground Rave:<br> Most guests and most songs played should be TECHNO <br> <br>(25 coins)"), 
+    ...Array(1).fill("🕺 Disco Fever: <br>Most guests and most songs played should be DISCO <br> <br> (25 coins)"), 
+    ...Array(1).fill("🎤 Karaoke Vibes: <br>Most guests and most songs played should be POP <br> <br>   (25 coins)"), 
+    ...Array(1).fill("🤘 Mosh Pit: <br>    Most guests and most songs played should be ROCK <br> <br>  (25 coins)"),
+    ...Array(1).fill("⚔️ Rap Battle: <br>Most guests and most songs played should be HIP HOP <br> <br> (25 coins)"), 
 
-    ...Array(1).fill("🧑‍🤝‍🧑🧑‍🤝‍🧑🧑‍🤝‍🧑 <br>A Proper Mixer: <br>Have 6 or more guests of each gernre at the end of the party <br> <br> (20 coins)"),  
+    ...Array(1).fill("🧑‍🤝‍🧑🧑‍🤝‍🧑🧑‍🤝‍🧑 <br>A Proper Mixer: <br>Have a balanced number guests of each gernre at the end of the party (2P=6 guest / 3P = 7 guests / 4P = 8 guests) <br> <br> (20 coins)"),  
 
     ...Array(1).fill("🌮 Hood Party Ese: <br>Have a mayority HIP HOP and LATIN music fans at the end of the party <br> <br> (15 coins)"),
     ...Array(1).fill("🎸 Electro Clash: <br>Have a mayority TECHNO and ROCK music fans at the end of the party <br> <br> (15 coins)"),
@@ -1926,6 +2001,11 @@ function formatTime(seconds) {
 }
 
 function startTimer() {
+    // Don't start timer if popup hasn't been resolved
+    if (!turnStartPopupResolved) {
+        return;
+    }
+
     const timerContainer = document.querySelector('.timer-container');
     const finishTurnBtn = document.querySelector('.finish-turn-btn');
     
@@ -2209,17 +2289,20 @@ async function handleTurnChange(nextPlayerName) { // Parameter is nextPlayerName
             console.log(`Bot ${nextPlayerName}'s turn. Bot should act now.`);
             // Temporary: if this client is host, make the bot play
             if (currentRoomData.hostId === localPlayerUid) {
-                 showLoading(`Bot ${nextPlayerName} is thinking...`, { isBotTurn: true });
-                 const botInstance = activeBots.get(nextPlayerName); // Assuming activeBots map stores bot instances by name
-                 if (botInstance) {
+                showLoading(`Bot ${nextPlayerName} is thinking...`, { isBotTurn: true });
+                const botInstance = activeBots.get(nextPlayerName); // Assuming activeBots map stores bot instances by name
+                if (botInstance) {
+                    // For bots, we bypass the turn start popup
+                    turnStartPopupResolved = true;
+                    turnStartPopup.style.display = 'none';
                     await botInstance.performTurn();
                     // After bot performs turn, it should call endTurn().
                     // This might create a loop if not handled carefully.
                     // For now, let's assume performTurn includes ending its turn.
-                 } else {
+                } else {
                     console.warn(`Bot instance ${nextPlayerName} not found.`);
                     hideLoading(); // Hide bot thinking if instance not found
-                 }
+                }
             } else {
                 // If not host, just show waiting for bot (handled by onSnapshot)
             }
@@ -2304,8 +2387,12 @@ function listenToGameState(roomId) {
             // Always show appropriate loading screen on turn change
             if (isMyTurn) {
                 showLoading('Your turn!');
-                setTimeout(hideLoading, 1500);
-                startTimer();
+                setTimeout(() => {
+                    hideLoading();
+                    // Show turn start popup instead of starting timer immediately
+                    turnStartPopupResolved = false;
+                    turnStartPopup.style.display = 'flex';
+                }, 1500);
             } else if (isBot) {
                 showLoading(`Bot ${data.currentTurn} is playing...`, { isBotTurn: true });
             } else if (data.currentTurn) {
