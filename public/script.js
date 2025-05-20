@@ -2235,8 +2235,8 @@ async function handleTurnChange(nextPlayerName) { // Parameter is nextPlayerName
 // Update the listenToGameState function
 function listenToGameState(roomId) {
     let previousTurnPlayer = null;
-
-    return onSnapshot(doc(db, 'rooms', roomId), async (snapshot) => {
+    
+    onSnapshot(doc(db, 'rooms', roomId), async (snapshot) => {
         const data = snapshot.data();
         if (!data) return;
         window.currentRoomDataForButton = data;
@@ -2280,6 +2280,10 @@ function listenToGameState(roomId) {
         // Only update game state if it's different
         if (data.gameState !== gameState) {
             gameState = data.gameState;
+            // If game just started, hide lobby for all players
+            if (gameState === GAME_STATES.STARTED) {
+                hideLobbyOnGameStart();
+            }
         }
 
         // Handle turn changes
@@ -2677,6 +2681,9 @@ async function startGame(roomId) {
             targetGuestCount: targetGuests,
             neighborComplaints: 0
         });
+
+        // Hide the lobby UI for all players
+        hideLobbyOnGameStart();
 
     } catch (error) {
         console.error("Error starting game:", error);
