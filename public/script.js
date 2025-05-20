@@ -29,6 +29,55 @@ let playerOrder = [];
 let db;
 let auth;
 
+// Add at the top with other state variables
+let currentMusic = null;
+
+// Create and add the music counter to the DOM
+const musicCounter = document.createElement('div');
+musicCounter.className = 'current-music-counter';
+musicCounter.style.display = 'none';
+document.body.appendChild(musicCounter);
+
+// Add to the existing style element or create a new one
+const styleUpdates = document.createElement('style');
+styleUpdates.textContent = `
+    .card {
+        height: 300px !important;
+        overflow-y: auto;
+    }
+    
+    .choose-btn {
+        color: black !important;
+        font-weight: bold;
+        background-color: #ffffff;
+        border: 2px solid #000000;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .choose-btn:hover {
+        background-color: #f0f0f0;
+    }
+    
+    .current-music-counter {
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 0 0 10px 10px;
+        z-index: 1000;
+        text-align: center;
+        font-size: 18px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+`;
+document.head.appendChild(styleUpdates);
+
 // Initialize Firebase services when the document is ready
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -427,6 +476,13 @@ const paintPlayerHand = () => {
 
             console.log(`Card ${i} clicked`);
             try {
+                // Check if it's a music card and extract the music type
+                const musicMatch = card.match(/Play Music:.*?<br>.*?<br>(.*?)<br>/);
+                if (musicMatch && musicMatch[1]) {
+                    const musicType = musicMatch[1].trim();
+                    updateCurrentMusic(musicType);
+                }
+
                 const playedCard = playerHand.splice(i, 1)[0];
                 console.log(`Playing card: ${playedCard}`);
                 await discardToSharedPile([playedCard]);
@@ -817,18 +873,32 @@ async function updateDiceInRoom(dice1Value, dice2Value) {
     }
 }
 
-// Function to handle dice roll
-const rollDice = async () => {
+// Function to handle single dice roll
+const rollSingleDice = async (diceNumber) => {
     if (!currentRoomId) {
         alert("Please join a room first!");
         return;
     }
 
-    const dice1Value = Math.floor(Math.random() * 6) + 1;
-    const dice2Value = Math.floor(Math.random() * 6) + 1;
+    const diceValue = Math.floor(Math.random() * 6) + 1;
     
-    // Update Firestore with new dice values
-    await updateDiceInRoom(dice1Value, dice2Value);
+    try {
+        const roomRef = doc(db, "rooms", currentRoomId);
+        const roomSnap = await getDoc(roomRef);
+        const currentDice = roomSnap.data().dice || {};
+        
+        // Update only the clicked dice while preserving the other dice's value
+        await updateDoc(roomRef, {
+            dice: {
+                ...currentDice,
+                [`dice${diceNumber}`]: diceValue,
+                lastRolled: Date.now(),
+                rolledBy: currentPlayerId
+            }
+        });
+    } catch (error) {
+        console.error("Error updating single dice:", error);
+    }
 };
 
 // Listen to dice changes in the room
@@ -849,8 +919,8 @@ function listenToDiceChanges(roomId) {
 }
 
 // Update dice click handlers
-dice1.addEventListener("click", rollDice);
-dice2.addEventListener("click", rollDice);
+dice1.addEventListener("click", () => rollSingleDice(1));
+dice2.addEventListener("click", () => rollSingleDice(2));
 
 // Create and add YOUR TURN button
 const yourTurnBtn = document.createElement('button');
@@ -870,7 +940,8 @@ const simulateDiceRolls = async () => {
         return;
     }
     
-    await rollDice();
+    await rollSingleDice(1);
+    await rollSingleDice(2);
 };
 
 // Function to perform all turn actions
@@ -902,11 +973,6 @@ const performTurnActions = async () => {
     if (!fckupBtn.disabled && !hasUnresolvedFckup) {
         fckupBtn.click();
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // 4. Roll the dice
-    simulateDiceRolls();
     
     // Re-enable the YOUR TURN button only if there's no unresolved FCKUP
     setTimeout(() => {
@@ -1852,6 +1918,17 @@ function listenToGameState(roomId) {
             currentTurnPlayer = data.currentTurn;
         }
 
+        // Update music counter if changed
+        if (data.currentMusic !== currentMusic) {
+            currentMusic = data.currentMusic;
+            if (currentMusic) {
+                musicCounter.textContent = `🎵 Now Playing: ${currentMusic}`;
+                musicCounter.style.display = 'block';
+            } else {
+                musicCounter.style.display = 'none';
+            }
+        }
+
         // Restore board state if it changed
         const board = getBoard();
         if (board && data.boardState) {
@@ -2466,5 +2543,21 @@ async function updateBoardState(boardState) {
         });
     } catch (error) {
         console.error("Error updating board state:", error);
+    }
+}
+
+// Function to update current music
+function updateCurrentMusic(musicType) {
+    currentMusic = musicType;
+    musicCounter.textContent = `🎵 Now Playing: ${musicType}`;
+    musicCounter.style.display = 'block';
+    
+    // Update in Firestore so all players can see it
+    if (currentRoomId) {
+        const roomRef = doc(db, "rooms", currentRoomId);
+        updateDoc(roomRef, {
+            currentMusic: musicType,
+            lastUpdated: Date.now()
+        });
     }
 }
