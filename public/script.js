@@ -151,7 +151,7 @@ let playerDeck = [
     ...Array(3).fill("<div> <h4>🎵 Play Music:<br> <br>Techno<br></h4><p>3 Ravers arrive to the party and someone who hates techno music leaves</p></div>"),
     ...Array(3).fill("<div> <h4>🎵 Play Music:<br> <br>Disco<br></h4><p>3 Discoheads arrive to the party and someone who hates disco music leaves</p></div>"),
 
-    ...Array(1).fill("<div><h4>🎉 The DROP:</h4><br><p>Your party is so lit that you are able to cancel the effect of one FCKUP</p></div>"),
+    ...Array(1).fill("<div><h4>💣 The DROP:</h4><br><p>Your party is so lit that you are able to cancel the effect of one FCKUP</p></div>"),
 ];
 
 const fuckupsDeck = [
@@ -208,24 +208,32 @@ const minimissionsDeck = [
 ];
 
 const PartyGoalsDeck = [
-    ...Array(1).fill("5 de Mayo: <br>Most guests should be Latin music fans and most songs played should be Latin <br> <br>(20 coins)"), 
-    ...Array(1).fill("Underground Rave:<br> Most guests should be Trance fans and most songs played should be Techno/Trance <br> <br>(20 coins)"), 
-    ...Array(1).fill("Disco Fever: <br>Most guests should be Disco fans and most songs played should be Disco <br> <br> (20 coins)"), 
-    ...Array(1).fill("Karaoke Vibes: <br>   Most guests should be Pop fans and most songs played should be Pop <br> <br>   (20 coins)"), 
-    ...Array(1).fill("Mosh Pit: <br>    Most guests should be Rock fans and most songs played should be Rock <br> <br>  (20 coins)"),
-    ...Array(1).fill("Rap Battle: <br>Most guests should be Hip-Hop fans and most songs played should be Hip-Hop <br> <br> (20 coins)"), 
+    ...Array(1).fill("🇲🇽 5 de Mayo: <br>Most guests and most songs played should be LATIN <br> <br>(20 coins)"), 
+    ...Array(1).fill("🔊 Underground Rave:<br> Most guests and most songs played should be TECHNO <br> <br>(20 coins)"), 
+    ...Array(1).fill("🕺 Disco Fever: <br>Most guests and most songs played should be DISCO <br> <br> (20 coins)"), 
+    ...Array(1).fill("🎤 Karaoke Vibes: <br>Most guests and most songs played should be POP <br> <br>   (20 coins)"), 
+    ...Array(1).fill("🤘 Mosh Pit: <br>    Most guests and most songs played should be ROCK <br> <br>  (20 coins)"),
+    ...Array(1).fill("⚔️ Rap Battle: <br>Most guests and most songs played should be HIP HOP <br> <br> (20 coins)"), 
 
-    ...Array(1).fill("A Proper Mixer: <br>Have 8 or more guests of each gernre at the end of the party <br> <br> (20 coins)"),  
+    ...Array(1).fill("🧑‍🤝‍🧑🧑‍🤝‍🧑🧑‍🤝‍🧑 <br>A Proper Mixer: <br>Have 6 or more guests of each gernre at the end of the party <br> <br> (20 coins)"),  
 
-    ...Array(1).fill("Hood Party Ese: <br>Have a mayority Hip-Hop and Latin music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("Electro Clash: <br>Have a mayority Techno and Rock music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("Disco Divas Night: <br>Have a mayority Disco and Pop music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("Rage Against the Public Enemy: <br>Have a mayority Rock and Hip-Hop music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("K-Pop night: <br>Have a mayority Pop and Techno music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("🌮 Hood Party Ese: <br>Have a mayority HIP HOP and LATIN music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("🎸 Electro Clash: <br>Have a mayority TECHNO and ROCK music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("👑 Disco Divas Night: <br>Have a mayority DISCO and POP music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("🚨 Rage Against the Public Enemy: <br>Have a mayority ROCK and HIP-HOP music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("👯👯👯 K-Pop night: <br>Have a mayority POP and TECHNO music fans at the end of the party <br> <br> (15 coins)"),
 
-    ...Array(1).fill("Beer Fest: <br>Have 3 or more drink stations running at the end of the party <br> <br>    (10 coins)"),
-    ...Array(1).fill("Disco Guards: <br>Have a disco queen in every room at the end of the party <br> <br> (10 coins)"),   
-    ...Array(1).fill("TikTok Dance Crew: <br>Have a group of 6 poppers dancing together at the end of the party <br> <br> (10 coins)"),  
+    ...Array(1).fill("🍻🍻🍻 <br> Beer Fest: <br>Have 3 or more DRINK stations running at the end of the party <br> <br> (10 coins)"),
+    ...Array(1).fill("🍕🍗🌭 <br> Banquet: <br>Have 3 or more FOOD stations running at the end of the party <br> <br> (10 coins)"),
+    ...Array(1).fill("☮️🕉️✡️ <br> Multi-Environment: <br> Have 3 or more DANCE FLOORS running at the end of the party <br> <br> (10 coins)"),
+    ...Array(1).fill("🚽🚽🚽 <br> Too many porcelain: <br> Have 3 or more TOILETS running at the end of the party <br> <br> (10 coins)"),
+
+    ...Array(1).fill("💂 Disco Guards: <br>Have a DISCO QUEEN in every room at the end of the party <br> <br> (10 coins)"),   
+    ...Array(1).fill("🩰 TikTok Dance Crew: <br>Have a group of 8 POPPERS dancing together at the end of the party <br> <br> (10 coins)"),  
+    ...Array(1).fill("🐓 Cock Fight: <br>Have a group of 8 LATINOS in a circle at the end of the party <br> <br> (10 coins)"),
+    ...Array(1).fill("🚬 Smoke Circle: <br>Have a group of 8 ROCKERS in a circle at the end of the party <br> <br> (10 coins)"),
+    ...Array(1).fill("🔫 B-BOYZ: <br>Have a group of 8 HIP HOPPERS in a circle at the end of the party <br> <br> (10 coins)"),
+    ...Array(1).fill("🍬 DJ Crew: <br>Have a TECHNO RAVER in every room at the end of the party <br> <br> (10 coins)"), 
 ];
 
 /*const htmlOutput = playerDeck.join('<br><br>').replace(/\n/g, '<br>');
