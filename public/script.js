@@ -105,6 +105,9 @@ let currentTurnPlayer = null;
 let turnTimer = null;
 let remainingTime = TURN_TIME;
 let playerOrder = [];
+let guestCount = 0;
+let targetGuestCount = 0;
+let neighborComplaints = 0;
 
 // Initialize Firebase services
 let db;
@@ -113,52 +116,143 @@ let auth;
 // Add at the top with other state variables
 let currentMusic = null;
 
-// Create and add the music counter to the DOM
-const musicCounter = document.createElement('div');
-musicCounter.className = 'current-music-counter';
-musicCounter.style.display = 'none';
-document.body.appendChild(musicCounter);
+// Create counters containers
+const guestCounter = document.createElement('div');
+guestCounter.className = 'guest-counter';
+guestCounter.innerHTML = `
+    <div class="counter-display">
+        <span class="guest-count">0</span>
+        <span>/</span>
+        <span class="target-count">0</span>
+        <span>👥</span>
+    </div>
+    <div class="counter-buttons">
+        <button class="guest-btn minus">-</button>
+        <button class="guest-btn plus">+</button>
+    </div>
+`;
 
-// Add to the existing style element or create a new one
-const styleUpdates = document.createElement('style');
-styleUpdates.textContent = `
-    .card {
-        height: 300px !important;
-        overflow-y: auto;
-    }
-    
-    .choose-btn {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: 2px solid white;
-        padding: 8px 15px;
-        font-size: 14px;
-        margin-top: 10px;
-        width: auto;
-        height: auto;
-        transition: all 0.3s ease;
-    }
-    
-    .choose-btn:hover {
-        background-color: #f0f0f0;
-    }
-    
-    .current-music-counter {
+const complaintCounter = document.createElement('div');
+complaintCounter.className = 'complaint-counter';
+complaintCounter.innerHTML = `
+    <div class="complaint-slots">
+        <span class="complaint-slot">⚪</span>
+        <span class="complaint-slot">⚪</span>
+        <span class="complaint-slot">⚪</span>
+    </div>
+`;
+
+// Add the counters after coins display
+document.body.appendChild(guestCounter);
+document.body.appendChild(complaintCounter);
+
+// Add styles for counters
+const counterStyles = document.createElement('style');
+counterStyles.textContent = `
+    .guest-counter, .complaint-counter {
         position: fixed;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(0, 0, 0, 0.8);
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
         color: white;
         padding: 10px 20px;
-        border-radius: 0 0 10px 10px;
+        border-radius: 10px;
         z-index: 1000;
         text-align: center;
         font-size: 18px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease;
+    }
+
+    .guest-counter {
+        top: 70px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .complaint-counter {
+        top: 160px;
+    }
+
+    .counter-display {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 24px;
+    }
+
+    .counter-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .guest-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .guest-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
+
+    .complaint-slots {
+        display: flex;
+        gap: 10px;
+    }
+
+    .complaint-slot {
+        font-size: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .complaint-slot.filled {
+        animation: pulse 0.5s ease;
+    }
+
+    .counter-flash {
+        animation: flash 0.5s ease;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes flash {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); background: rgba(255, 255, 255, 0.3); }
+        100% { transform: scale(1); }
+    }
+
+    .police-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        z-index: 2000;
+        animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
 `;
-document.head.appendChild(styleUpdates);
+document.head.appendChild(counterStyles);
 
 // Initialize Firebase services when the document is ready
 document.addEventListener('DOMContentLoaded', async () => {
@@ -308,14 +402,14 @@ let playerDeck = [
 
     ...Array(3).fill("<div><h4>🚪<br> Come In: <br>Everyone in the entrance moves inside</h4></div>"),
     ...Array(3).fill("<div><h4>🧽<br> Clean 🚾: <br>Everyone in the toilet must go elsewhere</h4></div>"),
-    ...Array(4).fill("<div><h4>🥸<br> <br>Invite Random Guest from a genre of your choosing</h4></div>"),
+    ...Array(4).fill("<div><h4>🥸<br> <br>Invite Random Guest: <br> Add 1 guest from the music genre of your choosing</h4></div>"),
 
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Rock<br></h4><p>3 Rockers arrive to the party and someone who hates rock music leaves</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Pop<br></h4><p>3 Poppers arrive to the party and someone who hates pop music leaves</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Latin<br></h4><p>3 Latinos arrive to the party and someone who hates latin music leaves</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Rap<br></h4><p>3 Rappers arrive to the party and someone who hates rap music leaves</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Techno<br></h4><p>3 Ravers arrive to the party and someone who hates techno music leaves</p></div>"),
-    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Disco<br></h4><p>3 Discoheads arrive to the party and someone who hates disco music leaves</p></div>"),
+    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Rock<br></h4><p>Add 3 Rockers to the party and remove 1 person who hates rock music</p></div>"),
+    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Pop<br></h4><p>Add 3 Poppers to the party and remove 1 person who hates pop music</p></div>"),
+    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Latin<br></h4><p>Add 3 Latinos to the party and remove 1 person who hates latin music</p></div>"),
+    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Rap<br></h4><p>Add 3 Rappers to the party and remove 1 person who hates rap music</p></div>"),
+    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Techno<br></h4><p>Add 3 Ravers to the party and remove 1 person who hates techno music</p></div>"),
+    ...Array(4).fill("<div> <h4>🎵 Play Music:<br> <br>Disco<br></h4><p>Add 3 Discoheads to the party and remove 1 person who hates disco music</p></div>"),
 
     ...Array(2).fill("<div><h4>💣 The DROP:</h4><br><p>Your party is so lit that you are able to cancel the effect of one FCKUP</p></div>"),
 ];
@@ -732,6 +826,17 @@ document.getElementById("round-card-btn").addEventListener("click", async () => 
         updateFckupsDisplay();
         newCardDiv.innerHTML = `<div class="resolved-state">✔ RESOLVED</div>`;
         LogSystem.logFuckupResolved(currentPlayerId, card);
+        
+        // Check if it's a neighbor complaint card
+        if (card.includes("Neighbor Complaint")) {
+            const roomRef = doc(db, "rooms", currentRoomId);
+            const roomDoc = await getDoc(roomRef);
+            const currentComplaints = roomDoc.data()?.neighborComplaints || 0;
+            
+            await updateDoc(roomRef, {
+                neighborComplaints: currentComplaints + 1
+            });
+        }
         
         hasUnresolvedFckup = false;
         document.getElementById("round-card-btn").disabled = false;
@@ -2447,6 +2552,9 @@ async function startGame(roomId) {
         const firstPlayer = playerOrder[0];
         currentTurnPlayer = firstPlayer;
 
+        // Initialize guest counter based on player count
+        await initializeGuestCounter(playerOrder.length);
+
         // Hide lobby for all players by updating room data
         await updateDoc(roomRef, {
             gameState: GAME_STATES.STARTED,
@@ -2455,11 +2563,8 @@ async function startGame(roomId) {
             playerOrder: playerOrder,
             playerGoals: await initializePlayerGoals(playerOrder),
             lastUpdated: Date.now(),
-            hideLobby: true // Add this flag to trigger lobby hiding for all players
+            hideLobby: true
         });
-
-        // Rest of the existing startGame function code...
-        // ... existing code ...
 
     } catch (error) {
         console.error("Error starting game:", error);
@@ -2690,3 +2795,97 @@ async function initializePlayerGoals(players) {
     
     return playerGoals;
 }
+
+// Counter Functions
+function updateGuestCounter(count, target) {
+    const guestCountSpan = document.querySelector('.guest-count');
+    const targetCountSpan = document.querySelector('.target-count');
+    
+    if (guestCountSpan && targetCountSpan) {
+        guestCountSpan.textContent = count;
+        targetCountSpan.textContent = target;
+        
+        // Add flash animation
+        guestCounter.classList.add('counter-flash');
+        setTimeout(() => guestCounter.classList.remove('counter-flash'), 500);
+    }
+}
+
+function updateComplaintCounter(complaints) {
+    const slots = document.querySelectorAll('.complaint-slot');
+    slots.forEach((slot, index) => {
+        if (index < complaints) {
+            slot.textContent = '🔇';
+            slot.classList.add('filled');
+        } else {
+            slot.textContent = '⚪';
+            slot.classList.remove('filled');
+        }
+    });
+}
+
+function showPolicePopup() {
+    const popup = document.createElement('div');
+    popup.className = 'police-popup';
+    popup.innerHTML = `
+        <h2>👮 DA POLICE! 👮</h2>
+        <p>Everyone hides - (Remove 6 guests)</p>
+        <button onclick="this.parentElement.remove()">OK</button>
+    `;
+    document.body.appendChild(popup);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => popup.remove(), 5000);
+}
+
+// Function to calculate target guests based on player count
+function calculateTargetGuests(playerCount) {
+    switch(playerCount) {
+        case 1: return 20;
+        case 2: return 30;
+        case 3: return 50;
+        case 4: return 60;
+        default: return 30; // Default to 2 players
+    }
+}
+
+// Function to initialize guest counter when game starts
+async function initializeGuestCounter(playerCount) {
+    const initialGuests = playerCount * 10;
+    const targetGuests = calculateTargetGuests(playerCount);
+    
+    if (currentRoomId) {
+        await updateDoc(doc(db, "rooms", currentRoomId), {
+            guestCount: initialGuests,
+            targetGuestCount: targetGuests,
+            neighborComplaints: 0
+        });
+    }
+}
+
+// Add event listeners for guest counter buttons
+guestCounter.querySelector('.minus').addEventListener('click', async () => {
+    if (!currentRoomId) return;
+    
+    const roomRef = doc(db, "rooms", currentRoomId);
+    const roomDoc = await getDoc(roomRef);
+    const currentCount = roomDoc.data()?.guestCount || 0;
+    
+    if (currentCount > 0) {
+        await updateDoc(roomRef, {
+            guestCount: currentCount - 1
+        });
+    }
+});
+
+guestCounter.querySelector('.plus').addEventListener('click', async () => {
+    if (!currentRoomId) return;
+    
+    const roomRef = doc(db, "rooms", currentRoomId);
+    const roomDoc = await getDoc(roomRef);
+    const currentCount = roomDoc.data()?.guestCount || 0;
+    
+    await updateDoc(roomRef, {
+        guestCount: currentCount + 1
+    });
+});
