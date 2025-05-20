@@ -222,8 +222,10 @@ musicStyles.textContent = `
     
     .music-history-dropdown {
         position: absolute;
-        top: 100%;
-        left: 0;
+        color: white;
+        width: 20%;
+        top: 255px;
+        left: 40%;
         right: 0;
         background: rgba(0, 0, 0, 0.9);
         border-radius: 0 0 10px 10px;
