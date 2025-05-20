@@ -488,12 +488,12 @@ button:disabled:hover {
     align-items: center;
     justify-content: center;
     padding: 15px;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.4;
 }
 
 /* Resolve Button Styles */
-.resolve-btn {
+.resolve-btn, .choose-btn {
     background-color: rgba(255, 255, 255, 0.2);
     color: white;
     border: 2px solid white;
@@ -505,6 +505,11 @@ button:disabled:hover {
 }
 
 .resolve-btn:hover {
+    background-color: white;
+    color: var(--monopoly-brown);
+}
+
+.choose-btn:hover {
     background-color: white;
     color: var(--monopoly-brown);
 }
