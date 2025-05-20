@@ -427,7 +427,7 @@ button:disabled:hover {
     width: 200px;
     height: 300px;
     margin: 0;
-    padding: 15px;
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px var(--shadow-color);
     transition: all 0.3s ease;
@@ -437,6 +437,7 @@ button:disabled:hover {
     font-family: 'Georgia', serif;
     font-size: 14px;
     align-items: center;
+    text-align: center;
 }
 
 /* Card Type Specific Styles */
