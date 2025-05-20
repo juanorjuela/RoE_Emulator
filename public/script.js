@@ -47,13 +47,14 @@ styleUpdates.textContent = `
     }
     
     .choose-btn {
-        color: black !important;
-        font-weight: bold;
-        background-color: #ffffff;
-        border: 2px solid #000000;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid white;
+        padding: 8px 15px;
+        font-size: 14px;
+        margin-top: 10px;
+        width: auto;
+        height: auto;
         transition: all 0.3s ease;
     }
     
