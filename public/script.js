@@ -1140,6 +1140,13 @@ const rollSingleDice = async (diceNumber) => {
         return;
     }
 
+    // Prevent multiple rapid clicks
+    const dice = diceNumber === 1 ? dice1 : dice2;
+    if (dice.classList.contains('rolling')) {
+        return;
+    }
+    dice.classList.add('rolling');
+
     const diceValue = Math.floor(Math.random() * 6) + 1;
     
     try {
@@ -1168,10 +1175,38 @@ const rollSingleDice = async (diceNumber) => {
         } else {
             LogSystem.logDiceRoll(currentPlayerId, otherDiceValue || 1, diceValue);
         }
+
+        // Remove rolling class after animation completes
+        setTimeout(() => {
+            dice.classList.remove('rolling');
+        }, 500);
     } catch (error) {
         console.error("Error updating single dice:", error);
+        dice.classList.remove('rolling');
     }
 };
+
+// Add CSS for dice rolling animation
+const diceStyles = document.createElement('style');
+diceStyles.textContent = `
+    .dice {
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .dice.rolling {
+        pointer-events: none;
+        animation: diceRoll 0.5s ease;
+    }
+
+    @keyframes diceRoll {
+        0% { transform: scale(1) rotate(0); }
+        50% { transform: scale(1.2) rotate(180deg); }
+        100% { transform: scale(1) rotate(360deg); }
+    }
+`;
+document.head.appendChild(diceStyles);
 
 // Listen to dice changes in the room
 function listenToDiceChanges(roomId) {
@@ -1203,8 +1238,15 @@ function listenToDiceChanges(roomId) {
 }
 
 // Update dice click handlers
-dice1.addEventListener("click", () => rollSingleDice(1));
-dice2.addEventListener("click", () => rollSingleDice(2));
+dice1.addEventListener("click", (event) => {
+    event.stopPropagation(); // Prevent event from bubbling up
+    rollSingleDice(1);
+});
+
+dice2.addEventListener("click", (event) => {
+    event.stopPropagation(); // Prevent event from bubbling up
+    rollSingleDice(2);
+});
 
 // Create and add YOUR TURN button
 const yourTurnBtn = document.createElement('button');
@@ -2447,26 +2489,22 @@ function updateGameAreaState() {
         return;
     }
 
-    console.log("Updating game area state:", {
-        gameState: gameState,
-        currentTurnPlayer: currentTurnPlayer,
-        currentPlayerId: currentPlayerId
-    });
-
     // Show/hide game area based on game state
     if (gameState === GAME_STATES.STARTED) {
-        // First make it visible but with opacity 0
-        gameArea.style.display = 'block';
-        gameArea.style.opacity = '0';
-        
-        // Force a reflow
-        gameArea.offsetHeight;
-        
-        // Then add the visible class for smooth transition
-        requestAnimationFrame(() => {
-            gameArea.classList.add('visible');
-            gameArea.style.opacity = '1';
-        });
+        // Only handle visibility changes if the state actually changed
+        if (gameArea.style.display === 'none') {
+            gameArea.style.display = 'block';
+            gameArea.style.opacity = '0';
+            
+            // Force a reflow
+            gameArea.offsetHeight;
+            
+            // Then add the visible class for smooth transition
+            requestAnimationFrame(() => {
+                gameArea.classList.add('visible');
+                gameArea.style.opacity = '1';
+            });
+        }
         
         // Show/hide timer and finish turn button based on current player
         if (currentTurnPlayer === currentPlayerId) {
@@ -2489,14 +2527,16 @@ function updateGameAreaState() {
             }
         }
     } else {
-        // Hide game area if game hasn't started
-        gameArea.classList.remove('visible');
-        gameArea.style.opacity = '0';
-        setTimeout(() => {
-            if (gameState !== GAME_STATES.STARTED) {
-                gameArea.style.display = 'none';
-            }
-        }, 300);
+        // Only hide if currently visible
+        if (gameArea.style.display !== 'none') {
+            gameArea.classList.remove('visible');
+            gameArea.style.opacity = '0';
+            setTimeout(() => {
+                if (gameState !== GAME_STATES.STARTED) {
+                    gameArea.style.display = 'none';
+                }
+            }, 300);
+        }
     }
 
     // Update player controls visibility
