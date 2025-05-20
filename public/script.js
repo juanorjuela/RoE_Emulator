@@ -1762,7 +1762,11 @@ function startTimer() {
         if (remainingTime <= 0) {
             clearInterval(turnTimer);
             turnTimer = null;
-            endTurn(); // Ensure this gets called when timer reaches zero
+            // Instead of directly calling endTurn, show a message first
+            showLoading('Time is up!');
+            setTimeout(() => {
+                endTurn(); // This will now handle showing the appropriate waiting screen
+            }, 1000);
         }
     }, 1000);
 }
@@ -1797,15 +1801,12 @@ async function endTurn() {
             }
         }
         const playerMapping = currentRoomData.playerMapping || {};
-
         const turnPlayerUid = playerMapping[currentTurnPlayer];
 
         if (!currentTurnPlayer || !turnPlayerUid || turnPlayerUid !== localPlayerUid) {
             console.warn('Not your turn to end.');
             return;
         }
-        
-        showLoading('Ending turn...');
         
         // Save final board state
         try {
@@ -1850,7 +1851,18 @@ async function endTurn() {
         // Log the start of the next turn
         LogSystem.logTurnStart(nextPlayerName);
         
-        hideLoading();
+        // Show waiting screen for the player who just finished their turn
+        const nextPlayerUid = playerMapping[nextPlayerName];
+        const isBot = nextPlayerName.startsWith('bot-');
+        
+        if (isBot) {
+            showLoading(`Bot ${nextPlayerName} is playing...`, { isBotTurn: true });
+        } else if (nextPlayerUid === localPlayerUid) {
+            showLoading('Your turn!');
+            setTimeout(hideLoading, 1500);
+        } else {
+            showLoading(`Waiting for ${nextPlayerName}...`, { isThirdPlayer: true });
+        }
         
     } catch (error) {
         console.error("Error ending turn:", error);
@@ -2030,22 +2042,49 @@ async function handleTurnChange(nextPlayerName) { // Parameter is nextPlayerName
 
 // Update the listenToGameState function
 function listenToGameState(roomId) {
+    let previousTurnPlayer = null;  // Add this to track turn changes
+
     return onSnapshot(doc(db, 'rooms', roomId), async (snapshot) => {
         const data = snapshot.data();
         if (!data) return;
         window.currentRoomDataForButton = data;
         
         const previousGameState = gameState;
-        const previousTurnPlayer = currentTurnPlayer;
-
+        
         // Only update game state if it's different
         if (data.gameState !== gameState) {
             gameState = data.gameState;
         }
 
-        // Only update current turn if it's different
-        if (data.currentTurn !== currentTurnPlayer) {
+        // Handle turn changes
+        if (data.currentTurn !== previousTurnPlayer) {
+            const localPlayerUid = auth.currentUser ? auth.currentUser.uid : null;
+            const playerMapping = data.playerMapping || {};
+            const turnPlayerUid = playerMapping[data.currentTurn];
+            const isMyTurn = localPlayerUid && turnPlayerUid === localPlayerUid;
+            const wasMyTurn = localPlayerUid && playerMapping[previousTurnPlayer] === localPlayerUid;
+            const isBot = data.currentTurn && data.currentTurn.startsWith('bot-');
+
+            console.log("Turn change detected:", {
+                from: previousTurnPlayer,
+                to: data.currentTurn,
+                isMyTurn,
+                wasMyTurn
+            });
+
+            // Always show appropriate loading screen on turn change
+            if (isMyTurn) {
+                showLoading('Your turn!');
+                setTimeout(hideLoading, 1500);
+                startTimer();
+            } else if (isBot) {
+                showLoading(`Bot ${data.currentTurn} is playing...`, { isBotTurn: true });
+            } else if (data.currentTurn) {
+                showLoading(`Waiting for ${data.currentTurn}...`, { isThirdPlayer: true });
+            }
+
             currentTurnPlayer = data.currentTurn;
+            previousTurnPlayer = data.currentTurn;  // Update previous turn player
         }
 
         // Update music counter if changed
@@ -2068,44 +2107,6 @@ function listenToGameState(roomId) {
             
             if (JSON.stringify(currentState) !== JSON.stringify(newState)) {
                 board.restoreBoardState(newState);
-            }
-        }
-        
-        // Determine if it's this client's turn
-        const localPlayerUid = auth.currentUser ? auth.currentUser.uid : null;
-        const playerMapping = data.playerMapping || {};
-        const turnPlayerUid = playerMapping[currentTurnPlayer];
-        const isMyTurn = localPlayerUid && turnPlayerUid === localPlayerUid;
-
-        if (currentTurnPlayer !== previousTurnPlayer || gameState !== previousGameState) {
-            console.log("Game state snapshot received:", {
-                newGameState: gameState,
-                newTurnPlayerName: currentTurnPlayer,
-                isMyTurn: isMyTurn,
-                roomData: data 
-            });
-
-            // Handle turn transitions and loading states
-            if (isMyTurn) {
-                // It's my turn
-                showLoading('Your turn!');
-                setTimeout(hideLoading, 1500); // Show "Your turn!" briefly
-                startTimer();
-            } else if (currentTurnPlayer) {
-                // It's someone else's turn
-                const isBot = currentTurnPlayer.startsWith('bot-');
-                
-                // Clear any existing hide loading timers
-                if (window.hideLoadingTimer) {
-                    clearTimeout(window.hideLoadingTimer);
-                    window.hideLoadingTimer = null;
-                }
-                
-                if (isBot) {
-                    showLoading(`Bot ${currentTurnPlayer} is playing...`, { isBotTurn: true });
-                } else {
-                    showLoading(`Waiting for ${currentTurnPlayer}...`, { isThirdPlayer: true });
-                }
             }
         }
         
