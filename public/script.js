@@ -2660,3 +2660,21 @@ function hideLobbyOnGameStart() {
         }
     }
 }
+
+// Function to initialize player goals
+async function initializePlayerGoals(players) {
+    const playerGoals = {};
+    
+    // Initialize goals for each player
+    for (const player of players) {
+        // Draw 3 random goals for each player
+        const drawnGoals = await drawFromDeck('partyGoals', 3);
+        
+        playerGoals[player] = {
+            goals: drawnGoals,
+            completed: []
+        };
+    }
+    
+    return playerGoals;
+}
