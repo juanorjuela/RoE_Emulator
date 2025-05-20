@@ -157,9 +157,13 @@ popupStyles.textContent = `
         padding: 30px;
         border-radius: 15px;
         text-align: center;
-        max-width: 500px;
+        max-width: 600px;
         color: white;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }
     
     .popup-text {
@@ -224,15 +228,15 @@ musicStyles.textContent = `
     }
     
     .music-history-dropdown {
-        position: absolute;
+        position: fixed;
         color: white;
         width: 20%;
-        top: 255px;
+        top: 44px;
         left: 40%;
         right: 0;
         background: rgba(0, 0, 0, 0.9);
         border-radius: 0 0 10px 10px;
-        padding: 10px;
+        padding: 20px 10px;
         max-height: 200px;
         overflow-y: auto;
         z-index: 1001;
@@ -242,7 +246,7 @@ musicStyles.textContent = `
     .music-history-entry {
         padding: 5px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        font-size: 14px;
+        font-size: 18px;
     }
     
     .music-history-entry:last-child {
@@ -298,13 +302,13 @@ counterStyles.textContent = `
         top: 0;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
+        background: rgb(0, 0, 0);
         color: white;
         padding: 10px 20px;
         border-radius: 0 0 10px 10px;
         z-index: 1000;
         text-align: center;
-        font-size: 18px;
+        font-size: 20px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
 
