@@ -2,8 +2,8 @@
 
 # Function to increment version
 increment_version() {
-    # Extract current version from index.html
-    current_version=$(grep -o 'v[0-9]\+\.[0-9]\+' public/index.html | grep -o '[0-9]\+\.[0-9]\+')
+    # Extract current version from index.html (using the loading screen version as source of truth)
+    current_version=$(grep -o 'class="version-number">v[0-9]\+\.[0-9]\+' public/index.html | grep -o '[0-9]\+\.[0-9]\+')
     
     if [ -z "$current_version" ]; then
         echo "Error: Could not find version number in index.html"
@@ -17,8 +17,9 @@ increment_version() {
     new_minor=$((minor + 1))
     new_version="v$major.$new_minor"
     
-    # Update version in index.html
-    sed -i '' "s/v[0-9]\+\.[0-9]\+/$new_version/" public/index.html
+    # Update both version numbers in index.html
+    sed -i '' "s/class=\"version-number\">v[0-9]\+\.[0-9]\+/class=\"version-number\">$new_version/" public/index.html
+    sed -i '' "s/class=\"version-display\">v[0-9]\+\.[0-9]\+/class=\"version-display\">$new_version/" public/index.html
     
     echo "Version updated to $new_version"
 }
@@ -33,7 +34,7 @@ increment_version
 git add .
 
 # Commit with timestamp and version
-new_version=$(grep -o 'v[0-9]\+\.[0-9]\+' public/index.html)
+new_version=$(grep -o 'class="version-number">v[0-9]\+\.[0-9]\+' public/index.html | grep -o 'v[0-9]\+\.[0-9]\+')
 git commit -m "Auto-commit: $timestamp (${new_version})"
 
 # Push to GitHub
