@@ -116,6 +116,12 @@ let auth;
 // Add at the top with other state variables
 let currentMusic = null;
 
+// Create and add the music counter to the DOM
+const musicCounter = document.createElement('div');
+musicCounter.className = 'current-music-counter';
+musicCounter.style.display = 'none';
+document.body.appendChild(musicCounter);
+
 // Create counters containers
 const guestCounter = document.createElement('div');
 guestCounter.className = 'guest-counter';
@@ -149,6 +155,21 @@ document.body.appendChild(complaintCounter);
 // Add styles for counters
 const counterStyles = document.createElement('style');
 counterStyles.textContent = `
+    .current-music-counter {
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 0 0 10px 10px;
+        z-index: 1000;
+        text-align: center;
+        font-size: 18px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
     .guest-counter, .complaint-counter {
         position: fixed;
         right: 20px;
@@ -245,6 +266,21 @@ counterStyles.textContent = `
         text-align: center;
         z-index: 2000;
         animation: popIn 0.3s ease;
+    }
+
+    .police-popup button {
+        margin-top: 10px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .police-popup button:hover {
+        background: rgba(255, 255, 255, 0.3);
     }
 
     @keyframes popIn {
@@ -692,6 +728,15 @@ const paintPlayerHand = () => {
                 if (musicMatch && musicMatch[1]) {
                     const musicType = musicMatch[1].trim();
                     updateCurrentMusic(musicType);
+                    
+                    // Add 2 guests for music card
+                    const roomRef = doc(db, "rooms", currentRoomId);
+                    const roomDoc = await getDoc(roomRef);
+                    const currentCount = roomDoc.data()?.guestCount || 0;
+                    
+                    await updateDoc(roomRef, {
+                        guestCount: currentCount + 2
+                    });
                 }
 
                 const playedCard = playerHand.splice(i, 1)[0];
@@ -2147,13 +2192,47 @@ async function handleTurnChange(nextPlayerName) { // Parameter is nextPlayerName
 
 // Update the listenToGameState function
 function listenToGameState(roomId) {
-    let previousTurnPlayer = null;  // Add this to track turn changes
+    let previousTurnPlayer = null;
 
     return onSnapshot(doc(db, 'rooms', roomId), async (snapshot) => {
         const data = snapshot.data();
         if (!data) return;
         window.currentRoomDataForButton = data;
         
+        // Update music if changed
+        if (data.currentMusic !== currentMusic) {
+            currentMusic = data.currentMusic;
+            if (currentMusic) {
+                musicCounter.textContent = `🎵 Now Playing: ${currentMusic}`;
+                musicCounter.style.display = 'block';
+            } else {
+                musicCounter.style.display = 'none';
+            }
+        }
+        
+        // Update guest counter if changed
+        if (data.guestCount !== undefined && data.targetGuestCount !== undefined) {
+            updateGuestCounter(data.guestCount, data.targetGuestCount);
+        }
+        
+        // Update complaint counter if changed
+        if (data.neighborComplaints !== undefined) {
+            updateComplaintCounter(data.neighborComplaints);
+            
+            // Check if we just reached 3 complaints
+            if (data.neighborComplaints === 3) {
+                showPolicePopup();
+                
+                // Reset complaints and remove 6 guests after a short delay
+                setTimeout(async () => {
+                    await updateDoc(doc(db, "rooms", roomId), {
+                        neighborComplaints: 0,
+                        guestCount: Math.max(0, (data.guestCount || 0) - 6)
+                    });
+                }, 2000);
+            }
+        }
+
         const previousGameState = gameState;
         
         // Only update game state if it's different
@@ -2190,17 +2269,6 @@ function listenToGameState(roomId) {
 
             currentTurnPlayer = data.currentTurn;
             previousTurnPlayer = data.currentTurn;  // Update previous turn player
-        }
-
-        // Update music counter if changed
-        if (data.currentMusic !== currentMusic) {
-            currentMusic = data.currentMusic;
-            if (currentMusic) {
-                musicCounter.textContent = `🎵 Now Playing: ${currentMusic}`;
-                musicCounter.style.display = 'block';
-            } else {
-                musicCounter.style.display = 'none';
-            }
         }
 
         // Restore board state if it changed
@@ -2553,7 +2621,8 @@ async function startGame(roomId) {
         currentTurnPlayer = firstPlayer;
 
         // Initialize guest counter based on player count
-        await initializeGuestCounter(playerOrder.length);
+        const initialGuests = playerOrder.length * 10;
+        const targetGuests = calculateTargetGuests(playerOrder.length);
 
         // Hide lobby for all players by updating room data
         await updateDoc(roomRef, {
@@ -2563,7 +2632,10 @@ async function startGame(roomId) {
             playerOrder: playerOrder,
             playerGoals: await initializePlayerGoals(playerOrder),
             lastUpdated: Date.now(),
-            hideLobby: true
+            hideLobby: true,
+            guestCount: initialGuests,
+            targetGuestCount: targetGuests,
+            neighborComplaints: 0
         });
 
     } catch (error) {
