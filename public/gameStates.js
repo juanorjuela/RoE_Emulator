@@ -37,6 +37,7 @@ class GameStateManager {
         const playersCompletedLastTurn = roomData.playersCompletedLastTurn || [];
         const allPlayers = roomData.players || [];
         const currentTurn = roomData.currentTurn;
+        const lastTurnTriggeredBy = roomData.lastTurnTriggeredBy;
 
         // If we're already in LAST_TURN state
         if (currentOutcome === GAME_OUTCOME.LAST_TURN) {
@@ -50,7 +51,13 @@ class GameStateManager {
             }
             
             // Check if all players have completed their last turn
-            if (playersCompletedLastTurn.length === allPlayers.length) {
+            // Make sure the triggering player also gets their last turn
+            const allPlayersHadLastTurn = allPlayers.every(player => 
+                playersCompletedLastTurn.includes(player) || 
+                (player === lastTurnTriggeredBy && playersCompletedLastTurn.length === allPlayers.length - 1)
+            );
+
+            if (allPlayersHadLastTurn) {
                 // If guest count is still at or above target after all players had their last turn
                 if (guestCount >= targetCount) {
                     return GAME_OUTCOME.WIN;
@@ -65,9 +72,12 @@ class GameStateManager {
         }
 
         // Check if we should enter last turn state
-        if (guestCount >= targetCount && currentOutcome === GAME_OUTCOME.IN_PROGRESS) {
-            await this.initializeLastTurnState();
-            return GAME_OUTCOME.LAST_TURN;
+        // We'll mark this turn as the triggering turn, but not activate last turn state yet
+        if (guestCount >= targetCount && currentOutcome === GAME_OUTCOME.IN_PROGRESS && !roomData.pendingLastTurn) {
+            await updateDoc(roomRef, {
+                pendingLastTurn: true,
+                lastTurnTriggeredBy: currentTurn
+            });
         }
 
         return GAME_OUTCOME.IN_PROGRESS;
@@ -75,10 +85,15 @@ class GameStateManager {
 
     async initializeLastTurnState() {
         const roomRef = doc(this.db, "rooms", this.currentRoomId);
+        const roomDoc = await getDoc(roomRef);
+        const roomData = roomDoc.data();
+        
         await updateDoc(roomRef, {
             gameOutcome: GAME_OUTCOME.LAST_TURN,
             playersCompletedLastTurn: [],
-            lastTurnStartTime: Date.now()
+            lastTurnStartTime: Date.now(),
+            pendingLastTurn: false,
+            lastTurnTriggeredBy: roomData.lastTurnTriggeredBy || null
         });
     }
 
@@ -87,7 +102,9 @@ class GameStateManager {
         await updateDoc(roomRef, {
             gameOutcome: GAME_OUTCOME.IN_PROGRESS,
             playersCompletedLastTurn: [],
-            lastTurnStartTime: null
+            lastTurnStartTime: null,
+            pendingLastTurn: false,
+            lastTurnTriggeredBy: null
         });
     }
 

@@ -2223,8 +2223,12 @@ async function endTurn() {
             return;
         }
 
+        // If this turn triggered the last turn state, initialize it for the next player
+        if (currentRoomData.pendingLastTurn) {
+            await gameStateManager.initializeLastTurnState();
+        }
         // If we're in last turn state, mark this player's turn as complete
-        if (currentRoomData.gameOutcome === GAME_OUTCOME.LAST_TURN) {
+        else if (currentRoomData.gameOutcome === GAME_OUTCOME.LAST_TURN) {
             await gameStateManager.markPlayerLastTurnComplete(currentTurnPlayer);
         }
         
