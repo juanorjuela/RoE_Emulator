@@ -1784,6 +1784,63 @@ const showHostControls = (isHost) => {
     }
 };
 
+// Initialize game state managers when joining/creating room
+async function initializeGameState(roomId) {
+    if (!roomId) {
+        console.error("No room ID provided to initializeGameState");
+        return;
+    }
+    try {
+        console.log("Initializing game state for room:", roomId);
+        gameStateManager.initialize(roomId);
+        statisticsManager.initialize(roomId);
+        
+        // Initialize stats in the room if they don't exist
+        const roomRef = doc(db, "rooms", roomId);
+        const roomDoc = await getDoc(roomRef);
+        if (roomDoc.exists() && !roomDoc.data().playerStats) {
+            await updateDoc(roomRef, {
+                playerStats: {},
+                gameOutcome: GAME_OUTCOME.IN_PROGRESS
+            });
+        }
+        console.log("✅ Game state initialized successfully");
+    } catch (error) {
+        console.error("❌ Error initializing game state:", error);
+        throw error; // Propagate error to be handled by caller
+    }
+}
+
+// Add game state integration
+async function checkGameOutcome() {
+    if (!currentRoomId) return;
+
+    const roomRef = doc(db, "rooms", currentRoomId);
+    const roomDoc = await getDoc(roomRef);
+    const roomData = roomDoc.data();
+
+    const guestCount = roomData.guestCount || 0;
+    const targetCount = roomData.targetGuestCount || 0;
+    const initialCount = roomData.players.length * 10;
+
+    const outcome = await gameStateManager.checkGameState(guestCount, targetCount, initialCount);
+
+    switch (outcome) {
+        case GAME_OUTCOME.LAST_TURN:
+            stateUI.showLastTurnBanner();
+            break;
+        case GAME_OUTCOME.WIN:
+            const stats = await statisticsManager.getGameStats();
+            stateUI.showWinnerPopup(stats);
+            break;
+        case GAME_OUTCOME.LOSE:
+            stateUI.showGameOverPopup();
+            break;
+        default:
+            stateUI.hideLastTurnBanner();
+    }
+}
+
 // Update createRoomBtn click handler
 createRoomBtn.addEventListener("click", async () => {
     const name = playerNameInput.value.trim();
@@ -1842,6 +1899,7 @@ createRoomBtn.addEventListener("click", async () => {
                 await initializeSharedDeck(roomCode);
                 listenToDeckChanges(roomCode);
                 
+                // Initialize game state after room is created
                 await initializeGameState(roomCode);
                 
                 return;
@@ -3230,33 +3288,3 @@ guestCounter.querySelector('.plus').addEventListener('click', async () => {
         guestCount: currentCount + 1
     });
 });
-
-// Add game state integration
-async function checkGameOutcome() {
-    if (!currentRoomId) return;
-
-    const roomRef = doc(db, "rooms", currentRoomId);
-    const roomDoc = await getDoc(roomRef);
-    const roomData = roomDoc.data();
-
-    const guestCount = roomData.guestCount || 0;
-    const targetCount = roomData.targetGuestCount || 0;
-    const initialCount = roomData.players.length * 10;
-
-    const outcome = await gameStateManager.checkGameState(guestCount, targetCount, initialCount);
-
-    switch (outcome) {
-        case GAME_OUTCOME.LAST_TURN:
-            stateUI.showLastTurnBanner();
-            break;
-        case GAME_OUTCOME.WIN:
-            const stats = await statisticsManager.getGameStats();
-            stateUI.showWinnerPopup(stats);
-            break;
-        case GAME_OUTCOME.LOSE:
-            stateUI.showGameOverPopup();
-            break;
-        default:
-            stateUI.hideLastTurnBanner();
-    }
-}
