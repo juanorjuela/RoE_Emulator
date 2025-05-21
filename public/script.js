@@ -1081,6 +1081,27 @@ document.getElementById("mini-mission-btn").addEventListener("click", async () =
         updateCoinsDisplay();
         LogSystem.logMissionCompleted(currentPlayerId, card, coinCount);
         
+        // Update player stats in Firebase
+        const roomRef = doc(db, "rooms", currentRoomId);
+        await runTransaction(db, async (transaction) => {
+            const roomDoc = await transaction.get(roomRef);
+            const roomData = roomDoc.data();
+            const playerStats = roomData.playerStats || {};
+            const myStats = playerStats[currentPlayerId] || {
+                coins: 0,
+                miniMissionsResolved: 0,
+                fuckupsResolved: 0,
+                actionsPlayed: 0,
+                completedGoals: []
+            };
+            
+            myStats.coins = (myStats.coins || 0) + coinCount;
+            myStats.miniMissionsResolved = (myStats.miniMissionsResolved || 0) + 1;
+            playerStats[currentPlayerId] = myStats;
+            
+            transaction.update(roomRef, { playerStats });
+        });
+        
         // Discard the resolved card
         await discardToPile('miniMissions', [card]);
     });
@@ -1184,6 +1205,14 @@ function displayChosenPartyGoal(card, container) {
                 const roomData = roomDoc.data();
                 const playerGoals = roomData.playerGoals || {};
                 const myGoals = playerGoals[currentPlayerId] || { goals: [], completed: [] };
+                const playerStats = roomData.playerStats || {};
+                const myStats = playerStats[currentPlayerId] || {
+                    coins: 0,
+                    miniMissionsResolved: 0,
+                    fuckupsResolved: 0,
+                    actionsPlayed: 0,
+                    completedGoals: []
+                };
                 
                 // Move goal from active to completed
                 myGoals.goals = [];
@@ -1191,7 +1220,16 @@ function displayChosenPartyGoal(card, container) {
                 myGoals.completed.push(cardText);
                 playerGoals[currentPlayerId] = myGoals;
                 
-                transaction.update(roomRef, { playerGoals });
+                // Update player stats
+                myStats.coins = (myStats.coins || 0) + coinCount;
+                myStats.completedGoals = myStats.completedGoals || [];
+                myStats.completedGoals.push(cardText);
+                playerStats[currentPlayerId] = myStats;
+                
+                transaction.update(roomRef, { 
+                    playerGoals,
+                    playerStats 
+                });
             });
 
             totalCoinsEarned += coinCount;
