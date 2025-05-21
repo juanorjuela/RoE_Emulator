@@ -2,6 +2,11 @@
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, updateDoc, arrayUnion, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// Import game state modules
+import { gameStateManager, GAME_OUTCOME } from './gameStates.js';
+import { statisticsManager } from './statistics.js';
+import { stateUI } from './stateUI.js';
+
 // Import the bot class
 import { RaveTycoonBot } from './bot.js';
 
@@ -231,13 +236,12 @@ musicStyles.textContent = `
         position: fixed;
         color: white;
         width: 20%;
-        top: 44px;
+        top: 40px;
         left: 40%;
         right: 0;
         background: rgba(0, 0, 0, 0.9);
         border-radius: 0 0 10px 10px;
-        padding: 20px 10px;
-        max-height: 200px;
+        padding: 10px 10px;
         overflow-y: auto;
         z-index: 1001;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -627,20 +631,21 @@ const fuckupsDeck = [
 
 
 const minimissionsDeck = [
-    ...Array(1).fill("🧚 Fairy Dusk: <br><br>Visit the 🚾 and bring 2 guests with you <br> <br> (5 coins)"), 
+    ...Array(1).fill("🧚 Fairy Dusk: <br><br>Visit the TOILET and bring 2 guests with you <br> <br> (5 coins)"), 
     ...Array(1).fill("🛏️ Hooked: <br><br>Be alone in a bedroom with another guest <br> <br> (10 coins)"), 
     ...Array(1).fill("🧳 Nomad: <br><br>Visit 3 different rooms in a single turn <br> <br> (5 coins)"), 
     ...Array(1).fill("🧑‍🤝‍🧑 Hook-Up: <br><br>Meet someone alone in the corridor <br> <br> (5 coins)"), 
     ...Array(1).fill("🦠 Germophobe: <br><br>Wash your hands, leave the 🚾, go back and wash again <br> <br>  (5 coins)"), 
     ...Array(1).fill("💊 Get Enhancers: <br><br>Catch a disco queen in the corner of the room <br> <br>(5 coins)"), 
 
-    ...Array(1).fill("📚 Sophisto Prick: <br><br>Suddenly feel like reading a book from the library <br> <br> (1 coin)"), 
-    ...Array(1).fill("😴 Powernap: <br><br>Take a quick break in the bedroom <br> <br> (1 coin)"), 
-    ...Array(1).fill("🕵️ Creeper: <br><br>Watch people dancing from a non-danceable corner <br> <br> (1 coin)"), 
+    ...Array(1).fill("📚 Sophisto Prick: <br><br>Suddenly feel like reading a book from the LIBRARY <br> <br> (3 coin)"), 
+    ...Array(1).fill("😴 Powernap: <br><br>Take a quick break in the BEDROOM <br> <br> (3 coin)"), 
+    ...Array(1).fill("🕵️ Creeper: <br><br>Watch people dancing from a non-danceable corner <br> <br> (3 coin)"), 
 
-    ...Array(1).fill("🍾 Barman: <br><br>Serve drinks at a full drinking station <br> <br> (10 coins)"),
-    ...Array(1).fill("🧑‍🍳 House Chef: <br><br>Chill out in a full kitchen <br> <br> (10 coins)"), 
-    ...Array(1).fill("💃 Sweaty Dancefloor: <br><br>Dance with 7 other guests on the dancefloor <br> <br> (10 coins)"), 
+    ...Array(1).fill("🍾 Barman: <br><br>Serve drinks at a full DRINKS station <br> <br> (10 coins)"),
+    ...Array(1).fill("🧑‍🍳 House Chef: <br><br>Chill out in a full FOOD station <br> <br> (10 coins)"), 
+    ...Array(1).fill("💃 Sweaty Dancefloor: <br><br>Dance with 7 other guests on a DANCE FLOOR <br> <br> (10 coins)"), 
+    ...Array(1).fill("💩 Communal Shit: <br><br>Share a TOILET with 3 oher people <br> <br> (7 coins)"), 
 
 ];
 
@@ -652,25 +657,25 @@ const PartyGoalsDeck = [
     ...Array(1).fill("🤘 Mosh Pit: <br>    Most guests and most songs played should be ROCK <br> <br>  (25 coins)"),
     ...Array(1).fill("⚔️ Rap Battle: <br>Most guests and most songs played should be HIP HOP <br> <br> (25 coins)"), 
 
-    ...Array(1).fill("🧑‍🤝‍🧑🧑‍🤝‍🧑🧑‍🤝‍🧑 <br>A Proper Mixer: <br>Have a balanced number guests of each gernre at the end of the party (2P=6 guest / 3P = 7 guests / 4P = 8 guests) <br> <br> (20 coins)"),  
+    ...Array(1).fill("🧑‍🤝‍🧑🧑‍🤝‍🧑🧑‍🤝‍🧑 <br>A Proper Mixer: <br>Have a balanced number guests of each gernre at the end of the party (2P=6 guest / 3P = 7 guests / 4P = 8 guests) <br> <br> (30 coins)"),  
 
-    ...Array(1).fill("🌮 Hood Party Ese: <br>Have a mayority HIP HOP and LATIN music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("🎸 Electro Clash: <br>Have a mayority TECHNO and ROCK music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("👑 Disco Divas Night: <br>Have a mayority DISCO and POP music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("🚨 Rage Against the Public Enemy: <br>Have a mayority ROCK and HIP-HOP music fans at the end of the party <br> <br> (15 coins)"),
-    ...Array(1).fill("👯👯👯 K-Pop night: <br>Have a mayority POP and TECHNO music fans at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("🌮 Hood Party Ese: <br>Have a mayority HIP HOP and LATIN music fans at the end of the party <br> <br> (20 coins)"),
+    ...Array(1).fill("🎸 Electro Clash: <br>Have a mayority TECHNO and ROCK music fans at the end of the party <br> <br> (20 coins)"),
+    ...Array(1).fill("👑 Disco Divas Night: <br>Have a mayority DISCO and POP music fans at the end of the party <br> <br> (20 coins)"),
+    ...Array(1).fill("🚨 Rage Against the Public Enemy: <br>Have a mayority ROCK and HIP-HOP music fans at the end of the party <br> <br> (20 coins)"),
+    ...Array(1).fill("👯👯👯 K-Pop night: <br>Have a mayority POP and TECHNO music fans at the end of the party <br> <br> (20 coins)"),
 
     ...Array(1).fill("🍻🍻🍻 <br> Beer Fest: <br>Have 3 or more DRINK stations running at the end of the party <br> <br> (10 coins)"),
     ...Array(1).fill("🍕🍗🌭 <br> Banquet: <br>Have 3 or more FOOD stations running at the end of the party <br> <br> (10 coins)"),
     ...Array(1).fill("☮️🕉️✡️ <br> Multi-Environment: <br> Have 3 or more DANCE FLOORS running at the end of the party <br> <br> (10 coins)"),
     ...Array(1).fill("🚽🚽🚽 <br> Too many porcelain: <br> Have 3 or more TOILETS running at the end of the party <br> <br> (10 coins)"),
 
-    ...Array(1).fill("💂 Disco Guards: <br>Have a DISCO QUEEN in every room at the end of the party <br> <br> (10 coins)"),   
-    ...Array(1).fill("🩰 TikTok Dance Crew: <br>Have a group of 8 POPPERS dancing together at the end of the party <br> <br> (10 coins)"),  
-    ...Array(1).fill("🐓 Cock Fight: <br>Have a group of 8 LATINOS in a circle at the end of the party <br> <br> (10 coins)"),
-    ...Array(1).fill("🚬 Smoke Circle: <br>Have a group of 8 ROCKERS in a circle at the end of the party <br> <br> (10 coins)"),
-    ...Array(1).fill("🔫 B-BOYZ: <br>Have a group of 8 HIP HOPPERS in a circle at the end of the party <br> <br> (10 coins)"),
-    ...Array(1).fill("🍬 DJ Crew: <br>Have a TECHNO RAVER in every room at the end of the party <br> <br> (10 coins)"), 
+    ...Array(1).fill("💂 Disco Guards: <br>Have a DISCO QUEEN in every room at the end of the party <br> <br> (15 coins)"),   
+    ...Array(1).fill("🩰 TikTok Dance Crew: <br>Have a group of 8 POPPERS dancing together at the end of the party <br> <br> (15 coins)"),  
+    ...Array(1).fill("🐓 Cock Fight: <br>Have a group of 8 LATINOS in a circle at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("🚬 Smoke Circle: <br>Have a group of 8 ROCKERS in a circle at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("🔫 B-BOYZ: <br>Have a group of 8 HIP HOPPERS in a circle at the end of the party <br> <br> (15 coins)"),
+    ...Array(1).fill("🍬 DJ Crew: <br>Have a TECHNO RAVER in every room at the end of the party <br> <br> (15 coins)"), 
 ];
 
 /*const htmlOutput = playerDeck.join('<br><br>').replace(/\n/g, '<br>');
@@ -1836,6 +1841,9 @@ createRoomBtn.addEventListener("click", async () => {
                 console.log("✅ Room created successfully:", roomCode);
                 await initializeSharedDeck(roomCode);
                 listenToDeckChanges(roomCode);
+                
+                await initializeGameState(roomCode);
+                
                 return;
             } catch (error) {
                 console.warn(`Room creation attempt failed (${retries} retries left):`, error);
@@ -1915,6 +1923,9 @@ async function joinRoom(roomCode, playerName) {
         console.log("✅ Joined room successfully:", roomCode);
         await initializeSharedDeck(roomCode);
         listenToDeckChanges(roomCode);
+        
+        await initializeGameState(roomCode);
+        
     } catch (error) {
         console.error("❌ Error joining room:", error);
         alert("Failed to join room. Please try again.");
@@ -2127,6 +2138,13 @@ async function endTurn() {
             return;
         }
 
+        // Calculate turn duration
+        const turnStartTime = window.currentRoomDataForButton?.turnStartTime;
+        if (turnStartTime) {
+            const turnDuration = Date.now() - turnStartTime;
+            await statisticsManager.updateTurnTime(currentPlayerId, turnDuration);
+        }
+
         // Log the end of the current turn
         LogSystem.logTurnEnd(currentTurnPlayer);
 
@@ -2200,6 +2218,15 @@ async function endTurn() {
             setTimeout(hideLoading, 1500);
         } else {
             showLoading(`Waiting for ${nextPlayerName}...`, { isThirdPlayer: true });
+        }
+        
+        // Check if this was the last turn
+        const roomRef = doc(db, "rooms", currentRoomId);
+        const roomDoc = await getDoc(roomRef);
+        const roomData = roomDoc.data();
+        
+        if (roomData.gameOutcome === GAME_OUTCOME.LAST_TURN) {
+            await gameStateManager.markPlayerLastTurnComplete(currentPlayerId);
         }
         
     } catch (error) {
@@ -2389,6 +2416,11 @@ function listenToGameState(roomId) {
         const data = snapshot.data();
         if (!data) return;
         window.currentRoomDataForButton = data;
+        
+        // Check game outcome whenever guest count changes
+        if (data.guestCount !== undefined) {
+            await checkGameOutcome();
+        }
         
         // Update music if changed
         if (data.currentMusic !== currentMusic) {
@@ -3198,3 +3230,33 @@ guestCounter.querySelector('.plus').addEventListener('click', async () => {
         guestCount: currentCount + 1
     });
 });
+
+// Add game state integration
+async function checkGameOutcome() {
+    if (!currentRoomId) return;
+
+    const roomRef = doc(db, "rooms", currentRoomId);
+    const roomDoc = await getDoc(roomRef);
+    const roomData = roomDoc.data();
+
+    const guestCount = roomData.guestCount || 0;
+    const targetCount = roomData.targetGuestCount || 0;
+    const initialCount = roomData.players.length * 10;
+
+    const outcome = await gameStateManager.checkGameState(guestCount, targetCount, initialCount);
+
+    switch (outcome) {
+        case GAME_OUTCOME.LAST_TURN:
+            stateUI.showLastTurnBanner();
+            break;
+        case GAME_OUTCOME.WIN:
+            const stats = await statisticsManager.getGameStats();
+            stateUI.showWinnerPopup(stats);
+            break;
+        case GAME_OUTCOME.LOSE:
+            stateUI.showGameOverPopup();
+            break;
+        default:
+            stateUI.hideLastTurnBanner();
+    }
+}
