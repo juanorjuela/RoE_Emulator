@@ -91,6 +91,15 @@ class StateUI {
     }
 
     showWinnerPopup(stats) {
+        // Pause game elements and game loop
+        clearInterval(window.turnTimer);
+        const turnStartPopup = document.querySelector('.turn-start-popup');
+        if (turnStartPopup) turnStartPopup.style.display = 'none';
+        
+        // Clear any active timers
+        const timerContainer = document.querySelector('.timer-container');
+        if (timerContainer) timerContainer.style.display = 'none';
+
         // Create and start confetti
         const confetti = document.createElement('canvas');
         confetti.id = 'confetti-canvas';
@@ -100,13 +109,19 @@ class StateUI {
         confetti.style.width = '100%';
         confetti.style.height = '100%';
         confetti.style.pointerEvents = 'none';
-        confetti.style.zIndex = '1001';
+        confetti.style.zIndex = '999999';
         document.body.appendChild(confetti);
 
         const popup = document.createElement('div');
         popup.className = 'winner-popup';
         popup.innerHTML = `
             <div class="winner-content">
+                <div class="party-goals-review">
+                    <h3>Review Your Party Goals</h3>
+                    <div id="party-goals-container"></div>
+                    <button class="resolve-goals-btn">Resolve Party Goals</button>
+                </div>
+
                 <div class="celebration-title">
                     <h1 class="animate-pop">Your party is officially EPIC</h1>
                     <div class="party-emoji animate-bounce">🎉</div>
@@ -117,13 +132,15 @@ class StateUI {
                 
                 <div class="stats-section">
                     <h3 class="animate-slide-up">Player Stats</h3>
-                    <ul class="animate-stats">
-                        <li class="stat-item">Coins Achieved: <span class="highlight">${stats.playerStats?.coins || 0}</span></li>
-                        <li class="stat-item">Party Goals: <span class="highlight">${stats.playerStats?.completedGoals?.join(', ') || 'None'}</span></li>
-                        <li class="stat-item">Fuckups Resolved: <span class="highlight">${stats.playerStats?.fuckupsResolved || 0}</span></li>
-                        <li class="stat-item">Actions Played: <span class="highlight">${stats.playerStats?.actionsPlayed || 0}</span></li>
-                        <li class="stat-item">Mini Missions Resolved: <span class="highlight">${stats.playerStats?.miniMissionsResolved || 0}</span></li>
-                    </ul>
+                    <div id="player-stats-container">
+                        <ul class="animate-stats">
+                            <li class="stat-item">Coins Achieved: <span class="highlight">${stats.playerStats?.coins || 0}</span></li>
+                            <li class="stat-item">Party Goals: <span class="highlight">${stats.playerStats?.completedGoals?.join(', ') || 'None'}</span></li>
+                            <li class="stat-item">Fuckups Resolved: <span class="highlight">${stats.playerStats?.fuckupsResolved || 0}</span></li>
+                            <li class="stat-item">Actions Played: <span class="highlight">${stats.playerStats?.actionsPlayed || 0}</span></li>
+                            <li class="stat-item">Mini Missions Resolved: <span class="highlight">${stats.playerStats?.miniMissionsResolved || 0}</span></li>
+                        </ul>
+                    </div>
 
                     <h3 class="animate-slide-up">Party Stats</h3>
                     <ul class="animate-stats">
@@ -150,7 +167,7 @@ class StateUI {
                 width: 100%;
                 height: 100%;
                 background: rgba(0, 0, 0, 0.9);
-                z-index: 1000;
+                z-index: 999999;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -296,6 +313,53 @@ class StateUI {
                     opacity: 1;
                 }
             }
+
+            .party-goals-review {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: rgba(255, 255, 255, 0.95);
+                padding: 20px;
+                border-radius: 10px;
+                max-width: 300px;
+                text-align: left;
+                box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
+            }
+
+            .party-goal-card {
+                background: rgba(46, 204, 113, 0.1);
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 8px;
+                border: 1px solid rgba(46, 204, 113, 0.2);
+            }
+
+            .player-name {
+                font-weight: bold;
+                color: #2ecc71;
+                margin-bottom: 5px;
+            }
+
+            .goal-text {
+                margin-bottom: 10px;
+            }
+
+            .goal-status {
+                display: flex;
+                gap: 10px;
+            }
+
+            .goal-status-btn {
+                padding: 5px 10px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+            }
+
+            .goal-status-btn:hover {
+                transform: scale(1.1);
+            }
         `;
         document.head.appendChild(style);
 
@@ -357,10 +421,99 @@ class StateUI {
         resizeCanvas();
         drawConfetti();
 
+        // Add click handler for goal status buttons
+        popup.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('goal-status-btn')) {
+                const goalCard = e.target.closest('.party-goal-card');
+                const goalText = goalCard.querySelector('.goal-text').textContent;
+                const status = e.target.dataset.status;
+                const coinMatch = goalText.match(/\((\d+)\s*coins\)/i);
+                const coinValue = coinMatch ? parseInt(coinMatch[1]) : 0;
+
+                // Update stats based on goal completion
+                if (status === 'success') {
+                    const roomRef = doc(db, "rooms", currentRoomId);
+                    await runTransaction(db, async (transaction) => {
+                        const roomDoc = await transaction.get(roomRef);
+                        const roomData = roomDoc.data();
+                        const playerStats = roomData.playerStats || {};
+                        const myStats = playerStats[currentPlayerId] || {
+                            coins: 0,
+                            completedGoals: [],
+                            fuckupsResolved: 0,
+                            actionsPlayed: 0,
+                            miniMissionsResolved: 0
+                        };
+
+                        myStats.coins = (myStats.coins || 0) + coinValue;
+                        myStats.completedGoals = myStats.completedGoals || [];
+                        myStats.completedGoals.push(goalText);
+                        playerStats[currentPlayerId] = myStats;
+
+                        transaction.update(roomRef, { playerStats });
+
+                        // Update the stats display
+                        const statsContainer = document.getElementById('player-stats-container');
+                        statsContainer.innerHTML = `
+                            <ul class="animate-stats">
+                                <li class="stat-item">Coins Achieved: <span class="highlight">${myStats.coins}</span></li>
+                                <li class="stat-item">Party Goals: <span class="highlight">${myStats.completedGoals.join(', ')}</span></li>
+                                <li class="stat-item">Fuckups Resolved: <span class="highlight">${myStats.fuckupsResolved}</span></li>
+                                <li class="stat-item">Actions Played: <span class="highlight">${myStats.actionsPlayed}</span></li>
+                                <li class="stat-item">Mini Missions Resolved: <span class="highlight">${myStats.miniMissionsResolved}</span></li>
+                            </ul>
+                        `;
+                    });
+                }
+
+                // Remove the goal card after resolution
+                goalCard.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => goalCard.remove(), 500);
+
+                // If no more goals to review, hide the review section
+                const remainingGoals = popup.querySelectorAll('.party-goal-card').length;
+                if (remainingGoals <= 1) {
+                    const reviewSection = popup.querySelector('.party-goals-review');
+                    reviewSection.style.animation = 'fadeOut 0.5s ease forwards';
+                    setTimeout(() => reviewSection.remove(), 500);
+                }
+            }
+        });
+
         // Add click handler for new game button
         popup.querySelector('.new-game-btn').addEventListener('click', () => {
             window.location.reload();
         });
+
+        // Fetch and display party goals
+        if (currentRoomId) {
+            const roomRef = doc(db, "rooms", currentRoomId);
+            getDoc(roomRef).then(roomDoc => {
+                if (roomDoc.exists()) {
+                    const roomData = roomDoc.data();
+                    const playerGoals = roomData.playerGoals || {};
+                    const myGoals = playerGoals[currentPlayerId]?.goals || [];
+                    const goalsContainer = popup.querySelector('#party-goals-container');
+                    
+                    myGoals.forEach(goal => {
+                        if (goal.chosen) {
+                            const goalCard = document.createElement('div');
+                            goalCard.className = 'party-goal-card';
+                            const goalText = goal.text || goal;
+                            goalCard.innerHTML = `
+                                <div class="player-name">${currentPlayerId}'s Goal</div>
+                                <div class="goal-text">${goalText}</div>
+                                <div class="goal-status">
+                                    <button class="goal-status-btn" data-status="success">✅ Achieved</button>
+                                    <button class="goal-status-btn" data-status="fail">❌ Failed</button>
+                                </div>
+                            `;
+                            goalsContainer.appendChild(goalCard);
+                        }
+                    });
+                }
+            });
+        }
     }
 
     showGameOverPopup() {

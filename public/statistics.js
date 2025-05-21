@@ -61,6 +61,7 @@ class StatisticsManager {
         const musicHistory = roomData.musicHistory || [];
         const playerStats = roomData.playerStats || {};
         const guestCount = roomData.guestCount || 0;
+        const currentPlayerId = window.currentPlayerId; // Get current player ID from global scope
 
         // Calculate most popular music genre
         const genreCounts = {};
@@ -88,6 +89,15 @@ class StatisticsManager {
             return acc;
         }, { totalCoins: 0, totalMiniMissions: 0 });
 
+        // Get current player's stats
+        const myStats = playerStats[currentPlayerId] || {
+            coins: 0,
+            completedGoals: [],
+            fuckupsResolved: 0,
+            actionsPlayed: 0,
+            miniMissionsResolved: 0
+        };
+
         return {
             guestCount,
             musicStats: {
@@ -99,7 +109,7 @@ class StatisticsManager {
                 slowest: slowestPlayer
             },
             totalStats,
-            playerStats
+            playerStats: myStats // Return current player's stats instead of all player stats
         };
     }
 }
