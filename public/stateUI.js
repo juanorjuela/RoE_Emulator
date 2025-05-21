@@ -91,6 +91,10 @@ class StateUI {
     }
 
     showWinnerPopup(stats) {
+        // Get global references
+        const currentRoomId = window.currentRoomId;
+        const db = window.db;
+        
         // Pause game elements and game loop
         clearInterval(window.turnTimer);
         const turnStartPopup = document.querySelector('.turn-start-popup');
@@ -109,7 +113,7 @@ class StateUI {
         confetti.style.width = '100%';
         confetti.style.height = '100%';
         confetti.style.pointerEvents = 'none';
-        confetti.style.zIndex = '999999';
+        confetti.style.zIndex = '9999999999999';
         document.body.appendChild(confetti);
 
         const popup = document.createElement('div');

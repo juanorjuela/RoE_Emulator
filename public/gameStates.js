@@ -23,21 +23,20 @@ class GameStateManager {
     async checkGameState(guestCount, targetCount, initialCount) {
         if (!this.currentRoomId) return GAME_OUTCOME.IN_PROGRESS;
 
-        // Check lose condition first
-        if (guestCount < (initialCount / 2)) {
-            return GAME_OUTCOME.LOSE;
-        }
-
         const roomRef = doc(this.db, "rooms", this.currentRoomId);
         const roomDoc = await getDoc(roomRef);
-        if (!roomDoc.exists()) return GAME_OUTCOME.IN_PROGRESS;
-
         const roomData = roomDoc.data();
+        
         const currentOutcome = roomData.gameOutcome || GAME_OUTCOME.IN_PROGRESS;
-        const playersCompletedLastTurn = roomData.playersCompletedLastTurn || [];
-        const allPlayers = roomData.players || [];
         const currentTurn = roomData.currentTurn;
+        const allPlayers = roomData.players || [];
+        const playersCompletedLastTurn = roomData.playersCompletedLastTurn || [];
         const lastTurnTriggeredBy = roomData.lastTurnTriggeredBy;
+
+        // If guest count is below target and we're not in last turn, it's game over
+        if (guestCount < initialCount && currentOutcome !== GAME_OUTCOME.LAST_TURN) {
+            return GAME_OUTCOME.LOSE;
+        }
 
         // If we're already in LAST_TURN state
         if (currentOutcome === GAME_OUTCOME.LAST_TURN) {
@@ -52,10 +51,14 @@ class GameStateManager {
             
             // Check if all players have completed their last turn
             // Make sure the triggering player also gets their last turn
-            const allPlayersHadLastTurn = allPlayers.every(player => 
-                playersCompletedLastTurn.includes(player) || 
-                (player === lastTurnTriggeredBy && playersCompletedLastTurn.length === allPlayers.length - 1)
-            );
+            const allPlayersHadLastTurn = allPlayers.every(player => {
+                // If this is the triggering player, they should be the last to play
+                if (player === lastTurnTriggeredBy) {
+                    return playersCompletedLastTurn.length === allPlayers.length - 1;
+                }
+                // For all other players, check if they've completed their turn
+                return playersCompletedLastTurn.includes(player);
+            });
 
             if (allPlayersHadLastTurn) {
                 // If guest count is still at or above target after all players had their last turn
@@ -72,12 +75,17 @@ class GameStateManager {
         }
 
         // Check if we should enter last turn state
-        // We'll mark this turn as the triggering turn, but not activate last turn state yet
         if (guestCount >= targetCount && currentOutcome === GAME_OUTCOME.IN_PROGRESS && !roomData.pendingLastTurn) {
             await updateDoc(roomRef, {
                 pendingLastTurn: true,
                 lastTurnTriggeredBy: currentTurn
             });
+        }
+
+        // If we have a pending last turn and the current player is not the triggering player
+        if (roomData.pendingLastTurn && currentTurn !== roomData.lastTurnTriggeredBy) {
+            await this.initializeLastTurnState();
+            return GAME_OUTCOME.LAST_TURN;
         }
 
         return GAME_OUTCOME.IN_PROGRESS;
