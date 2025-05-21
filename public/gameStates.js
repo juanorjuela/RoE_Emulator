@@ -1,7 +1,7 @@
 // Game States Management
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const GAME_OUTCOME = {
+export const GAME_OUTCOME = {
     IN_PROGRESS: 'in_progress',
     LAST_TURN: 'last_turn',
     WIN: 'win',
@@ -30,48 +30,74 @@ class GameStateManager {
 
         const roomRef = doc(this.db, "rooms", this.currentRoomId);
         const roomDoc = await getDoc(roomRef);
+        if (!roomDoc.exists()) return GAME_OUTCOME.IN_PROGRESS;
+
         const roomData = roomDoc.data();
+        const currentOutcome = roomData.gameOutcome || GAME_OUTCOME.IN_PROGRESS;
+        const playersCompletedLastTurn = roomData.playersCompletedLastTurn || [];
+        const allPlayers = roomData.players || [];
 
-        // Check if we're in last turn state
-        if (guestCount >= targetCount) {
-            if (!this.lastTurnActivated) {
-                // Activate last turn state
-                await updateDoc(roomRef, {
-                    gameOutcome: GAME_OUTCOME.LAST_TURN,
-                    lastTurnStarted: Date.now(),
-                    playersCompletedLastTurn: []
-                });
-                this.lastTurnActivated = true;
+        // If we're already in LAST_TURN state
+        if (currentOutcome === GAME_OUTCOME.LAST_TURN) {
+            // Only check for win/continue conditions after current player's turn is complete
+            if (playersCompletedLastTurn.length === allPlayers.length) {
+                // If guest count is still at or above target after all players had their last turn
+                if (guestCount >= targetCount) {
+                    return GAME_OUTCOME.WIN;
+                } else {
+                    // Reset last turn state if guest count dropped below target
+                    await this.resetLastTurnState();
+                    return GAME_OUTCOME.IN_PROGRESS;
+                }
             }
-
-            // Check if all players have completed their last turn
-            const allPlayersCompleted = roomData.playersCompletedLastTurn?.length === roomData.players?.length;
-            if (allPlayersCompleted) {
-                return GAME_OUTCOME.WIN;
-            }
+            // Continue last turn state until all players have had their turn
             return GAME_OUTCOME.LAST_TURN;
-        } else if (this.lastTurnActivated) {
-            // Deactivate last turn if guest count drops below target
-            this.lastTurnActivated = false;
-            await updateDoc(roomRef, {
-                gameOutcome: GAME_OUTCOME.IN_PROGRESS,
-                lastTurnStarted: null,
-                playersCompletedLastTurn: []
-            });
+        }
+
+        // Check if we should enter last turn state
+        if (guestCount >= targetCount && currentOutcome === GAME_OUTCOME.IN_PROGRESS) {
+            await this.initializeLastTurnState();
+            return GAME_OUTCOME.LAST_TURN;
         }
 
         return GAME_OUTCOME.IN_PROGRESS;
     }
 
-    async markPlayerLastTurnComplete(playerName) {
-        if (!this.currentRoomId || !this.lastTurnActivated) return;
-
+    async initializeLastTurnState() {
         const roomRef = doc(this.db, "rooms", this.currentRoomId);
         await updateDoc(roomRef, {
-            playersCompletedLastTurn: arrayUnion(playerName)
+            gameOutcome: GAME_OUTCOME.LAST_TURN,
+            playersCompletedLastTurn: [],
+            lastTurnStartTime: Date.now()
         });
+    }
+
+    async resetLastTurnState() {
+        const roomRef = doc(this.db, "rooms", this.currentRoomId);
+        await updateDoc(roomRef, {
+            gameOutcome: GAME_OUTCOME.IN_PROGRESS,
+            playersCompletedLastTurn: [],
+            lastTurnStartTime: null
+        });
+    }
+
+    async markPlayerLastTurnComplete(playerName) {
+        if (!this.currentRoomId || !playerName) return;
+
+        const roomRef = doc(this.db, "rooms", this.currentRoomId);
+        const roomDoc = await getDoc(roomRef);
+        if (!roomDoc.exists()) return;
+
+        const roomData = roomDoc.data();
+        const completedPlayers = roomData.playersCompletedLastTurn || [];
+        
+        // Only add player if they haven't been marked yet
+        if (!completedPlayers.includes(playerName)) {
+            await updateDoc(roomRef, {
+                playersCompletedLastTurn: [...completedPlayers, playerName]
+            });
+        }
     }
 }
 
-export const gameStateManager = new GameStateManager();
-export { GAME_OUTCOME }; 
+export const gameStateManager = new GameStateManager(); 
