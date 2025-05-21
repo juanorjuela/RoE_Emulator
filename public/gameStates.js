@@ -36,10 +36,20 @@ class GameStateManager {
         const currentOutcome = roomData.gameOutcome || GAME_OUTCOME.IN_PROGRESS;
         const playersCompletedLastTurn = roomData.playersCompletedLastTurn || [];
         const allPlayers = roomData.players || [];
+        const currentTurn = roomData.currentTurn;
 
         // If we're already in LAST_TURN state
         if (currentOutcome === GAME_OUTCOME.LAST_TURN) {
-            // Only check for win/continue conditions after current player's turn is complete
+            // Check if guest count dropped below target during someone's turn
+            if (guestCount < targetCount) {
+                // Only reset after the current player's turn is complete
+                if (playersCompletedLastTurn.includes(currentTurn)) {
+                    await this.resetLastTurnState();
+                    return GAME_OUTCOME.IN_PROGRESS;
+                }
+            }
+            
+            // Check if all players have completed their last turn
             if (playersCompletedLastTurn.length === allPlayers.length) {
                 // If guest count is still at or above target after all players had their last turn
                 if (guestCount >= targetCount) {
@@ -89,12 +99,11 @@ class GameStateManager {
         if (!roomDoc.exists()) return;
 
         const roomData = roomDoc.data();
-        const completedPlayers = roomData.playersCompletedLastTurn || [];
-        
-        // Only add player if they haven't been marked yet
-        if (!completedPlayers.includes(playerName)) {
+        const playersCompletedLastTurn = roomData.playersCompletedLastTurn || [];
+
+        if (!playersCompletedLastTurn.includes(playerName)) {
             await updateDoc(roomRef, {
-                playersCompletedLastTurn: [...completedPlayers, playerName]
+                playersCompletedLastTurn: [...playersCompletedLastTurn, playerName]
             });
         }
     }

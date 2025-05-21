@@ -98,29 +98,26 @@ class StateUI {
                 <h1>Your party is officially EPIC</h1>
                 <p>Congratulations, you people were able to put together the party of the season, everyone will be talking about tonight for the rest of the year!</p>
                 
-                <h2>Your party had ${stats.finalGuestCount} guests</h2>
+                <h2>Your party had ${stats.guestCount || 0} guests</h2>
                 
                 <div class="stats-section">
                     <h3>Player Stats</h3>
                     <ul>
-                        <li>Coins Achieved: ${stats.playerStats.coins || 0}</li>
-                        <li>Party Goals: ${stats.playerStats.completedGoals || []}</li>
-                        <li>Fuckups Resolved: ${stats.playerStats.fuckupsResolved || 0}</li>
-                        <li>Actions Played: ${stats.playerStats.actionsPlayed || 0}</li>
-                        <li>Mini Missions Resolved: ${stats.playerStats.miniMissionsResolved || 0}</li>
+                        <li>Coins Achieved: ${stats.playerStats?.coins || 0}</li>
+                        <li>Party Goals: ${stats.playerStats?.completedGoals?.join(', ') || 'None'}</li>
+                        <li>Fuckups Resolved: ${stats.playerStats?.fuckupsResolved || 0}</li>
+                        <li>Actions Played: ${stats.playerStats?.actionsPlayed || 0}</li>
+                        <li>Mini Missions Resolved: ${stats.playerStats?.miniMissionsResolved || 0}</li>
                     </ul>
 
                     <h3>Party Stats</h3>
                     <ul>
-                        <li>Playlist: ${stats.partyStats.playlist.join(', ') || 'No songs played'}</li>
-                        <li>Most Popular Genre: ${stats.partyStats.popularGenre || 'N/A'}</li>
-                        <li>Total Mini Missions: ${stats.partyStats.totalMiniMissions || 0}</li>
-                        <li>Total Coins: ${stats.partyStats.totalCoins || 0}</li>
-                        <li>Most Common Fuckup: ${stats.partyStats.commonFuckup || 'N/A'}</li>
-                        <li>Most Common Action: ${stats.partyStats.commonAction || 'N/A'}</li>
-                        <li>Winning Party Goals: ${stats.partyStats.winningGoals.join(', ') || 'None'}</li>
-                        <li>Slowest Player: ${stats.partyStats.slowestPlayer || 'N/A'}</li>
-                        <li>Fastest Player: ${stats.partyStats.fastestPlayer || 'N/A'}</li>
+                        <li>Playlist: ${stats.musicStats?.playlist?.map(entry => entry.type).join(', ') || 'No songs played'}</li>
+                        <li>Most Popular Genre: ${stats.musicStats?.mostPopularGenre || 'N/A'}</li>
+                        <li>Total Mini Missions: ${stats.totalStats?.totalMiniMissions || 0}</li>
+                        <li>Total Coins: ${stats.totalStats?.totalCoins || 0}</li>
+                        <li>Fastest Player: ${stats.playerPerformance?.fastest || 'N/A'}</li>
+                        <li>Slowest Player: ${stats.playerPerformance?.slowest || 'N/A'}</li>
                     </ul>
                 </div>
 

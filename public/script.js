@@ -2206,7 +2206,7 @@ async function endTurn() {
         // Log the end of the current turn
         LogSystem.logTurnEnd(currentTurnPlayer);
 
-        // Fetch the latest room data to get playerMapping if not readily available
+        // Fetch the latest room data
         let currentRoomData = {};
         if (currentRoomId) {
             const roomDoc = await getDoc(doc(db, "rooms", currentRoomId));
@@ -2214,12 +2214,18 @@ async function endTurn() {
                 currentRoomData = roomDoc.data();
             }
         }
+
         const playerMapping = currentRoomData.playerMapping || {};
         const turnPlayerUid = playerMapping[currentTurnPlayer];
 
         if (!currentTurnPlayer || !turnPlayerUid || turnPlayerUid !== localPlayerUid) {
             console.warn('Not your turn to end.');
             return;
+        }
+
+        // If we're in last turn state, mark this player's turn as complete
+        if (currentRoomData.gameOutcome === GAME_OUTCOME.LAST_TURN) {
+            await gameStateManager.markPlayerLastTurnComplete(currentTurnPlayer);
         }
         
         // Save final board state
@@ -2242,54 +2248,25 @@ async function endTurn() {
         
         // Determine the next player
         const roomPlayerOrder = currentRoomData.playerOrder || currentRoomData.players || [];
-        if (roomPlayerOrder.length > 0) {
-            playerOrder = roomPlayerOrder;
+        if (!roomPlayerOrder.length) {
+            console.error("No player order found");
+            return;
         }
         
-        const currentPlayerIndex = playerOrder.indexOf(currentTurnPlayer);
-        const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length;
-        const nextPlayerName = playerOrder[nextPlayerIndex];
-        
-        // Update room with next player's turn
-        if (currentRoomId) {
-            await updateDoc(doc(db, "rooms", currentRoomId), {
-                currentTurn: nextPlayerName,
-                turnStartTime: Date.now(),
-                lastUpdated: Date.now()
-            });
+        const currentPlayerIndex = roomPlayerOrder.indexOf(currentTurnPlayer);
+        if (currentPlayerIndex === -1) {
+            console.error("Current player not found in order");
+            return;
         }
         
-        // Update local game state
-        currentTurnPlayer = nextPlayerName;
+        const nextPlayerIndex = (currentPlayerIndex + 1) % roomPlayerOrder.length;
+        const nextPlayer = roomPlayerOrder[nextPlayerIndex];
         
-        // Log the start of the next turn
-        LogSystem.logTurnStart(nextPlayerName);
-        
-        // Show waiting screen for the player who just finished their turn
-        const nextPlayerUid = playerMapping[nextPlayerName];
-        const isBot = nextPlayerName.startsWith('bot-');
-        
-        if (isBot) {
-            showLoading(`Bot ${nextPlayerName} is playing...`, { isBotTurn: true });
-        } else if (nextPlayerUid === localPlayerUid) {
-            showLoading('Your turn!');
-            setTimeout(hideLoading, 1500);
-        } else {
-            showLoading(`Waiting for ${nextPlayerName}...`, { isThirdPlayer: true });
-        }
-        
-        // Check if this was the last turn
-        const roomRef = doc(db, "rooms", currentRoomId);
-        const roomDoc = await getDoc(roomRef);
-        const roomData = roomDoc.data();
-        
-        if (roomData.gameOutcome === GAME_OUTCOME.LAST_TURN) {
-            await gameStateManager.markPlayerLastTurnComplete(currentPlayerId);
-        }
+        // Update turn in room
+        await updateTurnInRoom(nextPlayer);
         
     } catch (error) {
         console.error("Error ending turn:", error);
-        hideLoading();
     }
 }
 

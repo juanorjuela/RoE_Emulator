@@ -60,6 +60,7 @@ class StatisticsManager {
 
         const musicHistory = roomData.musicHistory || [];
         const playerStats = roomData.playerStats || {};
+        const guestCount = roomData.guestCount || 0;
 
         // Calculate most popular music genre
         const genreCounts = {};
@@ -88,6 +89,7 @@ class StatisticsManager {
         }, { totalCoins: 0, totalMiniMissions: 0 });
 
         return {
+            guestCount,
             musicStats: {
                 playlist: musicHistory,
                 mostPopularGenre
