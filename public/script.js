@@ -585,6 +585,7 @@ let playerDeck = [
     ...Array(3).fill("<div><span><h3>ACTION</h3><br><br><h4>🧽<br> Clean 🚾: <br>Everyone in the toilet must go elsewhere</h4></span></div>"),
     ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🥸<br> <br>Invite Random Guest: <br> Add 1 guest from the music genre of your choosing</h4></span></div>"),
 
+    ...Array(6).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Your choice<br><br></h4><p>Add 3 fans of the genre of your choosing and remove 1 person who hates that music</p></span></div>"),
     ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Rock<br><br></h4><p>Add 3 Rockers to the party and remove 1 person who hates rock music</p></span></div>"),
     ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Pop<br><br></h4><p>Add 3 Poppers to the party and remove 1 person who hates pop music</p></span></div>"),
     ...Array(4).fill("<div><span><h3>ACTION</h3><br><br><h4>🎵 Play Music:<br> <br>Latin<br><br></h4><p>Add 3 Latinos to the party and remove 1 person who hates latin music</p></span></div>"),
